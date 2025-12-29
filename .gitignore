@@ -1,0 +1,48 @@
+# Android Studio / IntelliJ
+.idea/
+!.idea/codeStyles
+!.idea/inspectionProfiles
+*.iml
+
+# バイナリファイル
+*.bin
+*.dat
+*.tmp
+
+# Build outputs
+/build/
+app/build/
+app/release
+
+# Gradle
+.gradle/
+local.properties
+build/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.orig
+*.rej
+
+# Kotlin build caches
+out/
+.classpath
+.project
+.settings/
+.kotlin
+
+# Android test artifacts
+captures/
+
+# Keystore files
+*.jks
+*.keystore
+*.pem
+
+.cxx/
