@@ -10,6 +10,9 @@ interface RuleDao {
     @Query("SELECT * FROM rules ORDER BY id DESC")
     fun getAllRulesDesc(): Flow<List<RuleEntity>>
 
+    @Query("SELECT * FROM rules ORDER BY packageName ASC, id DESC")
+    fun getRulesOrderByPackageThenNewest(): Flow<List<RuleEntity>>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(rule: RuleEntity)
 
