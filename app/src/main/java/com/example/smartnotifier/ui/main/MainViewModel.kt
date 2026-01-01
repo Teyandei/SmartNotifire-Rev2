@@ -7,25 +7,36 @@ import androidx.lifecycle.viewModelScope
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.repository.RulesRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+
     private val db = DatabaseProvider.get(application)
-    private val rulesRepository = RulesRepository(db)
+    private val rulesRepo = RulesRepository(db)
 
-    private val _rules = MutableStateFlow<List<RuleEntity>>(emptyList())
-    val rules: StateFlow<List<RuleEntity>> = _rules.asStateFlow()
+    val rulesByOrderNewest = rulesRepo
+        .observeAllRulesOrderByNewest()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            emptyList()
+        )
 
-    init {
-        viewModelScope.launch {
-            rulesRepository
-                .observeAllRulesOrderByNewest()
-                .collect { list ->
-                    _rules.value = list
-                }
-        }
-    }
+    val rulesByOrderByPackageThenNewest = rulesRepo
+        .observeRulesOrderByPackageThenNewest()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            emptyList()
+        )
+
+    fun rules(orderNewest: Boolean = true) = if (orderNewest) rulesByOrderNewest else rulesByOrderByPackageThenNewest
+
+    suspend fun insert(rule: RuleEntity) = rulesRepo.insert(rule)
+
+    suspend fun update(rule: RuleEntity) = rulesRepo.update(rule)
+
+    suspend fun delete(rule: RuleEntity) = rulesRepo.delete(rule)
+
 }

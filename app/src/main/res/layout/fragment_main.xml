@@ -3,10 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- いったん仮の表示でOK -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SmartNotifire Rev2"
-        android:layout_gravity="center"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerRules"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </FrameLayout>
