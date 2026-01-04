@@ -2,17 +2,28 @@ package com.example.smartnotifier.data.repository
 
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.RuleEntity
+import kotlinx.coroutines.flow.Flow
 
-class RulesRepository(
-    private val db: AppDatabase
-) {
+class RulesRepository(private val db: AppDatabase) {
     private val dao = db.ruleDao()
 
     suspend fun insert(rule: RuleEntity) = dao.insert(rule)
     suspend fun update(rule: RuleEntity) = dao.update(rule)
     suspend fun delete(rule: RuleEntity) = dao.delete(rule)
 
-    fun observeAllRulesOrderByNewest() = dao.getAllRulesDesc()
-    fun observeRulesOrderByPackageThenNewest() = dao.getRulesOrderByPackageThenNewest()
+    /**
+     * 設計書 ⑨ 並び順 False: Rules.ID の降順
+     */
+    fun observeAllRulesOrderByNewest(): Flow<List<RuleEntity>> = dao.getAllRulesDesc()
 
+    /**
+     * 設計書 ⑨ 並び順 True: 1:PackageName, 2:Rules.ID の昇順
+     */
+    fun observeRulesOrderByPackageAsc(): Flow<List<RuleEntity>> = dao.getRulesOrderByPackageAsc()
+
+    /**
+     * トランザクションを利用したコピー処理
+     * id を指定して DAO 内でコピーを作成する
+     */
+    suspend fun duplicateRule(id: Int) = dao.duplicateRuleTransaction(id)
 }

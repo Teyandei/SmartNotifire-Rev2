@@ -1,10 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainRoot"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
+    <!-- ①～⑩ ヘッダー固定エリア -->
+    <TextView
+        android:id="@+id/txtAppTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Smart Notifier"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swSortList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/txtAppTitle"
+        app:layout_constraintStart_toEndOf="@+id/txtAppTitle"
+        app:layout_constraintTop_toTopOf="@+id/txtAppTitle" />
+
+    <TextView
+        android:id="@+id/captionSortApp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="並び順"
+        app:layout_constraintBottom_toBottomOf="@+id/swSortList"
+        app:layout_constraintStart_toEndOf="@+id/swSortList"
+        app:layout_constraintTop_toTopOf="@+id/swSortList" />
+
+    <ImageView
+        android:id="@+id/imgHelpIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="Help"
+        android:padding="12dp"
+        app:layout_constraintBottom_toBottomOf="@+id/txtAppTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/txtAppTitle"
+        app:srcCompat="@android:drawable/ic_menu_help" />
+
+    <View
+        android:id="@+id/headerDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintTop_toBottomOf="@+id/txtAppTitle" />
+
+    <!-- スクロールエリア (RecyclerView) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerRules"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/footerDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/headerDivider"
+        tools:listitem="@android:layout/simple_list_item_2" />
+
+    <!-- ⑪ 追加ボタン (固定) -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/btnAddRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:text="追加"
+        app:icon="@android:drawable/ic_input_add"
+        app:layout_constraintBottom_toTopOf="@+id/footerDivider"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ⑫～⑬ フッター固定エリア -->
+    <View
+        android:id="@+id/footerDivider"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</FrameLayout>
+        android:layout_height="1dp"
+        android:layout_marginBottom="8dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toTopOf="@+id/tilNotificationTitle" />
+
+    <TextView
+        android:id="@+id/txtNtfConfirmLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="通知タイトル"
+        app:layout_constraintBottom_toBottomOf="@+id/tilNotificationTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tilNotificationTitle" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilNotificationTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnConfirm"
+        app:layout_constraintStart_toEndOf="@+id/txtNtfConfirmLabel">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editNotificationTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="テスト通知"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="通知"
+        app:layout_constraintBottom_toBottomOf="@+id/tilNotificationTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tilNotificationTitle" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">SmartNotifier</string>
+    <string name="appName" translatable="false">Smart Notifier</string>
+    <string name="sortList">Newest</string>
+    <string name="captionAppOrder">By App</string>
+    <string name="captionOrder">Order</string>
+    <string name="descAbout">About this Applocation</string>
+    <string name="hintNotificationTitle">Nitification Title</string>
+    <string name="autoFillHistNotificationTitle">Input notification\'s title</string>
+    <string name="captionNtfConfirm">Confirm  Nitification</string>
+    <string name="captionConfirm">Confirm</string>
 </resources>

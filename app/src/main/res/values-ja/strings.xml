@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmartNotifier</string>
+    <string name="sortList">新しい順</string>
+    <string name="captionAppOrder">アプリ順</string>
+    <string name="captionOrder">表示順</string>
+    <string name="descAbout">このアプリについて</string>
+    <string name="hintNotificationTitle">通知タイトル</string>
+    <string name="autoFillHistNotificationTitle">通知タイトルを入力してください</string>
+    <string name="captionNtfConfirm">通知確認</string>
+    <string name="captionConfirm">確認</string>
+</resources>
