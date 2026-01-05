@@ -8,7 +8,9 @@ import com.example.smartnotifier.core.datastore.AppPrefs
 import com.example.smartnotifier.core.datastore.appPrefsDataStore
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.RuleEntity
+import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.repository.RulesRepository
+import com.example.smartnotifier.data.repository.NotificationLogRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -18,6 +20,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val dataStore = appContext.appPrefsDataStore
     private val db = DatabaseProvider.get(appContext)
     private val rulesRepo = RulesRepository(db)
+    private val logRepo = NotificationLogRepository(db)
 
     // 編集中のルールを一時的に保持するバッファ (Debounce用)
     private val _ruleUpdateBuffer = MutableSharedFlow<RuleEntity>(replay = 0)
@@ -30,6 +33,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .collect { rule ->
                     rulesRepo.update(rule)
                 }
+        }
+    }
+
+    // --- Notification Logs ---
+    val notificationLogs: StateFlow<List<NotificationLogEntity>> =
+        logRepo.observeLatestLogs()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Lazily,
+                initialValue = emptyList()
+            )
+
+    fun addRuleFromLog(log: NotificationLogEntity) {
+        viewModelScope.launch {
+            rulesRepo.insertFromNotificationLog(log)
         }
     }
 

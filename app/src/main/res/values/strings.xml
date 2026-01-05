@@ -1,12 +1,28 @@
 <resources>
-    <string name="app_name">SmartNotifier</string>
-    <string name="appName" translatable="false">Smart Notifier</string>
+    <string name="app_name">Smart Notifire</string>
+    <string name="appName" translatable="false">Smart Notifire</string>
     <string name="sortList">Newest</string>
     <string name="captionAppOrder">By App</string>
     <string name="captionOrder">Order</string>
+    <string name="caption_sort_list">Sort</string>
     <string name="descAbout">About this Applocation</string>
-    <string name="hintNotificationTitle">Nitification Title</string>
+    <string name="hintNotificationTitle">Notification Title</string>
     <string name="autoFillHistNotificationTitle">Input notification\'s title</string>
-    <string name="captionNtfConfirm">Confirm  Nitification</string>
-    <string name="captionConfirm">Confirm</string>
+    <string name="captionNtfConfirm">Confirm Notification</string>
+    <string name="captionConfirm">Notify</string>
+    <string name="caption_notification_log">Notification Log - double tap to add</string>
+    <string name="desc_help_icon">Help</string>
+    <string name="label_srh_title">Search Title</string>
+    <string name="label_voice_message">Voice Message</string>
+    <string name="dialog_delete_title">Delete rule</string>
+    <string name="dialog_delete_message">Do you want to delete the selected rule?</string>
+    <string name="dialog_delete_positive">Delete</string>
+    <string name="dialog_delete_negative">Cancel</string>
+    <string name="toast_rule_added_from_log">Rule has been added from notification log.</string>
+    <string name="notification_channel_check_name">Check notification</string>
+    <string name="notification_channel_check_desc">Notification for app verification.</string>
+    <string name="notification_check_body">通知確認を目的とした通知です。</string>
+    <string name="notification_permission_denied">Notification permission is required.</string>
+    <string name="btn_add">Add</string>
+    <string name="notification_send">Notify</string>
 </resources>

@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SmartNotifier</string>
+    <string name="app_name">Smart Notifire</string>
     <string name="sortList">新しい順</string>
     <string name="captionAppOrder">アプリ順</string>
     <string name="captionOrder">表示順</string>
+    <string name="caption_sort_list">並び順</string>
     <string name="descAbout">このアプリについて</string>
     <string name="hintNotificationTitle">通知タイトル</string>
     <string name="autoFillHistNotificationTitle">通知タイトルを入力してください</string>
     <string name="captionNtfConfirm">通知確認</string>
-    <string name="captionConfirm">確認</string>
+    <string name="captionConfirm">通知</string>
+    <string name="caption_notification_log">通知ログーダブルタップで追加</string>
+    <string name="desc_help_icon">ヘルプ</string>
+    <string name="label_srh_title">検索タイトル</string>
+    <string name="label_voice_message">音声メッセージ</string>
+    <string name="dialog_delete_title">削除確認</string>
+    <string name="dialog_delete_message">選択したルールを削除しますか？</string>
+    <string name="dialog_delete_positive">削除</string>
+    <string name="dialog_delete_negative">キャンセル</string>
+    <string name="toast_rule_added_from_log">通知検出ルールに追加しました</string>
+    <string name="notification_channel_check_name">動作確認</string>
+    <string name="notification_channel_check_desc">通知確認を目的とした通知です。</string>
+    <string name="notification_check_body">通知確認を目的とした通知です。</string>
+    <string name="notification_permission_denied">通知権限が必要です。</string>
+    <string name="btn_add">追加</string>
+    <string name="notification_send">通知</string>
 </resources>
