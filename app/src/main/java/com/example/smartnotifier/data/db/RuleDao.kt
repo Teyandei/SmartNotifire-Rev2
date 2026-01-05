@@ -39,6 +39,26 @@ interface RuleDao {
     suspend fun countSimilarTitles(packageName: String, channelId: String, srhTitle: String): Int
 
     /**
+     * 通知タイトルに部分一致する有効なルールを取得
+     * srhTitle が空文字の場合は全件ヒットさせる
+     */
+    @Query(
+        """
+        SELECT * FROM rules
+        WHERE enabled = 1
+          AND packageName = :packageName
+          AND channelId = :channelId
+          AND (:notificationTitle LIKE '%' || srhTitle || '%' OR srhTitle = '')
+        ORDER BY id ASC
+    """
+    )
+    suspend fun findMatchingRules(
+        packageName: String,
+        channelId: String,
+        notificationTitle: String
+    ): List<RuleEntity>
+
+    /**
      * 設計書 ⑤ コピー
      * トランザクション内で一意なタイトルを生成して挿入する
      */

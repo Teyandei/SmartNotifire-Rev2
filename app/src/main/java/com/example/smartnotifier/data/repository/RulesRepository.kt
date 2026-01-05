@@ -1,6 +1,8 @@
 package com.example.smartnotifier.data.repository
 
+import androidx.room.withTransaction
 import com.example.smartnotifier.data.db.AppDatabase
+import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -26,4 +28,39 @@ class RulesRepository(private val db: AppDatabase) {
      * id を指定して DAO 内でコピーを作成する
      */
     suspend fun duplicateRule(id: Int) = dao.duplicateRuleTransaction(id)
+
+    /**
+     * 通知ログからルールを作成する。
+     * - srhTitle は一意になるよう番号を付与
+     * - voiceMsg は null
+     * - enabled は False
+     */
+    suspend fun insertFromNotificationLog(log: NotificationLogEntity) {
+        db.withTransaction {
+            val uniqueCount = dao.countSimilarTitles(
+                packageName = log.packageName,
+                channelId = log.channelId,
+                srhTitle = log.title
+            )
+            val srhTitle = if (uniqueCount > 0) "${log.title}($uniqueCount)" else log.title
+            val rule = RuleEntity(
+                packageName = log.packageName,
+                channelId = log.channelId,
+                notificationIcon = log.notificationIcon,
+                srhTitle = srhTitle,
+                voiceMsg = null,
+                enabled = false
+            )
+            dao.insert(rule)
+        }
+    }
+
+    /**
+     * 通知タイトルに部分一致する有効なルールを取得
+     */
+    suspend fun findMatchingRules(
+        packageName: String,
+        channelId: String,
+        notificationTitle: String
+    ): List<RuleEntity> = dao.findMatchingRules(packageName, channelId, notificationTitle)
 }

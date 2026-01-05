@@ -59,4 +59,5 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.android)
 }

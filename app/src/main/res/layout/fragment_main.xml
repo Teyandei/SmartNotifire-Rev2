@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Smart Notifier"
+        android:text="@string/appName"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:text="並び順"
+        android:text="@string/caption_sort_list"
         app:layout_constraintBottom_toBottomOf="@+id/swSortList"
         app:layout_constraintStart_toEndOf="@+id/swSortList"
         app:layout_constraintTop_toTopOf="@+id/swSortList" />
@@ -44,12 +44,12 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginEnd="16dp"
-        android:contentDescription="Help"
+        android:contentDescription="@string/desc_help_icon"
         android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="@+id/txtAppTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/txtAppTitle"
-        app:srcCompat="@android:drawable/ic_menu_help" />
+        app:srcCompat="@drawable/ic_help_icon" />
 
     <View
         android:id="@+id/headerDivider"
@@ -77,7 +77,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
-        android:text="追加"
+        android:text="@string/btn_add"
         app:icon="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toTopOf="@+id/footerDivider"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -96,7 +96,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:text="通知タイトル"
+        android:text="@string/hintNotificationTitle"
         app:layout_constraintBottom_toBottomOf="@+id/tilNotificationTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tilNotificationTitle" />
@@ -116,7 +116,7 @@
             android:id="@+id/editNotificationTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="テスト通知"
+            android:hint="@string/hintNotificationTitle"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -125,7 +125,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
-        android:text="通知"
+        android:text="@string/notification_send"
         app:layout_constraintBottom_toBottomOf="@+id/tilNotificationTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tilNotificationTitle" />

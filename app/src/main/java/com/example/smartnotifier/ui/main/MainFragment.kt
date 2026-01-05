@@ -1,16 +1,30 @@
 package com.example.smartnotifier.ui.main
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.smartnotifier.R
+import com.example.smartnotifier.data.db.entity.RuleEntity
+import com.example.smartnotifier.core.tts.SpeechQueue
 import com.example.smartnotifier.databinding.FragmentMainBinding
+import com.example.smartnotifier.ui.logs.NotificationLogBottomSheet
 import com.example.smartnotifier.ui.rules.RulesAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -31,13 +45,12 @@ class MainFragment : Fragment() {
             viewModel.duplicateRule(rule)
         },
         onDeleteClicked = { rule ->
-            // TODO: 設計書 ⑥ 削除前に確認ダイアログを表示する
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.delete(rule)
-            }
+            confirmDelete(rule)
         },
         onPlayClicked = { rule ->
-            // TODO: 設計書 ⑧ TTSで再生 (TTSManager等の連携)
+            val message = rule.voiceMsg?.takeIf { it.isNotBlank() }
+                ?: rule.srhTitle
+            SpeechQueue.speakImmediately(requireContext(), message)
         },
         onRuleUpdated = { rule ->
             // テキスト入力中の Debounce 保存
@@ -52,6 +65,19 @@ class MainFragment : Fragment() {
     )
 
     private var rulesCollectJob: Job? = null
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                sendTestNotification()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.notification_permission_denied),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,12 +99,12 @@ class MainFragment : Fragment() {
 
         // ⑪: 追加ボタン
         binding.btnAddRow.setOnClickListener {
-            // TODO: 設計書 ⑪ 通知ログリストを表示する
+            showNotificationLogSheet()
         }
 
         // ⑬: 通知ボタン (テスト通知)
         binding.btnConfirm.setOnClickListener {
-            // TODO: 設計書 ⑬ テスト通知の発行ロジック
+            requestNotificationPermissionAndSend()
         }
 
         // ⑨: 並び順スイッチと DataStore の連動
@@ -86,6 +112,8 @@ class MainFragment : Fragment() {
 
         // ⑫: 通知タイトルと DataStore の連動
         setupNotificationTitleUi()
+
+        SpeechQueue.initialize(requireContext())
     }
 
     private fun setupSortListUi() {
@@ -130,5 +158,74 @@ class MainFragment : Fragment() {
         super.onDestroyView()
         rulesCollectJob?.cancel()
         _binding = null
+    }
+
+    private fun confirmDelete(rule: RuleEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.dialog_delete_title))
+            .setMessage(getString(R.string.dialog_delete_message))
+            .setPositiveButton(getString(R.string.dialog_delete_positive)) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.delete(rule)
+                }
+            }
+            .setNegativeButton(getString(R.string.dialog_delete_negative), null)
+            .show()
+    }
+
+    private fun showNotificationLogSheet() {
+        val sheet = NotificationLogBottomSheet()
+        binding.btnAddRow.hide()
+        sheet.onClosed = {
+            binding.btnAddRow.show()
+        }
+        sheet.show(parentFragmentManager, "notificationLogSheet")
+    }
+
+    private fun requestNotificationPermissionAndSend() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                return
+            }
+        }
+        sendTestNotification()
+    }
+
+    private fun sendTestNotification() {
+        val context = requireContext()
+        val notificationManager = NotificationManagerCompat.from(context)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHECK_CHANNEL_ID,
+                getString(R.string.notification_channel_check_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = getString(R.string.notification_channel_check_desc)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val title = binding.editNotificationTitle.text?.toString()
+            ?.takeIf { it.isNotBlank() }
+            ?: viewModel.notificationTitle.value
+
+        val notification = NotificationCompat.Builder(context, CHECK_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(getString(R.string.notification_check_body))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(CHECK_NOTIFICATION_ID, notification)
+    }
+
+    companion object {
+        private const val CHECK_NOTIFICATION_ID = 1001
+        private const val CHECK_CHANNEL_ID = "check"
     }
 }
