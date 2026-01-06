@@ -1,63 +1,70 @@
 package com.example.smartnotifier.ui.main
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.smartnotifier.core.notification.NotificationHelper
+import com.example.smartnotifier.core.service.SmartNotificationListenerService
+import com.example.smartnotifier.core.tts.TtsManager
+import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.databinding.FragmentMainBinding
 import com.example.smartnotifier.ui.rules.RulesAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.SimpleItemAnimator
+import com.example.smartnotifier.R
 
 class MainFragment : Fragment() {
 
     private val viewModel: MainViewModel by viewModels()
     private var _binding: FragmentMainBinding? = null
+
     private val binding get() = _binding!!
 
-    // 設計書 ①～⑧ に対応するアダプターの初期化
-    private val rulesAdapter = RulesAdapter(
-        onEnabledChanged = { rule, enabled ->
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.update(rule.copy(enabled = enabled))
+    private lateinit var notificationHelper: NotificationHelper
+    private var ttsManager: TtsManager? = null
+
+    // 権限リクエスト用
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) sendTestNotification()
+        else Snackbar.make(binding.root, R.string.msg_notification_permission_denied, Snackbar.LENGTH_LONG).show()
+    }
+
+    private lateinit var enabledChangeListener: (RuleEntity, Boolean, CompoundButton) -> Unit
+    private lateinit var rulesAdapter: RulesAdapter
+
+
+    // 通知ログアダプター
+    private val logAdapter by lazy {
+        NotificationLogAdapter(
+            onLogDoubleTapped = { log ->
+                viewModel.addRuleFromLog(log)
             }
-        },
-        onCopyClicked = { rule ->
-            viewModel.duplicateRule(rule)
-        },
-        onDeleteClicked = { rule ->
-            // TODO: 設計書 ⑥ 削除前に確認ダイアログを表示する
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.delete(rule)
-            }
-        },
-        onPlayClicked = { rule ->
-            // TODO: 設計書 ⑧ TTSで再生 (TTSManager等の連携)
-        },
-        onRuleUpdated = { rule ->
-            // テキスト入力中の Debounce 保存
-            viewModel.updateRuleDebounced(rule)
-        },
-        onRuleUpdatedImmediate = { rule ->
-            // フォーカスロスト時などの即時保存
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.update(rule)
-            }
-        }
-    )
+        )
+    }
 
     private var rulesCollectJob: Job? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -65,27 +72,153 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // RecyclerView セットアップ
+        // ①～⑧ ルールアダプター
+        enabledChangeListener = enabled@{ rule, enabled, button ->
+            if (!SmartNotificationListenerService.isPermissionGranted(requireContext())) {
+                // 念のため戻す
+                button.setOnCheckedChangeListener(null)
+                button.isChecked = false
+                button.setOnCheckedChangeListener { _, checked ->
+                    enabledChangeListener(rule, checked, button)
+                }
+                return@enabled
+            }
+            viewModel.updateImmediate(rule.copy(enabled = enabled))
+        }
+        rulesAdapter = RulesAdapter(
+            onEnabledChanged = enabledChangeListener,
+            onCopyClicked = { rule -> viewModel.duplicateRule(rule) },
+            onDeleteClicked = { rule -> showDeleteConfirmDialog(rule) },
+            onPlayClicked = { rule ->
+                val msg = rule.voiceMsg
+                if (!msg.isNullOrBlank()) {
+                    ttsManager?.speak(msg)
+                } else {
+                    Snackbar.make(binding.root, R.string.msg_no_voice_message, Snackbar.LENGTH_SHORT).show()
+                }
+            },
+            onRuleUpdated = { rule -> viewModel.updateRuleDebounced(rule) },
+            onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) }
+        )
+        notificationHelper = NotificationHelper(requireContext())
+        ttsManager = TtsManager(requireContext())
+
+        setupRecyclerViews()
+        setupObservers()
+        setupClickListeners()
+        setupSortListUi()
+        setupNotificationTitleUi()
+    }
+
+    private var permissionDialogShowing = false
+
+    override fun onResume() {
+        super.onResume()
+
+        val granted = SmartNotificationListenerService.isPermissionGranted(requireContext())
+        viewModel.setNotificationAccessGranted(granted)
+
+        if (!granted) {
+            showNotificationAccessGuideDialog()
+        } else {
+            permissionDialogShowing = false
+        }
+    }
+
+    private fun setupRecyclerViews() {
         binding.recyclerRules.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = rulesAdapter
+            (binding.recyclerRules.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        }
+        binding.recyclerLogs.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = logAdapter
+        }
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.errorMessage.collect { message ->
+                Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isShowingLogList.collect { isShowing ->
+                binding.layoutLogList.isVisible = isShowing
+                binding.btnAddRow.isVisible = !isShowing
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.notificationLogs.collect { logs ->
+                logAdapter.submitList(logs)
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.notificationAccessGranted.collect { granted ->
+                rulesAdapter.setNotificationAccessGranted(granted)
+            }
         }
 
-        // ⑪: 追加ボタン
+    }
+
+    private fun setupClickListeners() {
         binding.btnAddRow.setOnClickListener {
-            // TODO: 設計書 ⑪ 通知ログリストを表示する
+            viewModel.setShowingLogList(true)
         }
-
-        // ⑬: 通知ボタン (テスト通知)
         binding.btnConfirm.setOnClickListener {
-            // TODO: 設計書 ⑬ テスト通知の発行ロジック
+            checkPermissionAndSendNotification()
         }
+        binding.mainRoot.setOnClickListener {
+            if (viewModel.isShowingLogList.value) {
+                viewModel.setShowingLogList(false)
+            }
+        }
+    }
 
-        // ⑨: 並び順スイッチと DataStore の連動
-        setupSortListUi()
+    private fun showDeleteConfirmDialog(rule: RuleEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dlg_title_delete_confirm)
+            .setMessage(R.string.dlg_msg_delete_confirm)
+            .setNegativeButton(R.string.btn_cancel, null)
+            .setPositiveButton(R.string.btn_delete) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.delete(rule)
+                    Snackbar.make(binding.root, R.string.dle_msg_delete_sucess, Snackbar.LENGTH_SHORT).show()
+                }
+            }
+            .show()
+    }
 
-        // ⑫: 通知タイトルと DataStore の連動
-        setupNotificationTitleUi()
+    private fun showNotificationAccessGuideDialog() {
+        if (permissionDialogShowing) return
+        permissionDialogShowing = true
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.dlg_title_notification_access_required))
+            .setMessage(getString(R.string.dlg_msg_notification_access_required))
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.btn_ok)) { _, _ ->
+                permissionDialogShowing = false
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            }
+            .show()
+    }
+
+    private fun checkPermissionAndSendNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) 
+                        == PackageManager.PERMISSION_GRANTED -> sendTestNotification()
+                else -> requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            sendTestNotification()
+        }
+    }
+
+    private fun sendTestNotification() {
+        notificationHelper.sendTestNotification(viewModel.notificationTitle.value)
     }
 
     private fun setupSortListUi() {
@@ -97,7 +230,6 @@ class MainFragment : Fragment() {
                 restartRulesCollect(orderByPackageAsc)
             }
         }
-
         binding.swSortList.setOnCheckedChangeListener { _, isChecked ->
             viewModel.updateSortList(isChecked)
         }
@@ -120,7 +252,6 @@ class MainFragment : Fragment() {
                 }
             }
         }
-
         binding.editNotificationTitle.doAfterTextChanged { text ->
             viewModel.updateNotificationTitle(text?.toString() ?: "")
         }
@@ -128,6 +259,8 @@ class MainFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        ttsManager?.shutdown()
+        ttsManager = null
         rulesCollectJob?.cancel()
         _binding = null
     }

@@ -8,5 +8,32 @@
     <string name="hintNotificationTitle">通知タイトル</string>
     <string name="autoFillHistNotificationTitle">通知タイトルを入力してください</string>
     <string name="captionNtfConfirm">通知確認</string>
-    <string name="captionConfirm">確認</string>
+    <string name="captionConfirm">通知</string>
+    <string name="lbl_NtfLogListNote">通知ログーダブルタップで追加</string>
+    <string name="captionSearchTitle">検索タイトル</string>
+    <string name="captionVoiceMsg">音声メッセージ</string>
+    <string name="captionAddBtn">追加</string>
+
+    <!-- 初期データのデフォルト値 -->
+    <string name="default_check_notification_title">テスト通知</string>
+    <string name="default_check_voice_message">通知確認が成功しました。</string>
+    <string name="dlg_title_notification_access_required">通知へのアクセス権限が必要です</string>
+    <string name="dlg_msg_notification_access_required">
+SmartNotifire は、通知に対してあなたが設定したルールに従い、対象の通知内容を音声で読み上げるアプリです。
+この機能のために、Android の「通知へのアクセス」権限を有効にする必要があります。
+
+アプリは通知を識別するための情報と、通知のタイトルを利用します。
+それ以外の通知内容は保存・送信しません。
+
+OK をタップすると設定画面が開きます。一覧から SmartNotifire を見つけて、権限を有効にしてください。
+</string>
+    <string name="btn_ok">OK</string>
+    <string name="dlg_title_delete_confirm">ルールの削除</string>
+    <string name="dlg_msg_delete_confirm">このルールを削除してもよろしいですか？</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_delete">削除</string>
+    <string name="dle_msg_delete_sucess">ルールを削除しました</string>
+    <string name="msg_notification_permission_denied">通知権限が拒否されました。</string>
+    <string name="msg_no_voice_message">音声メッセージが設定されていません。</string>
+
 </resources>

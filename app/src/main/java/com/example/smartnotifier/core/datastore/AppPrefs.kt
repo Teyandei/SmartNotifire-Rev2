@@ -20,13 +20,8 @@ object AppPrefs {
     // ⑫ 通知タイトル
     val KEY_NOTIFICATION_TITLE: Preferences.Key<String> =
         stringPreferencesKey("notification_title")
-
-    const val DEFAULT_CHECK_NOTIFICATION_TITLE = "テスト通知"
-
-    const val DEFAULT_CHECK_VOICE_MESSAGE = "通知確認が成功しました。"
 }
 
-// ★ ここが “唯一の” DataStore 定義になる
 val Context.appPrefsDataStore by preferencesDataStore(
     name = AppPrefs.NAME
 )

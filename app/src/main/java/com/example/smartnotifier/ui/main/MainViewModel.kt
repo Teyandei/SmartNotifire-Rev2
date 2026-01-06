@@ -1,12 +1,15 @@
 package com.example.smartnotifier.ui.main
 
 import android.app.Application
+import android.database.sqlite.SQLiteConstraintException
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.smartnotifier.R
 import com.example.smartnotifier.core.datastore.AppPrefs
 import com.example.smartnotifier.core.datastore.appPrefsDataStore
 import com.example.smartnotifier.data.db.DatabaseProvider
+import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.flow.*
@@ -17,53 +20,93 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     private val dataStore = appContext.appPrefsDataStore
     private val db = DatabaseProvider.get(appContext)
-    private val rulesRepo = RulesRepository(db)
+    val rulesRepo = RulesRepository(db)
+    private val logDao = db.notificationLogDao()
 
-    // 編集中のルールを一時的に保持するバッファ (Debounce用)
     private val _ruleUpdateBuffer = MutableSharedFlow<RuleEntity>(replay = 0)
 
+    private val _errorMessage = MutableSharedFlow<String>()
+    val errorMessage = _errorMessage.asSharedFlow()
+
+    val notificationLogs: StateFlow<List<NotificationLogEntity>> = logDao.getLatestLogs()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private val _isShowingLogList = MutableStateFlow(false)
+    val isShowingLogList = _isShowingLogList.asStateFlow()
+
+    private val _notificationAccessGranted = MutableStateFlow(false)
+    val notificationAccessGranted: StateFlow<Boolean> = _notificationAccessGranted.asStateFlow()
+
+    fun setNotificationAccessGranted(granted: Boolean) {
+        _notificationAccessGranted.value = granted
+    }
+
     init {
-        // Debounce を使った自動保存ロジック
         viewModelScope.launch {
             _ruleUpdateBuffer
-                .debounce(500) // 0.5秒間入力がなければ実行
+                .debounce(500)
                 .collect { rule ->
-                    rulesRepo.update(rule)
+                    saveRuleSafely(rule)
                 }
         }
     }
 
-    // --- Rules 一覧 ---
+    private suspend fun saveRuleSafely(rule: RuleEntity) {
+        try {
+            rulesRepo.update(rule)
+        } catch (e: SQLiteConstraintException) {
+            _errorMessage.emit("同じアプリに同じ検索タイトルが既に設定されています。")
+        } catch (e: Exception) {
+            _errorMessage.emit("保存に失敗しました。")
+        }
+    }
+
+    fun setShowingLogList(show: Boolean) {
+        _isShowingLogList.value = show
+    }
+
+    fun addRuleFromLog(log: NotificationLogEntity) {
+        viewModelScope.launch {
+            try {
+                val count = rulesRepo.dao.countSimilarTitles(log.packageName, log.channelId, log.title)
+                val newTitle = if (count > 0) "${log.title}($count)" else log.title
+                
+                val newRule = RuleEntity(
+                    packageName = log.packageName,
+                    channelId = log.channelId,
+                    notificationIcon = log.notificationIcon,
+                    srhTitle = newTitle,
+                    voiceMsg = null,
+                    enabled = false
+                )
+                rulesRepo.insert(newRule)
+                setShowingLogList(false)
+                _errorMessage.emit("ルールを追加しました: $newTitle")
+            } catch (e: Exception) {
+                _errorMessage.emit("ルールの追加に失敗しました。")
+            }
+        }
+    }
 
     private val rulesByOrderNewest = rulesRepo
         .observeAllRulesOrderByNewest()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            emptyList()
-        )
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private val rulesByOrderByPackageAsc = rulesRepo
         .observeRulesOrderByPackageAsc()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            emptyList()
-        )
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun rules(orderNewest: Boolean = true): StateFlow<List<RuleEntity>> =
         if (orderNewest) rulesByOrderNewest else rulesByOrderByPackageAsc
 
     suspend fun insert(rule: RuleEntity) = rulesRepo.insert(rule)
     
-    /**
-     * 即時更新 (スイッチ切り替えやフォーカスロスト用)
-     */
-    suspend fun update(rule: RuleEntity) = rulesRepo.update(rule)
+    fun updateImmediate(rule: RuleEntity) {
+        viewModelScope.launch {
+            saveRuleSafely(rule)
+        }
+    }
 
-    /**
-     * バッファ経由の更新 (テキスト入力中用)
-     */
     fun updateRuleDebounced(rule: RuleEntity) {
         viewModelScope.launch {
             _ruleUpdateBuffer.emit(rule)
@@ -72,25 +115,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun delete(rule: RuleEntity) = rulesRepo.delete(rule)
     
-    /**
-     * 設計書 ⑤ コピー (トランザクション使用)
-     */
     fun duplicateRule(rule: RuleEntity) {
         viewModelScope.launch {
-            rulesRepo.duplicateRule(rule.id)
+            try {
+                rulesRepo.duplicateRule(rule.id)
+            } catch (e: Exception) {
+                _errorMessage.emit("コピーに失敗しました。")
+            }
         }
     }
-
-    // --- ⑨: 並び順 sortList ---
 
     val sortList: StateFlow<Boolean> =
         dataStore.data
             .map { prefs -> prefs[AppPrefs.KEY_SORT_LIST_ORDER] ?: false }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.Eagerly,
-                false
-            )
+            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun updateSortList(orderByPackageAsc: Boolean) {
         viewModelScope.launch {
@@ -100,16 +138,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- ⑫: 通知タイトル ntfTitle ---
-
+    // ⑫: 通知タイトル (デフォルト値をリソースから取得)
     val notificationTitle: StateFlow<String> =
         dataStore.data
-            .map { prefs -> prefs[AppPrefs.KEY_NOTIFICATION_TITLE] ?: AppPrefs.DEFAULT_CHECK_NOTIFICATION_TITLE }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.Eagerly,
-                AppPrefs.DEFAULT_CHECK_NOTIFICATION_TITLE
-            )
+            .map { prefs -> 
+                prefs[AppPrefs.KEY_NOTIFICATION_TITLE] ?: appContext.getString(R.string.default_check_notification_title) 
+            }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, appContext.getString(R.string.default_check_notification_title))
 
     fun updateNotificationTitle(title: String) {
         viewModelScope.launch {

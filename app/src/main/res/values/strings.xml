@@ -5,8 +5,35 @@
     <string name="captionAppOrder">By App</string>
     <string name="captionOrder">Order</string>
     <string name="descAbout">About this Applocation</string>
-    <string name="hintNotificationTitle">Nitification Title</string>
+    <string name="hintNotificationTitle">Notification Title</string>
     <string name="autoFillHistNotificationTitle">Input notification\'s title</string>
-    <string name="captionNtfConfirm">Confirm  Nitification</string>
-    <string name="captionConfirm">Confirm</string>
+    <string name="captionNtfConfirm">Confirm Notification</string>
+    <string name="captionConfirm">Notify</string>
+    <string name="lbl_NtfLogListNote">Notification log - Double tap to add</string>
+    <string name="captionSearchTitle">Search Title</string>
+    <string name="captionVoiceMsg">Voice Message</string>
+    <string name="captionAddBtn">Add</string>
+    
+    <!-- Default values for initial data -->
+    <string name="default_check_notification_title">Test Notification</string>
+    <string name="default_check_voice_message">Notification check succeeded.</string>
+    <string name="dlg_title_notification_access_required">Notification access required</string>
+    <string name="dlg_msg_notification_access_required">
+SmartNotifire reads notifications and speaks them aloud based on your rules.
+To work, it needs Android’s “Notification access” permission.
+
+SmartNotifire uses only the information needed to identify notifications and the notification title.
+It does not save or send other notification content.
+
+Tap OK to open settings, then enable notification access for SmartNotifire.
+</string>
+    <string name="btn_ok">OK</string>
+    <string name="dlg_title_delete_confirm">Deleting a Rule</string>
+    <string name="dlg_msg_delete_confirm">Are you sure you want to delete this rule?</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+    <string name="dle_msg_delete_sucess">The rule was deleted</string>
+    <string name="msg_notification_permission_denied">Notification permission denied.</string>
+    <string name="msg_no_voice_message">No voice message is set.</string>
+
 </resources>

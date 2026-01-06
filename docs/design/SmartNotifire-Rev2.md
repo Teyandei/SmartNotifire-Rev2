@@ -1,6 +1,6 @@
 # SmartNotifire-Rev2
 
-Document Rev2 2025-12-31 T.Yoshizawa
+Document Rev3 2026-01-05 T.Yoshizawa
 
 ## 目的
 
@@ -102,7 +102,7 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 | ID | ID | int | - | 主キー（自動インクリメント） |
 | パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
 | チャンネルID | ChannelID | String | null | 通知チャンネル |
-| 通知アイコン | NotificationIcon | Uri | null | 通知を処理するアプリが使用するアイコンのUri |
+| 通知アイコン | NotificationIcon | Uri | null | 未使用。null固定 |
 | 検索タイトル | SrhTitle | String | empty | 通知タイトルの検索キーワード。部分一致、empty時は全てヒットとする。 |
 | 音声メッセージ | VoiceMsg | String | null | 本アプリが検索でヒットした場合に使用するTTS対象 |
 | 許可 | Enabled | bool | False | True: 検索する、 False: 検索しない。 |
@@ -124,7 +124,7 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 | ID | ID | int | - | 主キー（自動インクリメント） |
 | パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
 | チャンネルID | ChannelID | String | null | 通知チャンネル |
-| 通知アイコン | NotificationIcon | Uri | null | 本アプリが検索でヒットした場合に使用する通知音ID |
+| 通知アイコン | NotificationIcon | Uri | null | 未使用。null固定 |
 | タイトル | Title | String | null | 通知タイトル |
 
 ### ３．トランザクション
@@ -141,7 +141,8 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 | No. | 名称 | 識別子 | 型 | 説明及び動作 |
 | --- | --- | --- | --- | --- |
-| ① | アプリアイコン | appIcon | Image | Rules.NotificationIconをアイコンイメージ化。 |
+| ① | アプリアイコン | appIcon | Image | Rules.PackageNameをPackageManager（アプリアイコン）から取得して表示する。
+但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
 | ② | アプリ名 | appName | Label | Rules.PackageNameから変換したアプリ名。 |
 | ③ | 検索タイトル | srhTitle | TextBox | Rules.SrhTitleの内容。 |
 | ④ | 音声メッセージ | voiceMsg | TextBox | Rules.VoiceMsgの内容。 |
@@ -170,7 +171,8 @@ Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
 
 | No. | 名称 | 識別子 | 型 | 説明及び動作 |
 | --- | --- | --- | --- | --- |
-| ① | アプリアイコン | appIcon | Image | NotificationLog.NotificationIconをアイコンイメージ化。 |
+| ① | アプリアイコン | appIcon | Image | NotificationLog.PackageNameをPackageManager（アプリアイコン）から取得して表示する。
+但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
 | ② | アプリ名 | appName | Label | NotificationLog.PackageNameから変換したアプリ名。 |
 | ③ | 通知タイトル | ntfTitle | Label | NotificationLog.Titleの内容。 |
 - リストは通知ログの全レコードを全て設定せず、表示行＋バッファ（１０行※現時点で仮定義）といった形で保持し、下へのスクロールによって、順次データ読み取り・設定を行ってパフォーマンス低下を軽減すること。
@@ -186,7 +188,7 @@ Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
     | --- | --- | --- |
     | PackageName | PackageName | sourceを設定 |
     | ChannelID | ChannelID | sourceを設定 |
-    | NotificationIcon | NotificationIcon | sourceを設定 |
+    | - | NotificationIcon | nullを設定 |
     | Title | SrhTitle | sourceを設定。但し、
     Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
     | - | VoiceMsg | nullを設定 |
@@ -249,7 +251,7 @@ Riporitogy及び画面仕様で記述されている情報で通知モニタ機�
     - 通知検出ルールの内容
         - パッケージ名：アプリパッケージ
         - チャンネルID：`check`
-        - 通知アイコン：本アプリのアイコンUri
+        - 通知アイコン：nullを設定する。
         - 検索タイトル：画面の通知タイトルデフォルト値と同じ
         - 音声メッセージ：通知確認が成功しました。
         - 許可：False
@@ -292,6 +294,7 @@ Riporitogy及び画面仕様で記述されている情報で通知モニタ機�
         **修正指針**
         
 - Rev2: 2025-12-31 通知確認機能追加
+- Rev3: 2026-01-05 Rule, NotoficationLogテーブルのIcon（Uri)は未使用とする。代わりにPaclageNameからのアイコン取得とし、オーバーヘッドを考慮して、イメージはメモリキャッシュを利用する。
 
 ## ChatGPTチャット履歴
 
