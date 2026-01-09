@@ -40,9 +40,9 @@ class NotificationHelper(private val context: Context) {
         createNotificationChannels()
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID_CHECK)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_launcher_small)
             .setContentTitle(title)
-            .setContentText("通知確認を目的とした通知です。")
+            .setContentText(context.getString(R.string.msg_text_message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
 

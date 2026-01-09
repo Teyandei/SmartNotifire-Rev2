@@ -8,7 +8,6 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
-import com.example.smartnotifier.data.db.entity.RuleEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 
@@ -41,11 +40,22 @@ class SmartNotificationListenerService : NotificationListenerService() {
         serviceScope.cancel()
     }
 
+    /**
+     * 通知がステータスバーに表示されたときに呼ばれるコールバック。
+     *
+     * この時点では通知はまだユーザーに表示されておらず、
+     * 内容の解析やログ保存に適している。
+     *
+     * @param sbn システムから渡される通知情報
+     */
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
         val channelId = sbn.notification.channelId
         val extras = sbn.notification.extras
-        val title = extras.getString("android.title") ?: ""
+        val title = extras
+            .getCharSequence(android.app.Notification.EXTRA_TITLE)
+            ?.toString()
+            .orEmpty()
         
         saveToLog(packageName, channelId, title)
 
@@ -58,14 +68,16 @@ class SmartNotificationListenerService : NotificationListenerService() {
         serviceScope.launch {
             val db = DatabaseProvider.get(this@SmartNotificationListenerService)
             val logDao = db.notificationLogDao()
-            
-            val logEntry = NotificationLogEntity(
-                packageName = packageName,
-                channelId = channelId,
-                notificationIcon = null,
-                title = title
-            )
-            logDao.insert(logEntry)
+
+            val logSameCount = logDao.getLogCount(packageName, channelId, title)
+            if (logSameCount == 0) {
+                val logEntry = NotificationLogEntity(
+                    packageName = packageName,
+                    channelId = channelId,
+                    title = title
+                )
+                logDao.insert(logEntry)
+            }
             logDao.trimLogs(100)
         }
     }
@@ -79,6 +91,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
         val matchedRule = rules.find { rule ->
             rule.enabled && 
             rule.packageName == packageName &&
+            rule.channelId == channelId &&
             (rule.srhTitle.isBlank() || title.contains(rule.srhTitle, ignoreCase = true))
         }
 

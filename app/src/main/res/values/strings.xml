@@ -35,5 +35,8 @@ Tap OK to open settings, then enable notification access for SmartNotifire.
     <string name="dle_msg_delete_sucess">The rule was deleted</string>
     <string name="msg_notification_permission_denied">Notification permission denied.</string>
     <string name="msg_no_voice_message">No voice message is set.</string>
+    <string name="msg_wrn_dup_same_name">The same search title is already set for the same app.</string>
+    <string name="msg_err_save_failed">Saving failed.</string>
+    <string name="msg_text_message">This notification is for notification confirmation purposes.</string>
 
 </resources>

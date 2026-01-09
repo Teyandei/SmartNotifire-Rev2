@@ -10,6 +10,9 @@ interface NotificationLogDao {
     @Query("SELECT * FROM notification_log ORDER BY id DESC LIMIT :limit")
     fun getLatestLogs(limit: Int = 100): Flow<List<NotificationLogEntity>>
 
+    @Query("SELECT Count(*) FROM notification_log WHERE packageName = :packageName AND channelId = :channelId AND title = :title")
+    suspend fun getLogCount(packageName: String, channelId: String, title: String): Int
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(log: NotificationLogEntity)
 

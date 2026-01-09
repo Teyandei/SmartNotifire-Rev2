@@ -1,11 +1,10 @@
 package com.example.smartnotifier.data.repository
 
 import com.example.smartnotifier.data.db.AppDatabase
-import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import kotlinx.coroutines.flow.Flow
 
-class RulesRepository(private val db: AppDatabase) {
+class RulesRepository(db: AppDatabase) {
     val dao = db.ruleDao() // ViewModel から利用可能にする
 
     suspend fun insert(rule: RuleEntity) = dao.insert(rule)

@@ -12,8 +12,10 @@ import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.repository.RulesRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -42,22 +44,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
+        observeRuleUpdates()
+    }
+
+     @OptIn(FlowPreview::class)
+    private fun observeRuleUpdates() {
         viewModelScope.launch {
             _ruleUpdateBuffer
-                .debounce(500)
-                .collect { rule ->
-                    saveRuleSafely(rule)
-                }
+                .debounce(500.milliseconds)
+                .collect { saveRuleSafely(it) }
         }
     }
+
 
     private suspend fun saveRuleSafely(rule: RuleEntity) {
         try {
             rulesRepo.update(rule)
-        } catch (e: SQLiteConstraintException) {
-            _errorMessage.emit("同じアプリに同じ検索タイトルが既に設定されています。")
-        } catch (e: Exception) {
-            _errorMessage.emit("保存に失敗しました。")
+        } catch (_: SQLiteConstraintException) {
+            _errorMessage.emit(R.string.msg_wrn_dup_same_name.toString())
+        } catch (_: Exception) {
+            _errorMessage.emit(R.string.msg_err_save_failed.toString())
         }
     }
 
@@ -74,7 +80,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val newRule = RuleEntity(
                     packageName = log.packageName,
                     channelId = log.channelId,
-                    notificationIcon = log.notificationIcon,
                     srhTitle = newTitle,
                     voiceMsg = null,
                     enabled = false
@@ -82,7 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 rulesRepo.insert(newRule)
                 setShowingLogList(false)
                 _errorMessage.emit("ルールを追加しました: $newTitle")
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _errorMessage.emit("ルールの追加に失敗しました。")
             }
         }
@@ -119,7 +124,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 rulesRepo.duplicateRule(rule.id)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _errorMessage.emit("コピーに失敗しました。")
             }
         }

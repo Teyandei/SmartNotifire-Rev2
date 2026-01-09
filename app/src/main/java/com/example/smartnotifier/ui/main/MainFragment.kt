@@ -30,6 +30,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.smartnotifier.R
+import com.example.smartnotifier.ui.log.NotificationLogAdapter
 
 class MainFragment : Fragment() {
 

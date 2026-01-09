@@ -1,8 +1,6 @@
 package com.example.smartnotifier.core.startup
 
 import android.content.Context
-import android.net.Uri
-import androidx.core.net.toUri
 import androidx.datastore.preferences.core.edit
 import androidx.startup.Initializer
 import com.example.smartnotifier.R
@@ -65,13 +63,10 @@ class DatabaseInitializer : Initializer<Unit> {
         rulesRepository: RulesRepository
     ) {
         val packageName = context.packageName
-        val iconUri: Uri = "android.resource://$packageName/${R.mipmap.ic_launcher}".toUri()
-        
         val initialRule = RuleEntity(
             id = 0,
             packageName = packageName,
             channelId = "check",
-            notificationIcon = iconUri,
             srhTitle = context.getString(R.string.default_check_notification_title),
             voiceMsg = context.getString(R.string.default_check_voice_message),
             enabled = false

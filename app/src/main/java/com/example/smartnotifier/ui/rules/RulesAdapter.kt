@@ -1,7 +1,7 @@
 package com.example.smartnotifier.ui.rules
 
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.databinding.ItemRuleBinding
+import com.example.smartnotifier.ui.common.util.IconCache
 
 /**
  * ルール一覧表示用の RecyclerView.Adapter
@@ -88,45 +89,18 @@ class RulesAdapter(
             val context = binding.root.context
             val pm = context.packageManager
 
-            val pkg = rule.packageName?.trim().orEmpty()
-            if (pkg.isBlank()) {
-                binding.txtAppName.text = "(unknown)"
-                binding.imgAppIcon.setImageResource(android.R.drawable.sym_def_app_icon)
-                return
-            }
-
             // ② アプリ名（packageName -> label）
             try {
-                val appInfo = pm.getApplicationInfo(pkg, 0)
+                val appInfo = pm.getApplicationInfo(rule.packageName, 0)
                 binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
-            } catch (e: PackageManager.NameNotFoundException) {
+                binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
+            } catch (_: PackageManager.NameNotFoundException) {
                 // 取れない場合は packageName を表示
-                binding.txtAppName.text = pkg
+                binding.txtAppName.text = rule.packageName
             } catch (e: Exception) {
-                binding.txtAppName.text = pkg
-            }
-            val loaded = tryLoadIconFromNotificationUri(rule)
-            if (!loaded) {
-                try {
-                    binding.imgAppIcon.setImageDrawable(pm.getApplicationIcon(pkg))
-                } catch (e: Exception) {
-                    binding.imgAppIcon.setImageResource(android.R.drawable.sym_def_app_icon)
-                }
+                Log.e("RulesAdapter", "Exception in bindAppInfo", e)
             }
         }
-        private fun tryLoadIconFromNotificationUri(rule: RuleEntity): Boolean {
-            val uri = rule.notificationIcon ?: return false
-            return try {
-                binding.root.context.contentResolver.openInputStream(uri)?.use { input ->
-                    val bmp = BitmapFactory.decodeStream(input) ?: return false
-                    binding.imgAppIcon.setImageBitmap(bmp)
-                    true
-                } ?: false
-            } catch (_: Exception) {
-                false
-            }
-        }
-
         fun bind(rule: RuleEntity) {
             // ①② アプリアイコン・アプリ名を表示
             bindAppInfo(rule)

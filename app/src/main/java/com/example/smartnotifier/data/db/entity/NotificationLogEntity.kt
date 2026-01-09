@@ -1,10 +1,15 @@
 package com.example.smartnotifier.data.db.entity
 
-import android.net.Uri
 import androidx.room.*
 
 @Entity(
-    tableName = "notification_log"
+    tableName = "notification_log",
+    indices = [
+        Index(
+            value = ["packageName", "channelId", "title"],
+            unique = true
+        )
+    ]
 )
 
 data class NotificationLogEntity(
@@ -13,6 +18,5 @@ data class NotificationLogEntity(
 
     val packageName: String,
     val channelId: String,
-    val notificationIcon: Uri?,
     val title: String
 )

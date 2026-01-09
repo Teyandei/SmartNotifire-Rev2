@@ -35,5 +35,8 @@ OK をタップすると設定画面が開きます。一覧から SmartNotifire
     <string name="dle_msg_delete_sucess">ルールを削除しました</string>
     <string name="msg_notification_permission_denied">通知権限が拒否されました。</string>
     <string name="msg_no_voice_message">音声メッセージが設定されていません。</string>
+    <string name="msg_wrn_dup_same_name">同じアプリに同じ検索タイトルが既に設定されています。</string>
+    <string name="msg_err_save_failed">保存に失敗しました。</string>
+    <string name="msg_text_message">通知確認を目的とした通知です。</string>
 
 </resources>

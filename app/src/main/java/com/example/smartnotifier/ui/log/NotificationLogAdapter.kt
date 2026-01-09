@@ -1,6 +1,5 @@
-package com.example.smartnotifier.ui.main
+package com.example.smartnotifier.ui.log
 
-import android.content.pm.PackageManager
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -10,6 +9,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.databinding.ItemNotificationLogBinding
+import com.example.smartnotifier.ui.common.util.IconCache
+
+
 
 /**
  * 通知ログ表示用の RecyclerView.Adapter
@@ -34,29 +36,21 @@ class NotificationLogAdapter(
             val pm = context.packageManager
 
             // アプリ情報の表示
-            try {
-                val appInfo = pm.getApplicationInfo(log.packageName, 0)
-                binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
-                if (log.notificationIcon != null) {
-                    binding.imgAppIcon.setImageURI(log.notificationIcon)
-                } else {
-                    binding.imgAppIcon.setImageDrawable(pm.getApplicationIcon(appInfo))
-                }
-            } catch (e: Exception) {
-                binding.txtAppName.text = log.packageName
-                binding.imgAppIcon.setImageResource(android.R.drawable.sym_def_app_icon)
-            }
+            val appInfo = pm.getApplicationInfo(log.packageName, 0)
+            binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
+            binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, log.packageName))
 
             // 通知タイトル
             binding.txtNtfTitle.text = log.title
 
             // ダブルタップ検知
-            val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-                override fun onDoubleTap(e: MotionEvent): Boolean {
-                    onLogDoubleTapped(log)
-                    return true
-                }
-            })
+            val gestureDetector =
+                GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onDoubleTap(e: MotionEvent): Boolean {
+                        onLogDoubleTapped(log)
+                        return true
+                    }
+                })
 
             binding.root.setOnTouchListener { v, event ->
                 gestureDetector.onTouchEvent(event)
