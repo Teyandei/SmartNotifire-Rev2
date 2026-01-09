@@ -149,25 +149,18 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 | No. | 名称 | 識別子 | 型 | 説明及び動作 |
 | --- | --- | --- | --- | --- |
-| ① | アプリアイコン | appIcon | Image | Rules.PackageNameをPackageManager（アプリアイコン）から取得して表示する。
-但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
+| ① | アプリアイコン | appIcon | Image | Rules.PackageNameをPackageManager（アプリアイコン）から取得して表示する。但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
 | ② | アプリ名 | appName | Label | Rules.PackageNameから変換したアプリ名。 |
 | ③ | 検索タイトル | srhTitle | TextBox | Rules.SrhTitleの内容。 |
 | ④ | 音声メッセージ | voiceMsg | TextBox | Rules.VoiceMsgの内容。 |
 | ⑤ | コピー | copyRow | Icon | タップで選択している行のコピー※を通知検出ルール(Rules)に追加。※Rules.SrhTitleが一意になるように番号を付与。 |
-| ⑥ | 削除 | deleteRow | Icon | タップで選択している行を削除する。
-削除前にユーザーに確認するダイアログを表示する。 |
+| ⑥ | 削除 | deleteRow | Icon | タップで選択している行を削除する。削除前にユーザーに確認するダイアログを表示する。 |
 | ⑦ | 有効 | enabled | SW Box | Rules.Enablesの内容。 |
 | ⑧ | プレイ | playVoice | Button | Rules.VoiceMsgをTTSで音声出力する。 |
-| ⑨ | 並び順 | sortList | SW Box | Rules表示の並び順
-False:Rules.IDの降順
-Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
-| ⑩ | ヘルプ | helpIcon | Icon | タップで、アプリのバージョンと簡単な説明を表示。
-後述のヘルプ表示内容を参照。 |
-| ⑪ | 追加 | addRow | Button | 後述のの通知ログリストを表示する。スクロールエリアにあるが、このボタン位置は固定する。
-通知履歴リスト表示時は隠れるか、通知ログリスト非表示になるまで消す。 |
-| ⑫ | 通知タイトル | ntfTitle | TextBox | このアプリが通知をするときのタイトル名
-（デフォルト）テスト通知 |
+| ⑨ | 並び順 | sortList | SW Box | Rules表示の並び順False:Rules.IDの降順Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
+| ⑩ | ヘルプ | helpIcon | Icon | タップで、アプリのバージョンと簡単な説明を表示。後述のヘルプ表示内容を参照。 |
+| ⑪ | 追加 | addRow | Button | 後述のの通知ログリストを表示する。スクロールエリアにあるが、このボタン位置は固定する。通知履歴リスト表示時は隠れるか、通知ログリスト非表示になるまで消す。 |
+| ⑫ | 通知タイトル | ntfTitle | TextBox | このアプリが通知をするときのタイトル名（デフォルト）テスト通知 |
 | ⑬ | 通知 | ntfSend | Button | 通知タイトルで通知する。 |
 
 ### ３．通知ログリスト
@@ -179,8 +172,7 @@ Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
 
 | No. | 名称 | 識別子 | 型 | 説明及び動作 |
 | --- | --- | --- | --- | --- |
-| ① | アプリアイコン | appIcon | Image | NotificationLog.PackageNameをPackageManager（アプリアイコン）から取得して表示する。
-但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
+| ① | アプリアイコン | appIcon | Image | NotificationLog.PackageNameをPackageManager（アプリアイコン）から取得して表示する。但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
 | ② | アプリ名 | appName | Label | NotificationLog.PackageNameから変換したアプリ名。 |
 | ③ | 通知タイトル | ntfTitle | Label | NotificationLog.Titleの内容。 |
 - リストは通知ログの全レコードを全て設定せず、表示行＋バッファ（１０行※現時点で仮定義）といった形で保持し、下へのスクロールによって、順次データ読み取り・設定を行ってパフォーマンス低下を軽減すること。
@@ -197,8 +189,7 @@ Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
     | PackageName | PackageName | sourceを設定 |
     | ChannelID | ChannelID | sourceを設定 |
     | - | NotificationIcon | nullを設定 |
-    | Title | SrhTitle | sourceを設定。但し、
-    Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
+    | Title | SrhTitle | sourceを設定。但し、Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
     | - | VoiceMsg | nullを設定 |
     | - | Enabled | Falseを設定 |
     
