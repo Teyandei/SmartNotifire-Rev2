@@ -1,4 +1,15 @@
 <resources>
+    <!-- Main screen (Rules list) -->
+    <string name="copy">copy</string>
+    <string name="enabled">Enabled</string>
+    <string name="play">Play</string>
+    <string name="sort_order">Sort Order</string>
+    <string name="help">Help</string>
+
+    <!-- Help dialog (No.10 helpIcon) -->
+    <string name="help_dialog_title">About Smart Notifire</string>
+    <string name="help_dialog_message">Smart Notifire 2.x.x\n\nFor more details, check the README on GitHub:\nhttps://github.com/Teyandei/SmartNotifire-Rev2</string>
+
     <string name="app_name">SmartNotifier</string>
     <string name="appName" translatable="false">Smart Notifier</string>
     <string name="sortList">Newest</string>

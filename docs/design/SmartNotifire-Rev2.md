@@ -1,6 +1,6 @@
 # SmartNotifire-Rev2
 
-Document Rev4 2026-01-08 T.Yoshizawa
+Document Rev5 2026-01-11 T.Yoshizawa
 
 ## 目的
 
@@ -31,44 +31,45 @@ Androidアプリの通知にユーザが決めた条件（アプリ名、通知�
     - ターゲットAPI: API35（Android15）
     - 推奨下限(minSdkVersion) API26（Android8）
 - アーキテクチャ
-    
-    Android Jetpack の推奨アーキテクチャ（単一 Activity、複数 Fragment）に基づき、**MVVM (Model-View-ViewModel)** パターンを厳格に適用する。
-    
+
+  Android Jetpack の推奨アーキテクチャ（単一 Activity、複数 Fragment）に基づき、**MVVM (Model-View-ViewModel)** パターンを厳格に適用する。
+
 - 責務の明確化
     - **View (Fragment):** データの表示とユーザー入力の収集のみを行い、ロジック（データの取得・加工・保存）は行わない。
     - **ViewModel:** View のライフサイクルを超えてデータを保持し、ビジネスロジックを実行する。
     - **Model (Repository):** データの永続化処理（Room/DataStore）へのアクセスを抽象化コア層
 - トップレベルの構成（レイヤーによる責務分離）
-    
-    
+
+
     | パッケージ名 | 責務 | 詳細 |
     | --- | --- | --- |
     | data | データソース | データベース (Room)、ネットワークAPI (Retrofit)、`SharedPreferences`などの実装。 |
     | core | アプリ基盤 | アプリのコア機能や共通インフラ。`App Startup`等 |
     | ui | ユーザーインターフェース | View（画面表示）に関するすべて。`Activity`、`Fragment`、`ViewModel`など。 |
-- フォアグラウンドサービス
-    
-    本アプリはフォアグラウンドサービスが機能のメインとなる。UIは、設定・状態確認とし、責務を分離するように配慮すること。
-    
+
+- 通知リスナーサービス
+
+  本アプリは NotificationListenerService（通知リスナーサービス：NLS） を機能のメインとする。NLS内処理は競合を避けるべき処理がある場合は同期オブジェクトによる保護、処理直列化を図ること。UIは、設定・状態確認とし、責務を分離するように配慮すること。
+
 - 国際化
-    
-    Englishと日本語の2種類に対応する。システムのロケールから日本である場合は日本語でUIを表示するように配慮する。
-    
+
+  Englishと日本語の2種類に対応する。システムのロケールから日本である場合は日本語でUIを表示するように配慮する。
+
 - TTS(Text-to-Speech)
-    
-    テキストの発声はシステムデフォルトのTTSを利用する。TTS変更はユーザーの責務と扱う。
-    
-    通知が短時間に同時発生することを考慮して、キュー構造を持った順次処理を考慮する。
-    
-    TTSのライフサイクルに沿った処理とし、メモリリークを防ぐように配慮すること。
-    
+
+  テキストの発声はシステムデフォルトのTTSを利用する。TTS変更はユーザーの責務と扱う。
+
+  通知が短時間に同時発生することを考慮して、キュー構造を持った順次処理を考慮する。
+
+  TTSのライフサイクルに沿った処理とし、メモリリークを防ぐように配慮すること。
+
 
 ### エラーハンドリング
 
 - 例外処理
-    
-    コルーチン内で発生したDBアクセスエラーやネットワークエラーは、`try-catch` や `Result` ラッパーを用いて捕捉し、View へ表示するための専用の **StateFlow** (例: `_errorMessage: StateFlow<String?>`) を通じて報告する。
-    
+
+  コルーチン内で発生したDBアクセスエラーやネットワークエラーは、`try-catch` や `Result` ラッパーを用いて捕捉し、View へ表示するための専用の **StateFlow** (例: `_errorMessage: StateFlow<String?>`) を通じて報告する。
+
 
 ### SDK
 
@@ -102,7 +103,6 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 | ID | ID | int | - | 主キー（自動インクリメント） |
 | パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
 | チャンネルID | ChannelID | String | null | 通知チャンネル |
-| 通知アイコン | NotificationIcon | Uri | null | 未使用。null固定 |
 | 検索タイトル | SrhTitle | String | empty | 通知タイトルの検索キーワード。部分一致、empty時は全てヒットとする。 |
 | 音声メッセージ | VoiceMsg | String | null | 本アプリが検索でヒットした場合に使用するTTS対象 |
 | 許可 | Enabled | bool | False | True: 検索する、 False: 検索しない。 |
@@ -124,7 +124,6 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 | ID | ID | int | - | 主キー（自動インクリメント） |
 | パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
 | チャンネルID | ChannelID | String | null | 通知チャンネル |
-| 通知アイコン | NotificationIcon | Uri | null | 未使用。null固定 |
 | タイトル | Title | String | null | 通知タイトル |
 
 インデックス　（一意）
@@ -181,22 +180,21 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
     - 通知ログの１レコード表示部分をダブルタップ。後述の通知検出ルール追加処理を伴う。
     - リストがロストフォーカスした場合。（上・下固定エリアタップや左スワイプなど）
 - 通知検出ルール追加
-    
-    以下の通り、タップ該当行の通知ログ（NotificationLog）のレコードを通知検出ルール（Rules）に追加する。
-    
-    | NotificationLog(source) | Rules(distination) | 操作 |
-    | --- | --- | --- |
-    | PackageName | PackageName | sourceを設定 |
-    | ChannelID | ChannelID | sourceを設定 |
-    | - | NotificationIcon | nullを設定 |
-    | Title | SrhTitle | sourceを設定。但し、Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
-    | - | VoiceMsg | nullを設定 |
-    | - | Enabled | Falseを設定 |
-    
-    ### ４．ヘルプ表示内容
-    
-    以下の点以外は、T.B.D。内容はハードルの高いNotificationLisnerService関連権限を扱うことによる審査を考慮して決定する。
-    
+
+  以下の通り、タップ該当行の通知ログ（NotificationLog）のレコードを通知検出ルール（Rules）に追加する。
+
+  | NotificationLog(source) | Rules(distination) | 操作 |
+      | --- | --- | --- |
+  | PackageName | PackageName | sourceを設定 |
+  | ChannelID | ChannelID | sourceを設定 |
+  | Title | SrhTitle | sourceを設定。但し、Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
+  | - | VoiceMsg | nullを設定 |
+  | - | Enabled | Falseを設定 |
+
+  ### ４．ヘルプ表示内容
+
+  以下の点以外は、T.B.D。内容はハードルの高いNotificationLisnerService関連権限を扱うことによる審査を考慮して決定する。
+
     - アプリ名とバージョン：Smart Notifire　2.x.x
     - GitHubのREADME.mdへのリンク
 
@@ -260,59 +258,60 @@ Riporitogy及び画面仕様で記述されている情報で通知モニタ機�
 
 - Rev 1: 2025-12-29 初版
     - レビュー記録
-        
-        ### **1. 表記・命名の統一**
-        
-        **検索ワード**
-        
-        **問題点**
-        
-        **修正指針**
-        
-        ### **2. 説明の集約（冗長記述）**
-        
-        **検索ワード**
-        
-        **問題点**
-        
-        **修正指針**
-        
-        ### **3. ロジック・仕様の明確化**
-        
-        **検索ワード**
-        
-        **問題点**
-        
-        **修正指針**
-        
-        ### **4. Android仕様との整合性**
-        
-        **検索ワード**
-        
-        **問題点**
-        
-        **修正指針**
-        
+
+      ### **1. 表記・命名の統一**
+
+      **検索ワード**
+
+      **問題点**
+
+      **修正指針**
+
+      ### **2. 説明の集約（冗長記述）**
+
+      **検索ワード**
+
+      **問題点**
+
+      **修正指針**
+
+      ### **3. ロジック・仕様の明確化**
+
+      **検索ワード**
+
+      **問題点**
+
+      **修正指針**
+
+      ### **4. Android仕様との整合性**
+
+      **検索ワード**
+
+      **問題点**
+
+      **修正指針**
+
 - Rev2: 2025-12-31 通知確認機能追加
 - Rev3: 2026-01-05 Rule, NotoficationLogテーブルのIcon（Uri)は未使用とする。代わりにPaclageNameからのアイコン取得とし、オーバーヘッドを考慮して、イメージはメモリキャッシュを利用する。
 - Rev4: 2025-01-08 通知ログに一意制約インデックスを追加し、不要通知を追加しないようにした。
+- Rev5: 2025-01-11 アーキテクチャとデータフロー章のフォアグラウンドサービスを通知リスナーサービスに変更し、内容を見直し。
 
 ## ChatGPTチャット履歴
 
 - 2025-12-30
     - ステップ１進捗
-        
-        [ステップ１](https://www.notion.so/2d9368ccc91980ef80d7c57362dd9a9e?pvs=21)
-        
-        [ステップ２](https://www.notion.so/2d9368ccc91980aaa322db04480789ff?pvs=21)
-        
-        [ステップ３](https://www.notion.so/2d9368ccc919801e9d09e3424d7528c6?pvs=21)
-        
-        [ステップ４](https://www.notion.so/2d9368ccc91980bca31bc3f456b99e8c?pvs=21)
-        
+
+      [ステップ１](https://www.notion.so/2d9368ccc91980ef80d7c57362dd9a9e?pvs=21)
+
+      [ステップ２](https://www.notion.so/2d9368ccc91980aaa322db04480789ff?pvs=21)
+
+      [ステップ３](https://www.notion.so/2d9368ccc919801e9d09e3424d7528c6?pvs=21)
+
+      [ステップ４](https://www.notion.so/2d9368ccc91980bca31bc3f456b99e8c?pvs=21)
+
 - 2026-01-02
     - App Sartupの実装
-        
-        [ステップ１](https://www.notion.so/2dc368ccc919808b9fa7cf233d4ad474?pvs=21)
-        
-        [画面実装](https://www.notion.so/2dc368ccc9198032b37cfaa82f46453b?pvs=21)
+
+      [ステップ１](https://www.notion.so/2dc368ccc919808b9fa7cf233d4ad474?pvs=21)
+
+      [画面実装](https://www.notion.so/2dc368ccc9198032b37cfaa82f46453b?pvs=21)
