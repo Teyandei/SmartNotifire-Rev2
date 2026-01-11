@@ -6,10 +6,6 @@
     <string name="sort_order">Sort Order</string>
     <string name="help">Help</string>
 
-    <!-- Help dialog (No.10 helpIcon) -->
-    <string name="help_dialog_title">About Smart Notifire</string>
-    <string name="help_dialog_message">Smart Notifire 2.x.x\n\nFor more details, check the README on GitHub:\nhttps://github.com/Teyandei/SmartNotifire-Rev2</string>
-
     <string name="app_name">SmartNotifier</string>
     <string name="appName" translatable="false">Smart Notifier</string>
     <string name="sortList">Newest</string>
@@ -49,5 +45,22 @@ Tap OK to open settings, then enable notification access for SmartNotifire.
     <string name="msg_wrn_dup_same_name">The same search title is already set for the same app.</string>
     <string name="msg_err_save_failed">Saving failed.</string>
     <string name="msg_text_message">This notification is for notification confirmation purposes.</string>
+
+    <!-- Help dialog (No.10 helpIcon) -->
+    <string name="help_dialog_title">About Smart Notifire</string>
+    <string name="msg_about_app_part1">
+        This app provides voice guidance to help you identify what each notification sound refers to,\n
+        based on:\n
+        1. Conditions specified by the user\n
+        2. Voice guidance messages registered by the user.
+    </string>
+    <string name="msg_about_app_part2">Important Notes</string>
+    <string name="msg_about_app_part3">
+        The notifications handled by this app are limited to those displayed when you tap the Add button.\n
+        While this app monitors and retrieves notifications shown on your device, it cannot handle all notifications due to Android system limitations and the requirements of Google’s privacy policies.\n\n
+        For detailed usage instructions and license terms, please refer to the following URL.
+    </string>
+    <string name="msg_about_app_part4" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/README.md</string>
+    <string name="captionClose">Close</string>
 
 </resources>

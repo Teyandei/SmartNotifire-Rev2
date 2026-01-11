@@ -7,11 +7,6 @@
     <string name="sort_order">並び順</string>
     <string name="help">ヘルプ</string>
 
-    <!-- ヘルプダイアログ（No.10 helpIcon） -->
-    <string name="help_dialog_title">Smart Notifire について</string>
-    <string name="help_dialog_message">Smart Notifire 2.x.x\n\n詳しくはGitHubのREADME.mdをご覧ください：\nhttps://github.com/Teyandei/SmartNotifire-Rev2</string>
-
-
     <string name="app_name">SmartNotifier</string>
     <string name="sortList">新しい順</string>
     <string name="captionAppOrder">アプリ順</string>
@@ -49,4 +44,19 @@
     <string name="msg_err_save_failed">保存に失敗しました。</string>
     <string name="msg_text_message">通知確認を目的とした通知です。</string>
 
+    <!-- ヘルプダイアログ（No.10 helpIcon） -->
+    <string name="help_dialog_title">Smart Notifire について</string>
+    <string name="msg_about_app_part1">
+        このアプリは、通知音が何の通知であるかを、\n
+        1. ユーザーが指定した条件\n
+        2. ユーザーが登録した音声用案内文\n
+        で、音声による案内をします。
+    </string>
+    <string name="msg_about_app_part2">注意事項</string>
+    <string name="msg_about_app_part3">
+        このアプリが取り扱う通知は、追加ボタンをタップしたときに表示される通知のみです。\n
+        表示される通知は本アプリが通知をモニターして取得しますが、Andoroidの制限や、Googleプライバシーポリシーの要件により全ての通知を扱うことはできません。\n\n
+        本アプリの詳しい使い方やライセンス条項は以下のURLをご参照ください。
+    </string>
+    <string name="captionClose">閉じる</string>
 </resources>

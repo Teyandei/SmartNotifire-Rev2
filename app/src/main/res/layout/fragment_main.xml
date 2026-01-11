@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <!-- ヘッダー固定エリア -->
+    <!-- Fixed Header Area -->
     <TextView
         android:id="@+id/txtAppTitle"
         android:layout_width="wrap_content"
@@ -20,44 +20,56 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/swSortList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/txtAppTitle"
-        app:layout_constraintStart_toEndOf="@+id/txtAppTitle"
-        app:layout_constraintTop_toTopOf="@+id/txtAppTitle" />
-
     <TextView
         android:id="@+id/captionSortApp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="@string/captionOrder"
-        app:layout_constraintBottom_toBottomOf="@+id/swSortList"
-        app:layout_constraintStart_toEndOf="@+id/swSortList"
-        app:layout_constraintTop_toTopOf="@+id/swSortList" />
+        android:layout_marginStart="100dp"
+        android:text="@string/sortList"
+        app:layout_constraintStart_toStartOf="@+id/txtAppTitle"
+        app:layout_constraintTop_toBottomOf="@+id/txtAppTitle" />
 
-    <ImageView
-        android:id="@+id/imgHelpIcon"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swSortList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:contentDescription="@string/sort_order"
+        app:layout_constraintBottom_toBottomOf="@+id/captionSortApp"
+        app:layout_constraintStart_toEndOf="@+id/captionSortApp"
+        app:layout_constraintTop_toTopOf="@+id/captionSortApp" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/captionAppOrder"
+        app:layout_constraintBottom_toBottomOf="@+id/captionSortApp"
+        app:layout_constraintStart_toEndOf="@+id/swSortList"
+        app:layout_constraintTop_toTopOf="@+id/captionSortApp" />
+
+    <ImageButton
+        android:id="@+id/imageButtonHelp"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginEnd="16dp"
-        android:contentDescription="Help"
-        android:padding="12dp"
-        app:layout_constraintBottom_toBottomOf="@+id/txtAppTitle"
+        android:adjustViewBounds="false"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/help"
+        android:padding="8dp"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="@+id/swSortList"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/txtAppTitle"
-        app:srcCompat="@android:drawable/ic_menu_help" />
+        app:layout_constraintTop_toTopOf="@+id/swSortList"
+        app:srcCompat="@drawable/ic_help_icon" />
 
     <View
         android:id="@+id/headerDivider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="12dp"
         android:background="?android:attr/listDivider"
-        app:layout_constraintTop_toBottomOf="@+id/txtAppTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/swSortList" />
 
     <!-- メイン：ルール一覧 -->
     <androidx.recyclerview.widget.RecyclerView

@@ -3,9 +3,15 @@ package com.example.smartnotifier.ui.main
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
+import android.text.style.URLSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +37,7 @@ import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.smartnotifier.R
 import com.example.smartnotifier.ui.log.NotificationLogAdapter
+import com.example.smartnotifier.BuildConfig
 
 class MainFragment : Fragment() {
 
@@ -42,7 +49,7 @@ class MainFragment : Fragment() {
     private lateinit var notificationHelper: NotificationHelper
     private var ttsManager: TtsManager? = null
 
-    // 権限リクエスト用
+   // 権限リクエスト用
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -175,6 +182,9 @@ class MainFragment : Fragment() {
                 viewModel.setShowingLogList(false)
             }
         }
+        binding.imageButtonHelp.setOnClickListener {
+            showHelpDialog()
+        }
     }
 
     private fun showDeleteConfirmDialog(rule: RuleEntity) {
@@ -216,6 +226,64 @@ class MainFragment : Fragment() {
         } else {
             sendTestNotification()
         }
+    }
+
+    private fun buildHelpText(): CharSequence {
+        val sb = SpannableStringBuilder()
+
+        fun appendHeading(text: String, rep: Int = 1) {
+            val start = sb.length
+            sb.append(text).append("\n".repeat(rep))
+            val end = sb.length - 1
+
+            sb.setSpan(
+                StyleSpan(Typeface.BOLD),
+                start,
+                end,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            sb.setSpan(
+                RelativeSizeSpan(1.15f),
+                start,
+                end,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        fun appendBody(text: String, rep: Int = 1) {
+            sb.append(text).append("\n".repeat(rep))
+        }
+
+        fun appendURL(text: String) {
+            val start = sb.length
+            sb.append(text)
+            val end = sb.length - 1
+
+            sb.setSpan(
+                URLSpan(text),
+                start,
+                end,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        appendHeading(getString(R.string.appName), 0)
+        appendBody(" ${BuildConfig.VERSION_NAME}")
+        appendBody(getString(R.string.msg_about_app_part1), 2)
+        appendHeading(getString(R.string.msg_about_app_part2))
+        appendBody(getString(R.string.msg_about_app_part3), 1)
+        appendURL(getString(R.string.msg_about_app_part4))
+
+        return sb
+    }
+
+
+    private fun showHelpDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.help_dialog_title)
+            .setMessage(buildHelpText())
+            .setPositiveButton(R.string.captionClose, null)
+            .show()
     }
 
     private fun sendTestNotification() {
