@@ -234,7 +234,7 @@ class MainFragment : Fragment() {
         fun appendHeading(text: String, rep: Int = 1) {
             val start = sb.length
             sb.append(text).append("\n".repeat(rep))
-            val end = sb.length - 1
+            val end = sb.length
 
             sb.setSpan(
                 StyleSpan(Typeface.BOLD),
@@ -254,13 +254,13 @@ class MainFragment : Fragment() {
             sb.append(text).append("\n".repeat(rep))
         }
 
-        fun appendURL(text: String) {
+        fun appendURL(text: String, url: String = text) {
             val start = sb.length
             sb.append(text)
-            val end = sb.length - 1
+            val end = sb.length
 
             sb.setSpan(
-                URLSpan(text),
+                URLSpan(url),
                 start,
                 end,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -272,7 +272,7 @@ class MainFragment : Fragment() {
         appendBody(getString(R.string.msg_about_app_part1), 2)
         appendHeading(getString(R.string.msg_about_app_part2))
         appendBody(getString(R.string.msg_about_app_part3), 1)
-        appendURL(getString(R.string.msg_about_app_part4))
+        appendURL(getString(R.string.msg_about_app_part4), getString(R.string.msg_about_aoo_part5))
 
         return sb
     }

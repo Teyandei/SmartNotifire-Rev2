@@ -11,10 +11,10 @@
     <string name="sortList">Newest</string>
     <string name="captionAppOrder">By App</string>
     <string name="captionOrder">Order</string>
-    <string name="descAbout">About this Applocation</string>
+    <string name="descAbout">About this Application</string>
     <string name="hintNotificationTitle">Notification Title</string>
     <string name="autoFillHistNotificationTitle">Input notification\'s title</string>
-    <string name="captionNtfConfirm">Confirm Notification</string>
+    <string name="captionNtfConfirm">Check\nNotification</string>
     <string name="captionConfirm">Notify</string>
     <string name="lbl_NtfLogListNote">Notification log - Double tap to add</string>
     <string name="captionSearchTitle">Search Title</string>
@@ -26,13 +26,11 @@
     <string name="default_check_voice_message">Notification check succeeded.</string>
     <string name="dlg_title_notification_access_required">Notification access required</string>
     <string name="dlg_msg_notification_access_required">
-SmartNotifire reads notifications and speaks them aloud based on your rules.
-To work, it needs Android’s “Notification access” permission.
-
-SmartNotifire uses only the information needed to identify notifications and the notification title.
-It does not save or send other notification content.
-
-Tap OK to open settings, then enable notification access for SmartNotifire.
+        SmartNotifire reads notifications and speaks them aloud based on your rules.\n
+        To work, it needs Android’s “Notification access” permission.\n\n
+        SmartNotifire uses only the information needed to identify notifications and the notification title.\n
+        It does not save or send other notification content.\n\n
+        Tap OK to open settings, then enable notification access for Smart Notifier.
 </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">Deleting a Rule</string>
@@ -60,7 +58,8 @@ Tap OK to open settings, then enable notification access for SmartNotifire.
         While this app monitors and retrieves notifications shown on your device, it cannot handle all notifications due to Android system limitations and the requirements of Google’s privacy policies.\n\n
         For detailed usage instructions and license terms, please refer to the following URL.
     </string>
-    <string name="msg_about_app_part4" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/README.md</string>
+    <string name="msg_about_app_part4" translatable="false">README</string>
+    <string name="msg_about_aoo_part5" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/README.md</string>
     <string name="captionClose">Close</string>
 
 </resources>
