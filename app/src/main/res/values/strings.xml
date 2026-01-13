@@ -61,5 +61,7 @@
     <string name="msg_about_app_part4" translatable="false">README</string>
     <string name="msg_about_aoo_part5" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/</string>
     <string name="captionClose">Close</string>
+    <string name="msg_privacy_title">Privacy Policy</string>
+    <string name="msg_privacy_url">"https://teyandei.github.io/SmartNotifire-Rev2/privacy.html "</string>
 
 </resources>

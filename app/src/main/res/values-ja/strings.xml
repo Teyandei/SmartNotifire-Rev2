@@ -59,4 +59,6 @@
         本アプリの詳しい使い方やライセンス条項は以下のURLをご参照ください。
     </string>
     <string name="captionClose">閉じる</string>
+    <string name="msg_privacy_title">プライバシーポリシー</string>
+    <string name="msg_privacy_url">https://teyandei.github.io/SmartNotifire-Rev2/ja/privacy.html</string>
 </resources>

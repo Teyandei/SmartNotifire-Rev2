@@ -315,6 +315,7 @@ class MainFragment : Fragment() {
         appendHeading(getString(R.string.msg_about_app_part2))
         appendBody(getString(R.string.msg_about_app_part3), 1)
         appendURL(getString(R.string.msg_about_app_part4), getString(R.string.msg_about_aoo_part5))
+        appendURL(getString(R.string.msg_privacy_title), getString(R.string.msg_privacy_url))
 
         return sb
     }
