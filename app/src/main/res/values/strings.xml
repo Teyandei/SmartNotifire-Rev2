@@ -59,7 +59,7 @@
         For detailed usage instructions and license terms, please refer to the following URL.
     </string>
     <string name="msg_about_app_part4" translatable="false">README</string>
-    <string name="msg_about_aoo_part5" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/README.md</string>
+    <string name="msg_about_aoo_part5" translatable="false">https://github.com/Teyandei/SmartNotifire-Rev2/</string>
     <string name="captionClose">Close</string>
 
 </resources>

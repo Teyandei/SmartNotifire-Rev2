@@ -1,5 +1,23 @@
 package com.example.smartnotifier.ui.main
 
+/*
+ * SmartNotifier-Rev2
+ * Copyright (C) 2026  Takeaki Yoshizawa
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +27,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.method.LinkMovementMethod
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
@@ -16,6 +35,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -228,9 +248,18 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * ダイアログの文字列装飾
+     */
     private fun buildHelpText(): CharSequence {
         val sb = SpannableStringBuilder()
 
+        /**
+         * 見出し風効果の装飾を入れたtextをsbに追加
+         *
+         * @param text 装飾対象文字列
+         * @param rep textの末尾に改行を入れる個数
+         */
         fun appendHeading(text: String, rep: Int = 1) {
             val start = sb.length
             sb.append(text).append("\n".repeat(rep))
@@ -250,10 +279,22 @@ class MainFragment : Fragment() {
             )
         }
 
+        /**
+         *  sdへのテキスト追加
+         *
+         *  @param text 追加するテキスト
+         *  @param rep textの末尾に改行を入れる個数
+         */
         fun appendBody(text: String, rep: Int = 1) {
             sb.append(text).append("\n".repeat(rep))
         }
 
+        /**
+         *  Markdown風([text](url))の装飾をつけたテキストをsbに追加
+         *
+         * @param text 装飾対象文字列
+         * @param url リンク先URL
+         */
         fun appendURL(text: String, url: String = text) {
             val start = sb.length
             sb.append(text)
@@ -265,6 +306,7 @@ class MainFragment : Fragment() {
                 end,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
+            sb.append("\n")
         }
 
         appendHeading(getString(R.string.appName), 0)
@@ -277,13 +319,24 @@ class MainFragment : Fragment() {
         return sb
     }
 
-
+    /**
+     *  ヘルプダイアログの表示
+     */
     private fun showHelpDialog() {
-        MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.help_dialog_title)
             .setMessage(buildHelpText())
             .setPositiveButton(R.string.captionClose, null)
             .show()
+
+        // AlertDialog の message TextView にリンク処理を有効化
+        dialog.findViewById<TextView>(android.R.id.message)?.apply {
+            movementMethod = LinkMovementMethod.getInstance()
+            linksClickable = true
+
+            // お好み：タップ時の背景ハイライトを消す
+            // highlightColor = Color.TRANSPARENT
+        }
     }
 
     private fun sendTestNotification() {
