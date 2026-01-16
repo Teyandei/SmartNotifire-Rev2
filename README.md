@@ -41,9 +41,10 @@
 
 ### 🚫 取り扱えない通知
 
-Android OS の制限および Google のプライバシーポリシーにより、 すべての通知を扱えるわけではありません。
+Android OS の制限および Google のプライバシーポリシーにより、 すべての通知を扱えるわけではありません。  
+※ 現在の仕様では、アプリ名へ変換できない通知は追加されません。  
 
-例：Gmail、Yahoo!系アプリなど
+例：Gmail、Yahoo!系アプリなど。OSバージョンによって異なる場合があります。
 
 ### ✔️ 必要な権限
 
@@ -64,8 +65,6 @@ Android OS の制限および Google のプライバシーポリシーにより�
 
 インストール直後は、**動作確認用の音声案内ルールが1件**登録されています。 このルールを使って、すべての機能を確認できます。
 
-（※ 画面イメージはアプリ内ヘルプに表示されます）
-
 ---
 
 ### 🔔 通知確認  
@@ -81,11 +80,11 @@ Android OS の制限および Google のプライバシーポリシーにより�
 
 ### 🏛️ 音声案内ルール  
 
-![音声案内ルール](./docs/pictures/ja/rule.png)
+![音声案内ルール](./docs/pictures/ja/rule_useage.png)
 
 通知を音声化するためのルール一覧画面です。
 
-#### 🔑 ルールの有効化
+#### 🔑 ルールの有効化 ①
 
 スイッチを ON にすると、そのルールが有効になります。
 
@@ -108,7 +107,7 @@ Android OS の制限および Google のプライバシーポリシーにより�
 
 ---
 
-#### 📑 ルールのコピー
+#### 📑 ルールのコピー ②
 
 既存ルールをコピーして、新しいルールを作成できます。
 
@@ -116,13 +115,13 @@ Android OS の制限および Google のプライバシーポリシーにより�
 
 ---
 
-#### 🗑️ ルールの削除
+#### 🗑️ ルールの削除 ③
 
 選択したルールを削除します。 削除前には確認ダイアログが表示されます。
 
 ---
 
-#### ▶️ 音声メッセージの再生
+#### ▶️ 音声メッセージの再生 ④
 
 登録した音声メッセージを、その場で再生できます。
 
@@ -163,16 +162,19 @@ SmartNotifire-Rev2
 
 ---
 
+---
+
 # 🌍 English Version
 
 ## 📣 About This App
 
-Most smartphone apps notify you using sounds. However, notification sounds alone do not tell you **which app** or **what kind of notification** it is.
+Most smartphone apps notify you using sounds.  
+However, notification sounds alone do not tell you **which app** or **what kind of notification** it is.
 
-**Smart Notifire** reads out a custom voice message when:
+**Smart Notifire** reads out a custom voice message when a notification matches user-defined conditions such as:
 
-* The app name matches
-* Part of the notification title matches
+- App name
+- Part of the notification title
 
 This allows you to understand notifications **without looking at the screen**.
 
@@ -180,41 +182,126 @@ This allows you to understand notifications **without looking at the screen**.
 
 ## 🧩 How It Works
 
-1. The app monitors notifications and stores only minimal identifying information.
-2. Users create voice guidance rules based on these notifications.
-3. When a notification matches a rule, a voice message is spoken about 3 seconds later.
+1. The app monitors notifications and stores only the minimum information required for identification.
+2. Based on stored notifications, users can create *voice guidance rules*.
+3. When a notification matches a rule, a voice message is spoken **about 3 seconds after** the notification sound.
 
-This avoids overlapping with the default notification sound.
+This timing prevents the voice guidance from overlapping with the notification sound.
 
 ---
 
 ## ⚠️ Notification Handling Policy
 
-Notifications may contain sensitive information. Therefore, Smart Notifire follows strict rules.
+Notifications may contain personal or sensitive information.  
+For this reason, **Smart Notifire** follows strict handling rules.
 
-### 📁 Stored Information
+### 📁 Stored Notification Information
 
-Only the following data is stored:
+Only the following minimum information is stored:
 
-* App package name
-* Notification channel ID
-* Notification title
+- App package name
+- Notification channel ID
+- Notification title
 
-Message bodies are never stored.
+Notification message bodies are **never stored**.
 
 ### 🚫 Unsupported Notifications
 
-Due to Android OS limitations and Google privacy policies, some notifications cannot be handled (e.g. Gmail).
+Due to Android OS restrictions and Google privacy policies,  
+**not all notifications can be handled**.
+
+⚠️ **In the current implementation, notifications whose app names cannot be resolved are not added to the notification log.**
 
 ### ✔️ Required Permissions
 
-* Notification access permission
-* Notification display permission
+The following permissions are required to use this app:
 
-Without these permissions, the app cannot function.
+1. Notification access permission
+2. Notification display permission
+
+Without these permissions, the app will not function.
+
+---
+
+## 🔤 How to Use
+
+### Initial State
+
+![Initial Screen](./docs/pictures/initialScreen.png)
+
+After installation, **one test voice guidance rule** is registered by default.  
+You can use this rule to confirm that all features are working correctly.
+
+---
+
+### 🔔 Notification Check
+
+![Notification Check](./docs/pictures/ntf_check.png)
+
+Tap the **Notification** button at the bottom of the screen to send a test notification.
+
+- On first use, a permission request dialog will be shown
+- After permission is granted, the notification sound is played, followed by the voice message
+
+---
+
+### 🏛️ Voice Guidance Rules
+
+![Voice Guidance Rules](./docs/pictures/rule_usage.png)
+
+This screen shows the list of voice guidance rules.  
+The numbers below correspond to the numbered markers in the image above.
+
+#### 🔑 Enable Rule ①
+
+Turn the switch ON to activate the rule.
+
+When both of the following match, voice guidance will be triggered:
+
+- App name
+- Search title (partial match)
+
+---
+
+#### 📑 Copy Rule ②
+
+Copies the selected rule and creates a new one.
+
+- A number is automatically appended to avoid duplicate search titles
+
+---
+
+#### 🗑️ Delete Rule ③
+
+Deletes the selected rule.
+
+- A confirmation dialog is shown before deletion
+
+---
+
+#### ▶️ Play Voice Message ④
+
+Plays the registered voice message immediately for confirmation.
+
+---
+
+## 🧭 Terminology Notes
+
+> The design document is written in Japanese.  
+> Therefore, terminology explanations in this section are intentionally kept simple.
+
+In this README, user-friendly terms are used instead of internal design document terms.
+
+Examples:
+
+- “Notification Detection Rule” → “Voice Guidance Rule”
+- “NotificationLog” → “Notification Log”
+
+The meanings remain the same.
 
 ---
 
 ## 🪪 License
 
-Smart Notifire Rev2 is a personal development project. Please refer to the `LICENSE` file in the repository for details.
+**Smart Notifire Rev2** is a personal development project.  
+Please refer to the `LICENSE` file in this repository for details.
