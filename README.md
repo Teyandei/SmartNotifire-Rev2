@@ -236,7 +236,7 @@ You can use this rule to confirm that all features are working correctly.
 
 ### 🔔 Notification Check
 
-![Notification Check](./docs/pictures/ntf_check.png)
+![Notification Check](./docs/pictures/ntf_cheack.png)
 
 Tap the **Notification** button at the bottom of the screen to send a test notification.
 
@@ -247,7 +247,7 @@ Tap the **Notification** button at the bottom of the screen to send a test notif
 
 ### 🏛️ Voice Guidance Rules
 
-![Voice Guidance Rules](./docs/pictures/rule_usage.png)
+![Voice Guidance Rules](./docs/pictures/rule_useage.png)
 
 This screen shows the list of voice guidance rules.  
 The numbers below correspond to the numbered markers in the image above.
