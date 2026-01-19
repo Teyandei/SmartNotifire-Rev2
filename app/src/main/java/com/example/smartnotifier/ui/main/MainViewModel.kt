@@ -20,6 +20,7 @@ package com.example.smartnotifier.ui.main
 
 import android.app.Application
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,9 +34,23 @@ import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 
+sealed interface AddRuleFromLogEvent {
+    data class Success(val title: String) : AddRuleFromLogEvent
+    data object TooManySameNames : AddRuleFromLogEvent
+    data object Failed : AddRuleFromLogEvent
+    data object FailedCopy : AddRuleFromLogEvent
+}
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    /**
+     * アプリケーション全体の状態とビジネスロジックを管理する ViewModel。
+     *
+     * MVVM 設計に基づき、UI（Fragment）からの要求を受け取り、
+     * データストア・データベース・リポジトリとの橋渡しを行う。
+     */
 
     private val appContext = application.applicationContext
     private val dataStore = appContext.appPrefsDataStore
@@ -43,20 +58,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val rulesRepo = RulesRepository(db)
     private val logDao = db.notificationLogDao()
 
+    /**
+     * ルール更新要求を一時的にバッファリングする SharedFlow。
+     *
+     * Debounce 処理により、入力中の頻繁な更新をまとめて保存する。
+     */
     private val _ruleUpdateBuffer = MutableSharedFlow<RuleEntity>(replay = 0)
 
+    /**
+     * UI に通知するエラーメッセージ用 Flow。
+     */
     private val _errorMessage = MutableSharedFlow<String>()
     val errorMessage = _errorMessage.asSharedFlow()
 
+    /**
+     * UIに通知するメッセージ用 Flow。
+     */
+    private val _addRuleFromLogEvent = MutableSharedFlow<AddRuleFromLogEvent>()
+    val addRuleFromLogEvent = _addRuleFromLogEvent.asSharedFlow()
+
+    /**
+     * 最新の通知ログ一覧。
+     *
+     * NotificationLogDao から取得し、StateFlow として公開する。
+     */
     val notificationLogs: StateFlow<List<NotificationLogEntity>> = logDao.getLatestLogs()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    /**
+     * 通知ログ一覧を表示中かどうかを示す状態。
+     */
     private val _isShowingLogList = MutableStateFlow(false)
     val isShowingLogList = _isShowingLogList.asStateFlow()
 
+    /**
+     * 通知アクセス権限が付与されているかどうかを示す状態。
+     */
     private val _notificationAccessGranted = MutableStateFlow(false)
     val notificationAccessGranted: StateFlow<Boolean> = _notificationAccessGranted.asStateFlow()
 
+    /**
+     * 通知アクセス権限の付与状態を更新する。
+     */
     fun setNotificationAccessGranted(granted: Boolean) {
         _notificationAccessGranted.value = granted
     }
@@ -66,6 +109,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
      @OptIn(FlowPreview::class)
+     /**
+      * ルール更新バッファを監視し、Debounce 後に安全に保存する。
+      */
     private fun observeRuleUpdates() {
         viewModelScope.launch {
             _ruleUpdateBuffer
@@ -74,7 +120,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
+    /**
+     * ルールを安全に保存する。
+     *
+     * 重複制約違反やその他の例外を捕捉し、UI へエラーメッセージを通知する。
+     */
     private suspend fun saveRuleSafely(rule: RuleEntity) {
         try {
             rulesRepo.update(rule)
@@ -85,74 +135,127 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * 通知ログ一覧表示の ON/OFF を切り替える。
+     */
     fun setShowingLogList(show: Boolean) {
         _isShowingLogList.value = show
     }
 
+    /**
+     * 通知ログから新しいルールを生成して追加する。
+     *
+     * 同一タイトルが存在する場合は連番を付与する。
+     */
     fun addRuleFromLog(log: NotificationLogEntity) {
         viewModelScope.launch {
+            val base = log.title
+            val maxTry = 50
+
             try {
-                val count = rulesRepo.dao.countSimilarTitles(log.packageName, log.channelId, log.title)
-                val newTitle = if (count > 0) "${log.title}($count)" else log.title
-                
-                val newRule = RuleEntity(
-                    packageName = log.packageName,
-                    channelId = log.channelId,
-                    srhTitle = newTitle,
-                    voiceMsg = null,
-                    enabled = false
-                )
-                rulesRepo.insert(newRule)
-                setShowingLogList(false)
-                _errorMessage.emit("ルールを追加しました: $newTitle")
-            } catch (_: Exception) {
-                _errorMessage.emit("ルールの追加に失敗しました。")
+                for (i in 0..maxTry) {
+                    val title = if (i == 0) base else "$base-#${i.toString().padStart(2, '0')}"
+                    val newRule = RuleEntity(
+                        packageName = log.packageName,
+                        channelId = log.channelId,
+                        srhTitle = title,
+                        voiceMsg = null,
+                        enabled = false
+                    )
+
+                    val rowId = rulesRepo.dao.insertIgnore(newRule)
+                    if (rowId != -1L) {
+                        setShowingLogList(false)
+                        _addRuleFromLogEvent.emit(AddRuleFromLogEvent.Success(title))
+                        return@launch
+                    }
+                }
+                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.TooManySameNames)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "addRuleFromLog failed", e)
+                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.Failed)
             }
         }
     }
 
+    /**
+     * 新しい順（ID 降順相当）で並べたルール一覧。
+     */
     private val rulesByOrderNewest = rulesRepo
         .observeAllRulesOrderByNewest()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    /**
+     * パッケージ名昇順で並べたルール一覧。
+     */
     private val rulesByOrderByPackageAsc = rulesRepo
         .observeRulesOrderByPackageAsc()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    /**
+     * 指定された並び順に応じたルール一覧を返す。
+     */
     fun rules(orderNewest: Boolean = true): StateFlow<List<RuleEntity>> =
         if (orderNewest) rulesByOrderNewest else rulesByOrderByPackageAsc
 
+    /**
+     * ルールを新規追加する。
+     */
     suspend fun insert(rule: RuleEntity) = rulesRepo.insert(rule)
-    
+
+    /**
+     * ルールを即時保存する。
+     *
+     * フォーカスロスト時など、遅延せずに反映したい場合に使用する。
+     */
     fun updateImmediate(rule: RuleEntity) {
         viewModelScope.launch {
             saveRuleSafely(rule)
         }
     }
 
+    /**
+     * ルール更新を Debounce 対象としてバッファに送る。
+     */
     fun updateRuleDebounced(rule: RuleEntity) {
         viewModelScope.launch {
             _ruleUpdateBuffer.emit(rule)
         }
     }
 
+    /**
+     * 指定されたルールを削除する。
+     */
     suspend fun delete(rule: RuleEntity) = rulesRepo.delete(rule)
-    
+
+    /**
+     * 指定されたルールを複製する。
+     */
     fun duplicateRule(rule: RuleEntity) {
         viewModelScope.launch {
             try {
                 rulesRepo.duplicateRule(rule.id)
             } catch (_: Exception) {
-                _errorMessage.emit("コピーに失敗しました。")
+                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.FailedCopy)
             }
         }
     }
 
+    /**
+     * ルール一覧の並び順設定。
+     *
+     * true の場合はパッケージ名昇順、false の場合は新しい順。
+     */
     val sortList: StateFlow<Boolean> =
         dataStore.data
             .map { prefs -> prefs[AppPrefs.KEY_SORT_LIST_ORDER] ?: false }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    /**
+     * ルール一覧の並び順設定を更新する。
+     */
     fun updateSortList(orderByPackageAsc: Boolean) {
         viewModelScope.launch {
             dataStore.edit { prefs ->
@@ -161,7 +264,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ⑫: 通知タイトル (デフォルト値をリソースから取得)
+    /**
+     * テスト通知送信用の通知タイトル。
+     */
     val notificationTitle: StateFlow<String> =
         dataStore.data
             .map { prefs -> 
@@ -169,6 +274,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             .stateIn(viewModelScope, SharingStarted.Eagerly, appContext.getString(R.string.default_check_notification_title))
 
+    /**
+     * 通知タイトルを更新する。
+     */
     fun updateNotificationTitle(title: String) {
         viewModelScope.launch {
             dataStore.edit { prefs ->

@@ -10,10 +10,10 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.smartnotifier"
+        applicationId = "com.teyanday.smartnotifier"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        versionCode = 6
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

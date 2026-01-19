@@ -97,24 +97,38 @@
 
         <TextView
             android:id="@+id/txtLogCaption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimaryContainer"
-            android:padding="8dp"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:gravity="center"
             android:text="@string/lbl_NtfLogListNote"
-            android:textAlignment="center"
             android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnCloseLog"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/btnCloseLog"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerLogs"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/txtLogCaption"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtLogCaption" />
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <!-- ⑪ 追加ボタン (固定) -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton

@@ -21,13 +21,40 @@ package com.example.smartnotifier.data.repository
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 
+/**
+ * 通知ログ([NotificationLogEntity])のデータ操作を抽象化するリポジトリ。
+ *
+ * 設計書の責務分離（MVVM）に基づき、ViewModelとデータソース（DAO）の間に位置します。
+ * このクラスは、通知ログの保存や取得に関するビジネスロジックをカプセル化し、
+ * UI層（ViewModel）がデータベースの実装詳細を意識することなくデータ操作を行えるようにします。
+ *
+ * @property db アプリケーションのデータベースインスタンス([AppDatabase])。
+ */
 class NotificationLogRepository(
     private val db: AppDatabase
 ) {
     private val dao = db.notificationLogDao()
 
+    /**
+     * 新しい通知ログをデータベースに挿入します。
+     *
+     * @param log 挿入する[NotificationLogEntity]インスタンス。
+     */
     suspend fun insert(log: NotificationLogEntity) = dao.insert(log)
+
+    /**
+     * データベース内のログ件数を制限内に保つために、古いログを削除します。
+     *
+     * @param limit 保持するログの最大件数。
+     */
     suspend fun trimLogs(limit: Int = 100) = dao.trimLogs(limit)
 
+    /**
+     * 最新の通知ログを監視するための[kotlinx.coroutines.flow.Flow]を返します。
+     * UI層はこのFlowを購読することで、データベースの変更をリアクティブに受け取ることができます。
+     *
+     * @param limit 取得するログの最大件数。
+     * @return 通知ログのリストを放出する[kotlinx.coroutines.flow.Flow]。
+     */
     fun observeLatestLogs(limit: Int = 100) = dao.getLatestLogs(limit)
 }

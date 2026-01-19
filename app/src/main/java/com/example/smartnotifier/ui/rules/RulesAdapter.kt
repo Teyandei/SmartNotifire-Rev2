@@ -46,21 +46,42 @@ class RulesAdapter(
     private val onRuleUpdatedImmediate: (RuleEntity) -> Unit // 即時保存用 (フォーカスロスト時)
 ) : ListAdapter<RuleEntity, RulesAdapter.RuleViewHolder>(DiffCallback) {
 
+    /**
+     * RecyclerView 用 ViewHolder を生成する。
+     *
+     * 行レイアウトは [ItemRuleBinding] を使用し、
+     * ルール1件分の表示と編集を担当する [RuleViewHolder] を返す。
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RuleViewHolder {
         val binding = ItemRuleBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return RuleViewHolder(binding)
     }
 
+    /**
+     * 指定位置のルールを ViewHolder にバインドする。
+     */
     override fun onBindViewHolder(holder: RuleViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
     private var notificationAccessGranted: Boolean = false
 
+    /**
+     * 通知アクセス権限の付与状態を設定する。
+     *
+     * 権限状態はスイッチの有効/無効や表示状態に影響するため、
+     * 変更後は一覧全体を再描画する。
+     */
     fun setNotificationAccessGranted(granted: Boolean) {
         notificationAccessGranted = granted
         notifyDataSetChanged()
     }
 
+    /**
+     * ルール1行分の表示と編集を担当する ViewHolder。
+     *
+     * 検索タイトル・音声メッセージの編集、スイッチ操作、
+     * 各種アクションボタン（コピー・削除・再生）を管理する。
+     */
     inner class RuleViewHolder(private val binding: ItemRuleBinding)
         : RecyclerView.ViewHolder(binding.root) {
 
@@ -102,7 +123,13 @@ class RulesAdapter(
                 if (newText != (rule.voiceMsg ?: "")) onRuleUpdated(rule.copy(voiceMsg = newText))
             }
         }
-        // ① アイコン（notificationIcon が読めればそれ、ダメならアプリのデフォルトアイコン）
+
+        /**
+         * ルールに紐づくアプリ情報（アプリ名・アイコン）を表示する。
+         *
+         * packageName からアプリ情報を取得し、失敗した場合は
+         * フォールバックとして packageName 自体を表示する。
+         */
         private fun bindAppInfo(rule: RuleEntity) {
             val context = binding.root.context
             val pm = context.packageManager
@@ -119,6 +146,13 @@ class RulesAdapter(
                 Log.e("RulesAdapter", "Exception in bindAppInfo", e)
             }
         }
+
+        /**
+         * 指定されたルールを UI に反映する。
+         *
+         * スイッチ状態、テキスト入力欄、各種ボタンのイベントを設定し、
+         * フォーカス状態と Debounce 保存仕様を考慮して表示を行う。
+         */
         fun bind(rule: RuleEntity) {
             // ①② アプリアイコン・アプリ名を表示
             bindAppInfo(rule)
@@ -171,6 +205,12 @@ class RulesAdapter(
 
 
     companion object {
+
+        /**
+         * RuleEntity 用 DiffUtil。
+         *
+         * ID による同一性判定と、データクラスの equals による内容比較を行う。
+         */
         private val DiffCallback = object : DiffUtil.ItemCallback<RuleEntity>() {
             override fun areItemsTheSame(oldItem: RuleEntity, newItem: RuleEntity): Boolean =
                 oldItem.id == newItem.id

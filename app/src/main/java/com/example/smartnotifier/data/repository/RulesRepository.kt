@@ -23,24 +23,43 @@ import com.example.smartnotifier.data.db.entity.RuleEntity
 import kotlinx.coroutines.flow.Flow
 
 class RulesRepository(db: AppDatabase) {
+    /**
+     * ルール（Rules）に関するデータアクセスを集約する Repository。
+     *
+     * ViewModel からは本 Repository を介して DAO を利用し、
+     * データ取得・更新の窓口を一本化する。
+     */
     val dao = db.ruleDao() // ViewModel から利用可能にする
 
+    /**
+     * ルールを新規追加する。
+     */
     suspend fun insert(rule: RuleEntity) = dao.insert(rule)
+
+    /**
+     * ルールを更新する。
+     */
     suspend fun update(rule: RuleEntity) = dao.update(rule)
+
+    /**
+     * ルールを削除する。
+     */
     suspend fun delete(rule: RuleEntity) = dao.delete(rule)
 
     /**
-     * 設計書 ⑨ 並び順 False: Rules.ID の降順
+     * ルール一覧を「新しい順（ID 降順相当）」で監視する。
      */
     fun observeAllRulesOrderByNewest(): Flow<List<RuleEntity>> = dao.getAllRulesDesc()
 
     /**
-     * 設計書 ⑨ 並び順 True: 1:PackageName, 2:Rules.ID の昇順
+     * ルール一覧を「PackageName 昇順、同一 PackageName 内で ID 昇順」で監視する。
      */
     fun observeRulesOrderByPackageAsc(): Flow<List<RuleEntity>> = dao.getRulesOrderByPackageAsc()
 
     /**
-     * トランザクションを利用したコピー処理
+     * 指定 ID のルールを複製する。
+     *
+     * DAO 側のトランザクション処理を呼び出し、複製の一貫性を担保する。
      */
     suspend fun duplicateRule(id: Int) = dao.duplicateRuleTransaction(id)
 }

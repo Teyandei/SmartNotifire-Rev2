@@ -32,16 +32,19 @@ import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.databinding.ItemNotificationLogBinding
 import com.example.smartnotifier.ui.common.util.IconCache
 
-
-
 /**
- * 通知ログ表示用の RecyclerView.Adapter
- * 設計書「３．通知ログリスト」に対応
+ * 通知ログ([NotificationLogEntity])の一覧を[RecyclerView]に表示するためのアダプターです。
+ *
+ * 設計書「３．通知ログリスト」の仕様に基づき、ユーザーが過去の通知履歴を確認し、
+ * アイテムをダブルタップすることで新しいルールとして簡単に追加する機能を提供します。
+ *
+ * @param onLogDoubleTapped ユーザーがリストのアイテムをダブルタップした際に呼び出されるコールバック。
+ *                          タップされた[NotificationLogEntity]を引数として受け取り、
+ *                          ViewModelにルールの追加処理を依頼します。
  */
 class NotificationLogAdapter(
     private val onLogDoubleTapped: (NotificationLogEntity) -> Unit,
 ) : ListAdapter<NotificationLogEntity, NotificationLogAdapter.LogViewHolder>(DiffCallback) {
-    private val THIS_CLASS :String = "NotificationLogAdapter"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogViewHolder {
         val binding = ItemNotificationLogBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -52,7 +55,21 @@ class NotificationLogAdapter(
         holder.bind(getItem(position))
     }
 
+    /**
+     * 通知ログの単一アイテムを表示するための[RecyclerView.ViewHolder]です。
+     *
+     * @property binding このViewHolderが管理するビューへの参照を持つ[ItemNotificationLogBinding]。
+     */
     inner class LogViewHolder(private val binding: ItemNotificationLogBinding) : RecyclerView.ViewHolder(binding.root) {
+        /**
+         * 指定された[NotificationLogEntity]のデータをビューにバインドします。
+         *
+         * アプリ名、通知タイトル、および[IconCache]から取得したアプリアイコンを対応するビューに設定します。
+         * また、アイテムビューに対するダブルタップを検出するための[GestureDetector]をセットアップし、
+         * ダブルタップが検出された際には[onLogDoubleTapped]コールバックを呼び出します。
+         *
+         * @param log 表示する[NotificationLogEntity]インスタンス。
+         */
         fun bind(log: NotificationLogEntity) {
             val context = binding.root.context
             val pm = context.packageManager
@@ -71,7 +88,6 @@ class NotificationLogAdapter(
                 binding.txtAppName.text = log.packageName
                 binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
             }
-
 
 
             // 通知タイトル
@@ -95,6 +111,7 @@ class NotificationLogAdapter(
     }
 
     companion object {
+        private const val THIS_CLASS :String = "NotificationLogAdapter"
         private val DiffCallback = object : DiffUtil.ItemCallback<NotificationLogEntity>() {
             override fun areItemsTheSame(oldItem: NotificationLogEntity, newItem: NotificationLogEntity): Boolean =
                 oldItem.id == newItem.id

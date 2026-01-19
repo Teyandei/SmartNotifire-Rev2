@@ -63,5 +63,9 @@
     <string name="captionClose">Close</string>
     <string name="msg_privacy_title">Privacy Policy</string>
     <string name="msg_privacy_url">"https://teyandei.github.io/SmartNotifire-Rev2/privacy.html "</string>
-
+    <string name="close">Close</string>
+    <string name="msg_added_success_with_title">Rule added: %1$s</string>
+    <string name="msg_add_failed_too_many_same_names">Failed to add the rule (too many with the same name).</string>
+    <string name="msg_add_failed_generic">Failed to add the rule.</string>
+    <string name="msg_failed_copy">Failed to copy.</string>
 </resources>

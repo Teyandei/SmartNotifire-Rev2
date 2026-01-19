@@ -59,17 +59,42 @@ import com.example.smartnotifier.R
 import com.example.smartnotifier.ui.log.NotificationLogAdapter
 import com.example.smartnotifier.BuildConfig
 
+/**
+ * 画面の表示とユーザー入力の収集を担当するメイン画面 Fragment。
+ *
+ * 設計書の MVVM 方針に従い、Fragment は UI 表示とイベント受付に限定し、
+ * ルール操作やログ操作などのロジックは [MainViewModel] に委譲する。
+ */
 class MainFragment : Fragment() {
 
     private val viewModel: MainViewModel by viewModels()
     private var _binding: FragmentMainBinding? = null
 
+    /**
+     * ViewBinding への非nullアクセサ。
+     *
+     * バインディングは View のライフサイクルに紐づくため、
+     * 有効期間は onCreateView から onDestroyView までに限定する。
+     */
     private val binding get() = _binding!!
 
+    /**
+     * テスト通知送信など、通知に関する補助処理を行うヘルパー。
+     */
     private lateinit var notificationHelper: NotificationHelper
+
+    /**
+     * ルールの音声メッセージ試聴などに利用する TTS 管理オブジェクト。
+     *
+     * View の破棄に合わせて終了処理を行い、リソースリークを防ぐ。
+     */
     private var ttsManager: TtsManager? = null
 
-   // 権限リクエスト用
+    /**
+     * Android 13+ の通知権限（POST_NOTIFICATIONS）要求用ランチャー。
+     *
+     * 許可された場合はテスト通知を送信し、拒否された場合はメッセージを表示する。
+     */
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -77,11 +102,25 @@ class MainFragment : Fragment() {
         else Snackbar.make(binding.root, R.string.msg_notification_permission_denied, Snackbar.LENGTH_LONG).show()
     }
 
+    /**
+     * ルール行の有効/無効切り替え時に呼ばれるリスナー。
+     *
+     * 通知アクセス権限が無い場合は UI 状態を元に戻し、更新処理は行わない。
+     */
     private lateinit var enabledChangeListener: (RuleEntity, Boolean, CompoundButton) -> Unit
+
+    /**
+     * 通知検出ルール一覧（Rules）を表示する RecyclerView 用アダプター。
+     */
     private lateinit var rulesAdapter: RulesAdapter
 
 
-    // 通知ログアダプター
+    /**
+     * 通知ログ一覧（NotificationLog）を表示する RecyclerView 用アダプター。
+     *
+     * ログ行のダブルタップ操作は、設計書の「通知ログからルール追加」動作に対応し、
+     * [MainViewModel.addRuleFromLog] に委譲する。
+     */
     private val logAdapter by lazy {
         NotificationLogAdapter(
             onLogDoubleTapped = { log ->
@@ -90,13 +129,26 @@ class MainFragment : Fragment() {
         )
     }
 
+    /**
+     * ルール一覧の収集（Flow collect）を管理するジョブ。
+     *
+     * 並び順変更などで収集条件が変わる場合はジョブを差し替える。
+     */
     private var rulesCollectJob: Job? = null
 
+    /**
+     * ViewBinding を初期化し、Fragment のルートビューを生成する。
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * 画面生成後の初期化処理を行う。
+     *
+     * RecyclerView のセットアップ、UI イベント設定、StateFlow の購読などを開始する。
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -140,6 +192,9 @@ class MainFragment : Fragment() {
 
     private var permissionDialogShowing = false
 
+    /**
+     * 画面復帰時に通知アクセス権限の状態を反映し、未許可なら案内ダイアログを表示する。
+     */
     override fun onResume() {
         super.onResume()
 
@@ -153,6 +208,9 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * ルール一覧と通知ログ一覧の RecyclerView を初期化する。
+     */
     private fun setupRecyclerViews() {
         binding.recyclerRules.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -165,9 +223,33 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * ViewModel の公開する StateFlow を購読し、UI へ反映する。
+     *
+     * View（Fragment）は表示に徹し、データ加工や保存のロジックは ViewModel に委譲する。
+     */
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.errorMessage.collect { message ->
+                Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.addRuleFromLogEvent.collect { ev ->
+                val message = when (ev) {
+                    is AddRuleFromLogEvent.Success ->
+                        getString(R.string.msg_added_success_with_title, ev.title)
+
+                    AddRuleFromLogEvent.TooManySameNames ->
+                        getString(R.string.msg_add_failed_too_many_same_names)
+
+                    AddRuleFromLogEvent.Failed ->
+                        getString(R.string.msg_add_failed_generic)
+
+                    AddRuleFromLogEvent.FailedCopy ->
+                        getString(R.string.msg_failed_copy)
+                }
+
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
             }
         }
@@ -190,9 +272,15 @@ class MainFragment : Fragment() {
 
     }
 
+    /**
+     * UI 部品のクリックイベントを設定する。
+     */
     private fun setupClickListeners() {
         binding.btnAddRow.setOnClickListener {
             viewModel.setShowingLogList(true)
+        }
+        binding.btnCloseLog.setOnClickListener {
+            viewModel.setShowingLogList(false)
         }
         binding.btnConfirm.setOnClickListener {
             checkPermissionAndSendNotification()
@@ -207,6 +295,11 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * ルール削除前の確認ダイアログを表示する。
+     *
+     * 削除確定時の処理は [MainViewModel.delete] に委譲する。
+     */
     private fun showDeleteConfirmDialog(rule: RuleEntity) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.dlg_title_delete_confirm)
@@ -221,6 +314,11 @@ class MainFragment : Fragment() {
             .show()
     }
 
+    /**
+     * 通知リスナー権限（Notification Access）が未許可の場合に表示する案内ダイアログ。
+     *
+     * 設定画面（Notification Listener Settings）へ誘導する。
+     */
     private fun showNotificationAccessGuideDialog() {
         if (permissionDialogShowing) return
         permissionDialogShowing = true
@@ -236,6 +334,11 @@ class MainFragment : Fragment() {
             .show()
     }
 
+    /**
+     * 通知権限を確認し、条件を満たす場合にテスト通知を送信する。
+     *
+     * Android 13+ は POST_NOTIFICATIONS の実行時権限が必要となる。
+     */
     private fun checkPermissionAndSendNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
@@ -340,10 +443,18 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * 画面で指定された通知タイトルを用いてテスト通知を送信する。
+     */
     private fun sendTestNotification() {
         notificationHelper.sendTestNotification(viewModel.notificationTitle.value)
     }
 
+    /**
+     * ルール一覧の並び順スイッチ（sortList）に関する UI と購読処理を設定する。
+     *
+     * 設計書の「並び順」仕様に対応し、切り替えに応じてルール一覧の収集を再開する。
+     */
     private fun setupSortListUi() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.sortList.collect { orderByPackageAsc ->
@@ -358,6 +469,11 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * ルール一覧の収集ジョブをキャンセルし、指定の並び順で再収集を開始する。
+     *
+     * @param orderByPackageAsc true の場合は PackageName 昇順、false の場合は新しい順（ID 降順相当）
+     */
     private fun restartRulesCollect(orderByPackageAsc: Boolean) {
         rulesCollectJob?.cancel()
         rulesCollectJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -367,6 +483,11 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * テスト通知タイトル入力（ntfTitle）に関する UI と購読処理を設定する。
+     *
+     * テキスト変更は [MainViewModel.updateNotificationTitle] に委譲する。
+     */
     private fun setupNotificationTitleUi() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.notificationTitle.collect { title ->
@@ -380,6 +501,11 @@ class MainFragment : Fragment() {
         }
     }
 
+    /**
+     * View 破棄時の後始末を行う。
+     *
+     * ViewBinding と TTS を解放し、Flow 収集ジョブをキャンセルしてリークを防ぐ。
+     */
     override fun onDestroyView() {
         super.onDestroyView()
         ttsManager?.shutdown()
