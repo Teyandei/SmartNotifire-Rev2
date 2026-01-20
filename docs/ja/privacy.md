@@ -59,3 +59,9 @@ Smart Notifire（以下、「本アプリ」といいます）は、ユーザー
 -   開発者名： Takeaki Yoshizawa
 
 -   連絡先： t11087287@gmail.com
+
+---
+
+
+This Privacy Policy is also available in English:
+https://teyandei.github.io/SmartNotifire-Rev2/privacy.html

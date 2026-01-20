@@ -50,3 +50,8 @@ For inquiries regarding this Privacy Policy, please contact:
 Developer: Takeaki Yoshizawa
 
 Contact: t11087287@gmail.com
+
+---
+
+If you prefer the Japanese version of this Privacy Policy, please refer to [here](https://teyandei.github.io/SmartNotifire-Rev2/ja/privacy.html).
+
