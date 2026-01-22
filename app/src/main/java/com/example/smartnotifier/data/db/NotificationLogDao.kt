@@ -78,4 +78,13 @@ interface NotificationLogDao {
     @Query("DELETE FROM notification_log WHERE id NOT IN (" +
             "SELECT id FROM notification_log ORDER BY id DESC LIMIT :limit)")
     suspend fun trimLogs(limit: Int = 100)
+
+    /**
+     * 指定されたパッケージ名の通知ログを削除します。
+     *
+     * @param packageName 削除するログの対象となるパッケージ名。
+     */
+    @Query("DELETE FROM notification_log WHERE packageName = :packageName")
+    suspend fun deleteByPackageName(packageName: String)
+
 }

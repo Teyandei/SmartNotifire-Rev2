@@ -30,6 +30,7 @@ import com.example.smartnotifier.core.datastore.appPrefsDataStore
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
+import com.example.smartnotifier.data.repository.NotificationLogRepository
 import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -56,7 +57,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val dataStore = appContext.appPrefsDataStore
     private val db = DatabaseProvider.get(appContext)
     val rulesRepo = RulesRepository(db)
-    private val logDao = db.notificationLogDao()
+
+    private val pendingInvalid = mutableSetOf<String>()
+
+    private val notificationLogRepo = NotificationLogRepository(db)
+
+    private val pendingInvalidRules = mutableSetOf<Int>() // rule.id
 
     /**
      * ルール更新要求を一時的にバッファリングする SharedFlow。
@@ -82,7 +88,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      *
      * NotificationLogDao から取得し、StateFlow として公開する。
      */
-    val notificationLogs: StateFlow<List<NotificationLogEntity>> = logDao.getLatestLogs()
+    val notificationLogs: StateFlow<List<NotificationLogEntity>> = notificationLogRepo.observeLatestLogs()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     /**
@@ -129,9 +135,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             rulesRepo.update(rule)
         } catch (_: SQLiteConstraintException) {
-            _errorMessage.emit(R.string.msg_wrn_dup_same_name.toString())
+            _errorMessage.emit(appContext.getString(R.string.msg_wrn_dup_same_name))
         } catch (_: Exception) {
-            _errorMessage.emit(R.string.msg_err_save_failed.toString())
+            _errorMessage.emit(appContext.getString(R.string.msg_err_save_failed))
         }
     }
 
@@ -163,7 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         enabled = false
                     )
 
-                    val rowId = rulesRepo.dao.insertIgnore(newRule)
+                    val rowId = rulesRepo.insertIgnore(newRule)
                     if (rowId != -1L) {
                         setShowingLogList(false)
                         _addRuleFromLogEvent.emit(AddRuleFromLogEvent.Success(title))
@@ -282,6 +288,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             dataStore.edit { prefs ->
                 prefs[AppPrefs.KEY_NOTIFICATION_TITLE] = title
             }
+        }
+    }
+
+    /**
+     * 指定された packageName に紐づく通知ログを削除する。
+     */
+    fun onInvalidPackageFound(packageName: String) {
+        if (!pendingInvalid.add(packageName)) return
+
+        viewModelScope.launch {
+            notificationLogRepo.deleteLogsByPackageName(packageName)
+            pendingInvalid.remove(packageName)
+        }
+    }
+
+    /**
+     * 不正なルールであるrule.enabledを無効化する。
+     */
+    fun onInvalidRuleFound(rule: RuleEntity) {
+        val id = rule.id
+        if (!pendingInvalidRules.add(id)) return
+
+        viewModelScope.launch {
+            rulesRepo.markRuleInvalid(id)
+            pendingInvalidRules.remove(id)
         }
     }
 }

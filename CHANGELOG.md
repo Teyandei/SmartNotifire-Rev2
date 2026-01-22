@@ -1,3 +1,24 @@
+## CL-0003 無効通知の整理 2026-01-22
+
+### 現象
+
+- 追加ボタンクリックによる通知ログ表示で、アプリ名に変換できず、パッケージ名＋デフォルトアイコンのレコードがある。
+
+### 原因
+
+- PackageManager.NameNotFoundException例外が発生するも、パッケージ名とデフォルトアイコンを表示するコードになっていた。
+- 以下の点が直接原因と考えられる。
+  1. プリインストール系、一時的なメーカーアプリ、disabled / hidden 状態のアプリは、getApplicationInfo(packageName, 0) が 例外を投げる or null相当 になることがある
+  2. 表示時点でアンインストール/無効化されて、後から変換が失敗
+  3. 別ユーザー（Work profile / サブユーザー）由来の通知
+  4. パッケージは見えるがリソース参照が失敗（まれに Resources.NotFoundException 系）
+
+### 対処
+- PackageManager.NameNotFoundException例外が発生した場合は、通知ログの該当行削除依頼をNotificationLogAdapterに追加
+- NotificationLogAdapter->MainFragment->MainViewModel->NotificationLogRepository->NotificationDaoで該当行を削除
+- Ruleに既にある無効なレコードに対してenabledをオフにする処理を追加。アプリ名に無効であることを表示。（削除判断はユーザーに任せる）
+- その他クリティカルバグの修正
+
 ## CL-0002 プライバシーポリシー変更 - 2026-01-20
 
 ### 変更内容

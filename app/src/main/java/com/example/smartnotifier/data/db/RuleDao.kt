@@ -86,6 +86,13 @@ interface RuleDao {
     suspend fun countSimilarTitles(packageName: String, channelId: String, srhTitle: String): Int
 
     /**
+     * rules.enabled を無効化する。
+     * @param id ruleのID
+     */
+    @Query("UPDATE rules SET enabled = 0 WHERE id = :id")
+    suspend fun disableRule(id: Int)
+
+    /**
      * 指定されたルールをトランザクション内で複製する。
      *
      * 元ルールを取得し、タイトルの重複を回避した上で

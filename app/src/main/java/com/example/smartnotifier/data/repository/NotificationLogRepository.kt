@@ -57,4 +57,11 @@ class NotificationLogRepository(
      * @return 通知ログのリストを放出する[kotlinx.coroutines.flow.Flow]。
      */
     fun observeLatestLogs(limit: Int = 100) = dao.getLatestLogs(limit)
+
+    /**
+     * 指定されたパッケージ名の通知ログを削除します。
+     *
+     * @param packageName 削除するログの対象となるパッケージ名。
+     */
+    suspend fun deleteLogsByPackageName(packageName: String) = dao.deleteByPackageName(packageName)
 }

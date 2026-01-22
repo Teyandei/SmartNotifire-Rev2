@@ -68,4 +68,5 @@
     <string name="msg_add_failed_too_many_same_names">Failed to add the rule (too many with the same name).</string>
     <string name="msg_add_failed_generic">Failed to add the rule.</string>
     <string name="msg_failed_copy">Failed to copy.</string>
+    <string name="rule_app_not_found">App not found (may be uninstalled/disabled)</string>
 </resources>

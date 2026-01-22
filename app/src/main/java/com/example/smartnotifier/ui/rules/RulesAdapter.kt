@@ -31,6 +31,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.databinding.ItemRuleBinding
 import com.example.smartnotifier.ui.common.util.IconCache
+import com.example.smartnotifier.R
+
 
 /**
  * ルール一覧表示用の RecyclerView.Adapter
@@ -42,6 +44,7 @@ class RulesAdapter(
     private val onCopyClicked: (RuleEntity) -> Unit,
     private val onDeleteClicked: (RuleEntity) -> Unit,
     private val onPlayClicked: (RuleEntity) -> Unit,
+    private val onInvalidRuleFound: (RuleEntity) -> Unit,
     private val onRuleUpdated: (RuleEntity) -> Unit,         // Debounce保存用
     private val onRuleUpdatedImmediate: (RuleEntity) -> Unit // 即時保存用 (フォーカスロスト時)
 ) : ListAdapter<RuleEntity, RulesAdapter.RuleViewHolder>(DiffCallback) {
@@ -58,12 +61,31 @@ class RulesAdapter(
     }
 
     /**
-     * 指定位置のルールを ViewHolder にバインドする。
+     * 本来のonBindViewHolderは使わないので空実装
      */
     override fun onBindViewHolder(holder: RuleViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
+
+    /**
+     * 指定位置のルールを ViewHolder にバインドする。
+     */
+    override fun onBindViewHolder(
+        holder: RuleViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.contains(PayloadPermissionChanged)) {
+            holder.bindPermissionOnly(getItem(position))
+            return
+        }
+        // ここで、通常、onBindViewHolderが呼ばれる
+        super.onBindViewHolder(holder, position, payloads)
+    }
     private var notificationAccessGranted: Boolean = false
+
+    // イベントの種類を表す型安全なトークン
+    private object PayloadPermissionChanged
 
     /**
      * 通知アクセス権限の付与状態を設定する。
@@ -72,8 +94,9 @@ class RulesAdapter(
      * 変更後は一覧全体を再描画する。
      */
     fun setNotificationAccessGranted(granted: Boolean) {
+        if (notificationAccessGranted == granted) return
         notificationAccessGranted = granted
-        notifyDataSetChanged()
+        if (itemCount > 0) notifyItemRangeChanged(0, itemCount, PayloadPermissionChanged)
     }
 
     /**
@@ -140,23 +163,28 @@ class RulesAdapter(
                 binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
                 binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
             } catch (_: PackageManager.NameNotFoundException) {
+                Log.w(THIS_CLASS, "Package not found/visible: ${rule.packageName}")
                 // 取れない場合は packageName を表示
-                binding.txtAppName.text = rule.packageName
+                binding.txtAppName.text = context.getString(R.string.rule_app_not_found)
+                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
+
+                // DB更新依頼（無効化）
+                onInvalidRuleFound(rule)
             } catch (e: Exception) {
-                Log.e("RulesAdapter", "Exception in bindAppInfo", e)
+                Log.e(THIS_CLASS, "Exception in bindAppInfo", e)
+                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
             }
         }
 
         /**
-         * 指定されたルールを UI に反映する。
+         * 許可スイッチの更新を処理する。
+         * 1. 許可スイッチのリスナーを追加
+         * 2. 権限がない場合は OFF 表示に寄せる（DBがtrueでもUIはOFF）
+         * 3. 権限が無い間は、許可スイッチを非活性にする。
          *
-         * スイッチ状態、テキスト入力欄、各種ボタンのイベントを設定し、
-         * フォーカス状態と Debounce 保存仕様を考慮して表示を行う。
+         * @param rule 表示対象のRulesレコード
          */
-        fun bind(rule: RuleEntity) {
-            // ①② アプリアイコン・アプリ名を表示
-            bindAppInfo(rule)
-
+        fun bindPermissionOnly(rule: RuleEntity) {
             currentRule = rule
 
             // スイッチは従来通りリスナー付け直しでOK
@@ -177,6 +205,19 @@ class RulesAdapter(
                 }
                 onEnabledChanged(rule, isChecked, button)
             }
+        }
+
+        /**
+         * 指定されたルールを UI に反映する。
+         *
+         * スイッチ状態、テキスト入力欄、各種ボタンのイベントを設定し、
+         * フォーカス状態と Debounce 保存仕様を考慮して表示を行う。
+         */
+        fun bind(rule: RuleEntity) {
+            // ①② アプリアイコン・アプリ名を表示
+            bindAppInfo(rule)
+
+            currentRule = rule
 
             // ★ setTextは「プログラム更新時だけ」発火させる
             //    その間 watcher を黙らせる（無限ループ防止）
@@ -218,5 +259,7 @@ class RulesAdapter(
             override fun areContentsTheSame(oldItem: RuleEntity, newItem: RuleEntity): Boolean =
                 oldItem == newItem
         }
+
+        private const val THIS_CLASS :String = "RulesAdapter"
     }
 }

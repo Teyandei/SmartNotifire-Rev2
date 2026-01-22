@@ -120,11 +120,16 @@ class MainFragment : Fragment() {
      *
      * ログ行のダブルタップ操作は、設計書の「通知ログからルール追加」動作に対応し、
      * [MainViewModel.addRuleFromLog] に委譲する。
+     * labelに変換不能なレコードの削除要求を
+     * [MainViewModel.onInvalidPackageFound]に通知する。
      */
     private val logAdapter by lazy {
         NotificationLogAdapter(
             onLogDoubleTapped = { log ->
                 viewModel.addRuleFromLog(log)
+            },
+            onInvalidPackageFound = { packageName ->
+                viewModel.onInvalidPackageFound(packageName)
             }
         )
     }
@@ -177,6 +182,7 @@ class MainFragment : Fragment() {
                     Snackbar.make(binding.root, R.string.msg_no_voice_message, Snackbar.LENGTH_SHORT).show()
                 }
             },
+            onInvalidRuleFound = { rule -> viewModel.onInvalidRuleFound(rule) },
             onRuleUpdated = { rule -> viewModel.updateRuleDebounced(rule) },
             onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) }
         )

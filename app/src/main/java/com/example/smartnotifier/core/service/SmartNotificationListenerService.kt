@@ -73,13 +73,20 @@ class SmartNotificationListenerService : NotificationListenerService() {
         val pm = this.packageManager
         return try {
             val appInfo = pm.getApplicationInfo(packageName, 0)
-            // ここまで来たらアプリ名/アイコン取れる → OK
-            true
+            // “表示できる”ことをここで検証する
+            val label = pm.getApplicationLabel(appInfo).toString()
+            pm.getApplicationIcon(appInfo) // 取れなければ例外になる
+
+            label.isNotBlank()
         } catch (_: PackageManager.NameNotFoundException) {
             Log.w("NotificationListener", "Skip logging: Package not visible - $packageName")
             false
+        } catch (_: SecurityException) {
+            // Work profile/他ユーザー等で起きうる
+            Log.w("NotificationListener", "Skip logging: security exception - $packageName")
+            false
         } catch (e: Exception) {
-            Log.e("NotificationListener", "Unexpected error checking package", e)
+            Log.e("NotificationListener", "Skip logging: unexpected error - $packageName", e)
             false
         }
     }
@@ -154,7 +161,6 @@ class SmartNotificationListenerService : NotificationListenerService() {
         if (!isNew) return
 
         try {
-            recentlySpokenMessages.add(message)
             delay(3000)
 
             speakMutex.withLock {

@@ -62,4 +62,18 @@ class RulesRepository(db: AppDatabase) {
      * DAO 側のトランザクション処理を呼び出し、複製の一貫性を担保する。
      */
     suspend fun duplicateRule(id: Int) = dao.duplicateRuleTransaction(id)
+
+    /**
+     * 指定 ID のルールを無効化する。
+     */
+    suspend fun markRuleInvalid(id: Int) = dao.disableRule(id)
+
+    /**
+     * 指定したruleを追加する。一意制約違反でも例外を発声せずに、戻り値で判断できる。
+     *
+     * @param rule 追加するルール
+     * @return 追加結果。一意制約違反の場合は-1Lを返す。
+     */
+    suspend fun insertIgnore(rule: RuleEntity): Long = dao.insertIgnore(rule)
+
 }
