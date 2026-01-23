@@ -63,5 +63,5 @@ Smart Notifire（以下、「本アプリ」といいます）は、ユーザー
 ---
 
 
-This Privacy Policy is also available in English:
-https://teyandei.github.io/SmartNotifire-Rev2/privacy.html
+This Privacy Policy is also available in English:  
+[Privacy Policy](https://teyandei.github.io/SmartNotifire-Rev2/privacy.html)
