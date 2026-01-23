@@ -18,8 +18,10 @@ package com.example.smartnotifier.core.service
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -113,6 +115,9 @@ class SmartNotificationListenerService : NotificationListenerService() {
         
         saveToLog(packageName, channelId, title)
 
+        // 音を慣らしてはいけない時はリターン
+        if (!canSpeakNow(this)) return
+
         serviceScope.launch {
             checkRulesAndSpeak(packageName, channelId, title)
         }
@@ -134,6 +139,27 @@ class SmartNotificationListenerService : NotificationListenerService() {
             }
             logDao.trimLogs(100)
         }
+    }
+
+    /**
+     * TTSを使えるかを判断する。
+     * @return TTSが使え以下の場合はfalseを返す。
+     * 1.マナーモード時
+     * 2.おやすみモード時
+     */
+    private fun canSpeakNow(context: Context): Boolean {
+        val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
+
+        // マナーモード（サイレント / バイブ）は即NG
+        if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) {
+            return false
+        }
+
+        // おやすみモード（DND）も安全側に倒す
+        val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        return nm.currentInterruptionFilter ==
+                NotificationManager.INTERRUPTION_FILTER_ALL
     }
 
     private suspend fun checkRulesAndSpeak(packageName: String, channelId: String, title: String) {

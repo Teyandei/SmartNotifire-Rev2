@@ -238,6 +238,8 @@ class RulesAdapter(
                 suppressTextCallback = false
             }
 
+            bindPermissionOnly(rule)
+
             binding.btnCopyRow.setOnClickListener { onCopyClicked(rule) }
             binding.btnDeleteRow.setOnClickListener { onDeleteClicked(rule) }
             binding.btnPlayVoice.setOnClickListener { onPlayClicked(rule) }

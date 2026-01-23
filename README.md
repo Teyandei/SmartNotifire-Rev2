@@ -13,6 +13,8 @@
 
 画面を見なくても、通知の概要を耳で把握できる。それがこのアプリの目的です。
 
+※ マナーモード時は音声案内をしません。
+
 ---
 
 ## 🧩 動作の仕組み
@@ -177,6 +179,8 @@ However, notification sounds alone do not tell you **which app** or **what kind 
 - Part of the notification title
 
 This allows you to understand notifications **without looking at the screen**.
+
+* Voice announcements are not played while the device is set to Silent or Vibrate mode.
 
 ---
 
