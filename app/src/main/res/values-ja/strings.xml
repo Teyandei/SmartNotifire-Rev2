@@ -30,7 +30,8 @@
         この機能のために、Android の「通知へのアクセス」権限を有効にする必要があります。\n\n
         アプリは通知を識別するための情報と、通知のタイトルを利用します。\n
         それ以外の通知内容は保存・送信しません。\n\n
-        OK をタップすると設定画面が開きます。一覧から SmartNotifire を見つけて、権限を有効にしてください。
+        OK をタップすると設定画面が開きます。一覧から SmartNotifire を見つけて、権限を有効にしてください。\n
+        この権限を有効にしない選択も可能です。その場合は、「アプリ終了」を選んで、このアプリを終了できます。
     </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">ルールの削除</string>
@@ -66,6 +67,6 @@
     <string name="msg_add_failed_too_many_same_names">ルールの追加に失敗しました。（同名が多すぎます）</string>
     <string name="msg_add_failed_generic">ルールの追加に失敗しました。</string>
     <string name="msg_failed_copy">コピーに失敗しました。</string>
-    <string name="rule_app_not_found">アプリが見つかりません（アンインストール/無効化の可能性）</string>
-
+    <string name="spk_msg_default">%1sから通知が届きました。</string>
+    <string name="btn_exit">アプリ終了</string>
 </resources>

@@ -58,11 +58,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = DatabaseProvider.get(appContext)
     val rulesRepo = RulesRepository(db)
 
-    private val pendingInvalid = mutableSetOf<String>()
-
     private val notificationLogRepo = NotificationLogRepository(db)
-
-    private val pendingInvalidRules = mutableSetOf<Int>() // rule.id
 
     /**
      * ルール更新要求を一時的にバッファリングする SharedFlow。
@@ -155,28 +151,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun addRuleFromLog(log: NotificationLogEntity) {
         viewModelScope.launch {
-            val base = log.title
-            val maxTry = 50
-
             try {
-                for (i in 0..maxTry) {
-                    val title = if (i == 0) base else "$base-#${i.toString().padStart(2, '0')}"
-                    val newRule = RuleEntity(
-                        packageName = log.packageName,
-                        channelId = log.channelId,
-                        srhTitle = title,
-                        voiceMsg = null,
-                        enabled = false
-                    )
+                val ruleBase = RuleEntity(
+                    id = 0,
+                    packageName = log.packageName,
+                    appLabel = log.appLabel,
+                    channelId = log.channelId,
+                    srhTitle = log.title,
+                    voiceMsg = "",
+                    enabled = false
+                )
 
-                    val rowId = rulesRepo.insertIgnore(newRule)
-                    if (rowId != -1L) {
+                when (val result =
+                    rulesRepo.insertFromLog(ruleBase, log.title)
+                ) {
+                    is RulesRepository.InsertRuleResult.Success -> {
                         setShowingLogList(false)
-                        _addRuleFromLogEvent.emit(AddRuleFromLogEvent.Success(title))
-                        return@launch
+                        _addRuleFromLogEvent.emit(
+                            AddRuleFromLogEvent.Success(result.adoptedTitle)
+                        )
+                    }
+
+                    RulesRepository.InsertRuleResult.TooManySameNames -> {
+                        _addRuleFromLogEvent.emit(
+                            AddRuleFromLogEvent.TooManySameNames
+                        )
                     }
                 }
-                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.TooManySameNames)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -242,7 +243,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun duplicateRule(rule: RuleEntity) {
         viewModelScope.launch {
             try {
-                rulesRepo.duplicateRule(rule.id)
+                when (rulesRepo.duplicateRule(rule.id)) {
+                    is RulesRepository.InsertRuleResult.Success -> {
+                        // UI通知不要なら何もしない
+                    }
+                    RulesRepository.InsertRuleResult.TooManySameNames -> {
+                        _addRuleFromLogEvent.emit(
+                            AddRuleFromLogEvent.TooManySameNames
+                        )
+                    }
+                }
             } catch (_: Exception) {
                 _addRuleFromLogEvent.emit(AddRuleFromLogEvent.FailedCopy)
             }
@@ -292,27 +302,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * 指定された packageName に紐づく通知ログを削除する。
+     * Rulesの指定したidのenabledを更新する。
      */
-    fun onInvalidPackageFound(packageName: String) {
-        if (!pendingInvalid.add(packageName)) return
-
+    fun updateRuleOfEnabled(id: Int, enabled: Boolean) {
         viewModelScope.launch {
-            notificationLogRepo.deleteLogsByPackageName(packageName)
-            pendingInvalid.remove(packageName)
-        }
-    }
-
-    /**
-     * 不正なルールであるrule.enabledを無効化する。
-     */
-    fun onInvalidRuleFound(rule: RuleEntity) {
-        val id = rule.id
-        if (!pendingInvalidRules.add(id)) return
-
-        viewModelScope.launch {
-            rulesRepo.markRuleInvalid(id)
-            pendingInvalidRules.remove(id)
+            rulesRepo.updateEnabled(id, enabled)
         }
     }
 }

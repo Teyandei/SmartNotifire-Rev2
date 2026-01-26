@@ -34,7 +34,6 @@ import android.text.style.URLSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -103,13 +102,6 @@ class MainFragment : Fragment() {
     }
 
     /**
-     * ルール行の有効/無効切り替え時に呼ばれるリスナー。
-     *
-     * 通知アクセス権限が無い場合は UI 状態を元に戻し、更新処理は行わない。
-     */
-    private lateinit var enabledChangeListener: (RuleEntity, Boolean, CompoundButton) -> Unit
-
-    /**
      * 通知検出ルール一覧（Rules）を表示する RecyclerView 用アダプター。
      */
     private lateinit var rulesAdapter: RulesAdapter
@@ -120,16 +112,11 @@ class MainFragment : Fragment() {
      *
      * ログ行のダブルタップ操作は、設計書の「通知ログからルール追加」動作に対応し、
      * [MainViewModel.addRuleFromLog] に委譲する。
-     * labelに変換不能なレコードの削除要求を
-     * [MainViewModel.onInvalidPackageFound]に通知する。
      */
     private val logAdapter by lazy {
         NotificationLogAdapter(
             onLogDoubleTapped = { log ->
                 viewModel.addRuleFromLog(log)
-            },
-            onInvalidPackageFound = { packageName ->
-                viewModel.onInvalidPackageFound(packageName)
             }
         )
     }
@@ -158,31 +145,20 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // ①～⑧ ルールアダプター
-        enabledChangeListener = enabled@{ rule, enabled, button ->
-            if (!SmartNotificationListenerService.isPermissionGranted(requireContext())) {
-                // 念のため戻す
-                button.setOnCheckedChangeListener(null)
-                button.isChecked = false
-                button.setOnCheckedChangeListener { _, checked ->
-                    enabledChangeListener(rule, checked, button)
-                }
-                return@enabled
-            }
-            viewModel.updateImmediate(rule.copy(enabled = enabled))
-        }
         rulesAdapter = RulesAdapter(
-            onEnabledChanged = enabledChangeListener,
+            onEnabledChanged = { rule ->
+                viewModel.updateRuleOfEnabled(rule.id, rule.enabled)
+            },
             onCopyClicked = { rule -> viewModel.duplicateRule(rule) },
             onDeleteClicked = { rule -> showDeleteConfirmDialog(rule) },
             onPlayClicked = { rule ->
                 val msg = rule.voiceMsg
-                if (!msg.isNullOrBlank()) {
+                if (msg.isNotBlank()) {
                     ttsManager?.speak(msg)
                 } else {
-                    Snackbar.make(binding.root, R.string.msg_no_voice_message, Snackbar.LENGTH_SHORT).show()
+                    ttsManager?.speak(getString(R.string.spk_msg_default, rule.appLabel))
                 }
             },
-            onInvalidRuleFound = { rule -> viewModel.onInvalidRuleFound(rule) },
             onRuleUpdated = { rule -> viewModel.updateRuleDebounced(rule) },
             onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) }
         )
@@ -324,6 +300,7 @@ class MainFragment : Fragment() {
      * 通知リスナー権限（Notification Access）が未許可の場合に表示する案内ダイアログ。
      *
      * 設定画面（Notification Listener Settings）へ誘導する。
+     * 通知リスナー権限の承認ができないユーザーに対してはアプリの終了を選択可能とする。
      */
     private fun showNotificationAccessGuideDialog() {
         if (permissionDialogShowing) return
@@ -333,6 +310,9 @@ class MainFragment : Fragment() {
             .setTitle(getString(R.string.dlg_title_notification_access_required))
             .setMessage(getString(R.string.dlg_msg_notification_access_required))
             .setCancelable(false)
+            .setNegativeButton(getString(R.string.btn_exit)) {_,_ ->
+                activity?.finish()
+            }
             .setPositiveButton(getString(R.string.btn_ok)) { _, _ ->
                 permissionDialogShowing = false
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))

@@ -64,4 +64,14 @@ class NotificationLogRepository(
      * @param packageName 削除するログの対象となるパッケージ名。
      */
     suspend fun deleteLogsByPackageName(packageName: String) = dao.deleteByPackageName(packageName)
+
+    /**
+     *  同一の条件（パッケージ名、チャンネルID、タイトル）に一致するログの件数を取得します。
+     *
+     * @param packageName 検索対象のパッケージ名。
+     * @param channelId 検索対象のチャンネルID。
+     * @param title 検索対象の通知タイトル。
+     * @return 条件に一致したログの件数。
+     */
+    suspend fun getLogCount(packageName: String, channelId: String, title: String): Int = dao.getLogCount(packageName, channelId, title)
 }

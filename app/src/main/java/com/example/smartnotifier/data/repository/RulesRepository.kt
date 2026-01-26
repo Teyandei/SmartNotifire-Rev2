@@ -20,9 +20,20 @@ package com.example.smartnotifier.data.repository
 
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.RuleEntity
+import com.example.smartnotifier.data.db.RuleDao
 import kotlinx.coroutines.flow.Flow
 
 class RulesRepository(db: AppDatabase) {
+
+    sealed interface InsertRuleResult {
+        data class Success(
+            val rowId: Long,
+            val adoptedTitle: String
+        ) : InsertRuleResult
+
+        data object TooManySameNames : InsertRuleResult
+    }
+
     /**
      * ルール（Rules）に関するデータアクセスを集約する Repository。
      *
@@ -61,19 +72,44 @@ class RulesRepository(db: AppDatabase) {
      *
      * DAO 側のトランザクション処理を呼び出し、複製の一貫性を担保する。
      */
-    suspend fun duplicateRule(id: Int) = dao.duplicateRuleTransaction(id)
+    suspend fun duplicateRule(id: Int): InsertRuleResult =
+        dao.duplicateRuleTransaction(id).toRepoResult()
 
     /**
-     * 指定 ID のルールを無効化する。
-     */
-    suspend fun markRuleInvalid(id: Int) = dao.disableRule(id)
-
-    /**
-     * 指定したruleを追加する。一意制約違反でも例外を発声せずに、戻り値で判断できる。
+     * 通知ログから追加(ダブルタップ)するルールを生成する。
      *
-     * @param rule 追加するルール
-     * @return 追加結果。一意制約違反の場合は-1Lを返す。
+     * @param ruleBase 通理ログから生成したrules
+     * @param baseTitle 通理ログのTitle
      */
-    suspend fun insertIgnore(rule: RuleEntity): Long = dao.insertIgnore(rule)
+    suspend fun insertFromLog(
+        ruleBase: RuleEntity,
+        baseTitle: String
+    ): InsertRuleResult = dao.insertWithAutoNumber(ruleBase, baseTitle).toRepoResult()
+
+    /**
+     * Rulesに追加できたことを示すリターンを設定する
+     */
+    private fun RuleDao.InsertWithAutoNumberResult.toRepoResult(): InsertRuleResult =
+        when (this) {
+            is RuleDao.InsertWithAutoNumberResult.Success ->
+                InsertRuleResult.Success(rowId, adoptedTitle)
+            RuleDao.InsertWithAutoNumberResult.TooManySameNames ->
+                InsertRuleResult.TooManySameNames
+        }
+    /**
+     * 通知リスナーのRule検索用クエリ
+     *
+     * @param packageName パッケージ名
+     * @param channelId チャンネルID
+     * @return 検索結果Flow
+     */
+    fun getRulesByPackageAndChannel(packageName: String, channelId: String): Flow<List<RuleEntity>> = dao.getRulesByPackageAndChannel(packageName, channelId)
+
+    /**
+     * 許可の更新
+     * @param id ルールID
+     * @param enabled 許可状態
+     */
+    suspend fun updateEnabled(id: Int, enabled: Boolean) = dao.updateEnabled(id, enabled)
 
 }

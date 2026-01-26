@@ -17,8 +17,9 @@ data class RuleEntity(
         val id: Int = 0,
 
         val packageName: String,       // PackageName
+        val appLabel: String,          // AppLabel
         val channelId: String,         // ChannelID
-        val srhTitle: String,          // SrhTitle
-        val voiceMsg: String?,         // VoiceMsg
+        val srhTitle: String = "",     // SrhTitle
+        val voiceMsg: String = "",     // VoiceMsg
         val enabled: Boolean = false   // Enabled
 )

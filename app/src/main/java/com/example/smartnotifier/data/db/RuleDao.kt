@@ -63,6 +63,14 @@ interface RuleDao {
     suspend fun update(rule: RuleEntity)
 
     /**
+     * 許可の更新
+     * @param id ルールID
+     * @param enabled 許可状態
+     */
+    @Query("UPDATE rules SET enabled = :enabled WHERE id = :id")
+    suspend fun updateEnabled(id: Int, enabled: Boolean)
+
+    /**
      * 指定されたルールを削除する。
      */
     @Delete
@@ -86,34 +94,85 @@ interface RuleDao {
     suspend fun countSimilarTitles(packageName: String, channelId: String, srhTitle: String): Int
 
     /**
-     * rules.enabled を無効化する。
-     * @param id ruleのID
+     * 通知の該当チャンネルの一覧を検索タイトルの降順で選択する。
+     *
+     * - Emptyが一番最後にヒットするように
      */
-    @Query("UPDATE rules SET enabled = 0 WHERE id = :id")
-    suspend fun disableRule(id: Int)
+    @Query("SELECT * FROM rules WHERE packageName = :packageName AND channelId = :channelId ORDER BY SrhTitle DESC")
+    fun getRulesByPackageAndChannel(packageName: String, channelId: String): Flow<List<RuleEntity>>
 
     /**
      * 指定されたルールをトランザクション内で複製する。
      *
-     * 元ルールを取得し、タイトルの重複を回避した上で
-     * 新しいルールとして挿入する。
+     * 元ルールを取得し、タイトルの重複を回避した上で新しいルールとして挿入する。
+     *
+     * @param id 複製元のルールID
+     * @return 実行結果
+     *         ```
+     *         Success: {
+     *             rowId,           // 追加したId
+     *             adoptedTitle     // 一意制約化したタイトル
+     *         }
+     *         TooManySameNames: maxTryに達してタイトルを作成出来なかった
+     *         ```
      */
     @Transaction
-    suspend fun duplicateRuleTransaction(id: Int) {
-        val original = getRuleById(id) ?: return
-        val count = countSimilarTitles(original.packageName, original.channelId, original.srhTitle)
-        
-        val newTitle = if (count > 0) {
-            "${original.srhTitle}($count)"
-        } else {
-            original.srhTitle
-        }
-        
-        val newRule = original.copy(
+    suspend fun duplicateRuleTransaction(id: Int): InsertWithAutoNumberResult {
+        val original = getRuleById(id)
+            ?: return InsertWithAutoNumberResult.TooManySameNames
+
+        val ruleBase = original.copy(
             id = 0,
-            srhTitle = newTitle,
+            srhTitle = original.srhTitle, // baseTitle として使用
             enabled = false
         )
-        insert(newRule)
+
+        return insertWithAutoNumber(
+            ruleBase = ruleBase,
+            baseTitle = original.srhTitle
+        )
+    }
+
+    /**
+     * Rulesの一意制約インデックスを保証する Insert 実行
+     *
+     * @param ruleBase 元となる情報を設定したルール
+     * @param baseTitle 一意制約にする元タイトル
+     * @param maxTry 一意制約タイトルにするための最大試行回数
+     * @return 実行結果
+     * - Success(rowId, adoptedTitle): 追加成功。採用タイトルを返す
+     * - TooManySameNames: maxTry に達して作成不可
+     */
+    @Transaction
+    suspend fun insertWithAutoNumber(
+        ruleBase: RuleEntity,
+        baseTitle: String,
+        maxTry: Int = 50
+    ): InsertWithAutoNumberResult {
+        for (i in 0..maxTry) {
+            val title = if (i == 0) {
+                baseTitle
+            } else {
+                "$baseTitle-#${i.toString().padStart(2, '0')}"
+            }
+
+            val rowId = insertIgnore(ruleBase.copy(srhTitle = title))
+            if (rowId != -1L) {
+                return InsertWithAutoNumberResult.Success(
+                    rowId = rowId,
+                    adoptedTitle = title
+                )
+            }
+        }
+        return InsertWithAutoNumberResult.TooManySameNames
+    }
+
+    sealed interface InsertWithAutoNumberResult {
+        data class Success(
+            val rowId: Long,
+            val adoptedTitle: String
+        ) : InsertWithAutoNumberResult
+
+        data object TooManySameNames : InsertWithAutoNumberResult
     }
 }

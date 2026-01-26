@@ -20,15 +20,17 @@ package com.example.smartnotifier.core.service
 
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import com.example.smartnotifier.R
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import com.example.smartnotifier.data.repository.NotificationLogRepository
+import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -36,6 +38,9 @@ import kotlinx.coroutines.sync.withLock
 
 
 class SmartNotificationListenerService : NotificationListenerService() {
+
+    private lateinit var logRepo: NotificationLogRepository
+    private lateinit var ruleRepo: RulesRepository
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var ttsManager: TtsManager
@@ -57,10 +62,15 @@ class SmartNotificationListenerService : NotificationListenerService() {
             return NotificationManagerCompat.getEnabledListenerPackages(context)
                 .contains(context.packageName)
         }
+
+        private const val THIS_CLASS :String = "SmartNotificationListenerService"
     }
 
     override fun onCreate() {
         super.onCreate()
+        val db = DatabaseProvider.get(applicationContext)
+        logRepo = NotificationLogRepository(db)
+        ruleRepo = RulesRepository(db)
         ttsManager = TtsManager(this)
     }
 
@@ -68,29 +78,6 @@ class SmartNotificationListenerService : NotificationListenerService() {
         super.onDestroy()
         ttsManager.shutdown()
         serviceScope.cancel()
-    }
-
-    private fun shouldLogNotification(sbn: StatusBarNotification): Boolean {
-        val packageName = sbn.packageName
-        val pm = this.packageManager
-        return try {
-            val appInfo = pm.getApplicationInfo(packageName, 0)
-            // “表示できる”ことをここで検証する
-            val label = pm.getApplicationLabel(appInfo).toString()
-            pm.getApplicationIcon(appInfo) // 取れなければ例外になる
-
-            label.isNotBlank()
-        } catch (_: PackageManager.NameNotFoundException) {
-            Log.w("NotificationListener", "Skip logging: Package not visible - $packageName")
-            false
-        } catch (_: SecurityException) {
-            // Work profile/他ユーザー等で起きうる
-            Log.w("NotificationListener", "Skip logging: security exception - $packageName")
-            false
-        } catch (e: Exception) {
-            Log.e("NotificationListener", "Skip logging: unexpected error - $packageName", e)
-            false
-        }
     }
 
     /**
@@ -103,41 +90,48 @@ class SmartNotificationListenerService : NotificationListenerService() {
      */
     override fun onNotificationPosted(sbn : StatusBarNotification?) {
         sbn ?: return
-        if (!shouldLogNotification(sbn)) return
-
+        val pm = this.packageManager
         val packageName = sbn.packageName
-        val channelId = sbn.notification.channelId
-        val extras = sbn.notification.extras
-        val title = extras
-            .getCharSequence(android.app.Notification.EXTRA_TITLE)
-            ?.toString()
-            .orEmpty()
-        
-        saveToLog(packageName, channelId, title)
-
-        // 音を慣らしてはいけない時はリターン
-        if (!canSpeakNow(this)) return
-
+        var appLabel: String
+        try {
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            appLabel = pm.getApplicationLabel(appInfo).toString()
+        } catch (e: Exception) {
+            Log.w(THIS_CLASS, "onNotificationPosted： $packageName. ", e)
+            appLabel = ""
+        }
+        val log = NotificationLogEntity(
+            packageName = packageName,
+            appLabel = appLabel,
+            channelId = sbn.notification.channelId,
+            title = sbn
+                .notification.extras
+                .getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
+                .orEmpty()
+        )
         serviceScope.launch {
-            checkRulesAndSpeak(packageName, channelId, title)
+            if (!log.appLabel.isEmpty()) saveToLog(log)  // アプリ名がある時のみ通知ログに保存
+
+            // 音を慣らして良いときのみTTS
+            if (canSpeakNow(applicationContext)) checkRulesAndSpeak(log)
+            else Log.w(THIS_CLASS, "tts disabled")
         }
     }
 
-    private fun saveToLog(packageName: String, channelId: String, title: String) {
-        serviceScope.launch {
-            val db = DatabaseProvider.get(this@SmartNotificationListenerService)
-            val logDao = db.notificationLogDao()
-
-            val logSameCount = logDao.getLogCount(packageName, channelId, title)
-            if (logSameCount == 0) {
-                val logEntry = NotificationLogEntity(
-                    packageName = packageName,
-                    channelId = channelId,
-                    title = title
-                )
-                logDao.insert(logEntry)
-            }
-            logDao.trimLogs(100)
+    /**
+     * 通知ログに保存する
+     *
+     * @param log 通知ログ
+     */
+    private suspend fun saveToLog(log: NotificationLogEntity) {
+        try {
+            val logCount = logRepo.getLogCount(log.packageName, log.channelId, log.title)
+            if (logCount == 0) logRepo.insert(log)  // 新規のみ保存
+        } catch (e: Exception) {
+            Log.e(THIS_CLASS, "saveToLog: $log", e)
+        }
+        finally {
+            logRepo.trimLogs(100)
         }
     }
 
@@ -162,23 +156,27 @@ class SmartNotificationListenerService : NotificationListenerService() {
                 NotificationManager.INTERRUPTION_FILTER_ALL
     }
 
-    private suspend fun checkRulesAndSpeak(packageName: String, channelId: String, title: String) {
-        val db = DatabaseProvider.get(this@SmartNotificationListenerService)
-        val ruleDao = db.ruleDao()
-        
-        val rules = ruleDao.getAllRulesDesc().first()
-        
+    /**
+     * 検索タイトルのヒット確認とTTS読み上げ
+     *
+     * @param log 通知ログ
+     */
+    private suspend fun checkRulesAndSpeak(log: NotificationLogEntity) {
+        val rules = ruleRepo.getRulesByPackageAndChannel(log.packageName, log.channelId).first()
+
         val matchedRule = rules.find { rule ->
-            rule.enabled && 
-            rule.packageName == packageName &&
-            rule.channelId == channelId &&
-            (rule.srhTitle.isBlank() || title.contains(rule.srhTitle, ignoreCase = true))
+            rule.enabled &&
+            rule.packageName == log.packageName &&
+            rule.channelId == log.channelId &&
+            (rule.srhTitle.isBlank() || log.title.contains(rule.srhTitle, ignoreCase = true))
         }
 
-        matchedRule?.voiceMsg?.let { msg ->
-            if (msg.isNotBlank()) {
-                processVoiceQueue(msg)
+        matchedRule?.let { rules ->
+            var message = rules.voiceMsg
+            if (message.isBlank()) {
+                message = applicationContext.getString(R.string.spk_msg_default, rules.appLabel)
             }
+            processVoiceQueue(message)
         }
     }
 

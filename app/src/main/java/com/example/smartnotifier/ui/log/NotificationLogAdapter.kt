@@ -27,7 +27,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.smartnotifier.R
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.databinding.ItemNotificationLogBinding
 import com.example.smartnotifier.ui.common.util.IconCache
@@ -41,14 +40,9 @@ import com.example.smartnotifier.ui.common.util.IconCache
  * @param onLogDoubleTapped ユーザーがリストのアイテムをダブルタップした際に呼び出されるコールバック。
  *                          タップされた[NotificationLogEntity]を引数として受け取り、
  *                          ViewModelにルールの追加処理を依頼します。
- * @param onInvalidPackageFound packageNameがpackageManager.getApplicationLabelで、
- *                              PackageManager.NameNotFoundException例外を発声したときに、
- *                              呼び出されるコールバック。
- *
  */
 class NotificationLogAdapter(
     private val onLogDoubleTapped: (NotificationLogEntity) -> Unit,
-    private val onInvalidPackageFound: (String) -> Unit
 ) : ListAdapter<NotificationLogEntity, NotificationLogAdapter.LogViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogViewHolder {
@@ -77,28 +71,10 @@ class NotificationLogAdapter(
          */
         fun bind(log: NotificationLogEntity) {
             val context = binding.root.context
-            val pm = context.packageManager
 
            // アプリ情報の表示
-            try {
-                val appInfo = pm.getApplicationInfo(log.packageName, 0)
-                binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
-                binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, log.packageName))
-            } catch (_: PackageManager.NameNotFoundException) {
-                Log.w(THIS_CLASS, "Package not found/visible: ${log.packageName}")
-
-                // UIは一応フォールバック（瞬間の表示崩れ対策）
-                binding.txtAppName.text = log.packageName
-                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
-
-                // DB掃除依頼
-                onInvalidPackageFound(log.packageName)
-            }catch (e: Exception) {
-                Log.e(THIS_CLASS, "Exception in bindAppInfo", e)
-                binding.txtAppName.text = log.packageName
-                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
-            }
-
+            binding.txtAppName.text = log.appLabel
+            binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, log.packageName))
 
             // 通知タイトル
             binding.txtNtfTitle.text = log.title

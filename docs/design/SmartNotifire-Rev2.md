@@ -1,6 +1,6 @@
 # SmartNotifire-Rev2
 
-Document Rev6 2026-01-12 T.Yoshizawa
+Document Rev7 2026-01-25 T.Yoshizawa
 
 ## 目的
 
@@ -12,7 +12,7 @@ Document Rev6 2026-01-12 T.Yoshizawa
 
 ## 要件
 
-Androidアプリの通知にユーザが決めた条件（アプリ名、通知タイトルの部分一致）で、ユーザー指定の文字を音声として読み上げること。
+Androidアプリの通知にユーザが決めた条件（アプリ名、チャンネルID、通知タイトル）で、ユーザー指定の文字を音声として読み上げること。
 
 ## 実装指針
 
@@ -98,14 +98,15 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 対象アプリの通知を管理する。
 
-| 項目名 | メンバー名 | 型 | 初期値 | 内容 |
-| --- | --- | --- | --- | --- |
-| ID | ID | int | - | 主キー（自動インクリメント） |
-| パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
-| チャンネルID | ChannelID | String | null | 通知チャンネル |
-| 検索タイトル | SrhTitle | String | empty | 通知タイトルの検索キーワード。部分一致、empty時は全てヒットとする。 |
-| 音声メッセージ | VoiceMsg | String | null | 本アプリが検索でヒットした場合に使用するTTS対象 |
-| 許可 | Enabled | bool | False | True: 検索する、 False: 検索しない。 |
+| 項目名    | メンバー名       | 型 | 初期値 | 内容                                                             |
+|--------|-------------| --- | --- |----------------------------------------------------------------|
+| ID     | ID          | int | - | 主キー（自動インクリメント）                                                 |
+| パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名。通知ログの内容から取得。                                     |
+| アプリ名   | AppLabel    | String | null | 可読できるアプリ名。通知ログの内容から取得。                                         |
+| チャンネルID | ChannelID   | String | null | 通知チャンネル。通知ログの内容から取得。                                           |
+| 検索タイトル | SrhTitle    | String | empty | 通知タイトルの検索キーワード。部分一致、empty時は全てヒットとする。通知ログの内容から取得するが、UIで更新可能とする。 |
+| 音声メッセージ | VoiceMsg    | String | empty | 本アプリが検索でヒットした場合に使用するTTSメッセージ。未指定時はアプリ名の通知が合ったことをメッセージとする。UIで更新可能とする。|
+| 許可     | Enabled     | bool | False | True: 検索する、 False: 検索しない。 UIで更新可能とする。                          |
 
 インデックス　（一意）
 
@@ -119,12 +120,13 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 通知設定を容易化するために、通知選択画面で使用する。
 
-| 項目名 | メンバー名 | 型 | 初期値 | 内容 |
-| --- | --- | --- | --- | --- |
-| ID | ID | int | - | 主キー（自動インクリメント） |
-| パッケージ名 | PackageName | String | null | 通知を処理するパッケージ名 |
-| チャンネルID | ChannelID | String | null | 通知チャンネル |
-| タイトル | Title | String | null | 通知タイトル |
+| 項目名     | メンバー名 | 型 | 初期値   | 内容                  |
+|-----------| -------- | --- |-------|---------------------|
+| ID      | ID | int | -     | 主キー（自動インクリメント）      |
+| パッケージ名  | PackageName | String | null  | 通知を処理するパッケージ名       |
+| アプリ名    | AppLabel | String | empty | パッケージ名から取得したアプリの名称  |
+| チャンネルID | ChannelID | String | null  | 通知チャンネル             |
+| タイトル    | Title | String | empty  | 通知タイトル              |
 
 インデックス　（一意）
 
@@ -146,21 +148,21 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 ### ２．画面レイアウト項目説明
 
-| No. | 名称 | 識別子 | 型 | 説明及び動作 |
-| --- | --- | --- | --- | --- |
+| No. | 名称 | 識別子 | 型 | 説明及び動作                                                                                       |
+| --- | --- | --- | --- |----------------------------------------------------------------------------------------------|
 | ① | アプリアイコン | appIcon | Image | Rules.PackageNameをPackageManager（アプリアイコン）から取得して表示する。但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
-| ② | アプリ名 | appName | Label | Rules.PackageNameから変換したアプリ名。 |
-| ③ | 検索タイトル | srhTitle | TextBox | Rules.SrhTitleの内容。 |
-| ④ | 音声メッセージ | voiceMsg | TextBox | Rules.VoiceMsgの内容。 |
-| ⑤ | コピー | copyRow | Icon | タップで選択している行のコピー※を通知検出ルール(Rules)に追加。※Rules.SrhTitleが一意になるように番号を付与。 |
-| ⑥ | 削除 | deleteRow | Icon | タップで選択している行を削除する。削除前にユーザーに確認するダイアログを表示する。 |
-| ⑦ | 有効 | enabled | SW Box | Rules.Enablesの内容。 |
-| ⑧ | プレイ | playVoice | Button | Rules.VoiceMsgをTTSで音声出力する。 |
-| ⑨ | 並び順 | sortList | SW Box | Rules表示の並び順False:Rules.IDの降順Rules:Rules: 1:PackageName, 2:Roules.IDの昇順 |
-| ⑩ | ヘルプ | helpIcon | Icon | タップで、アプリのバージョンと簡単な説明を表示。後述のヘルプ表示内容を参照。 |
-| ⑪ | 追加 | addRow | Button | 後述のの通知ログリストを表示する。スクロールエリアにあるが、このボタン位置は固定する。通知履歴リスト表示時は隠れるか、通知ログリスト非表示になるまで消す。 |
-| ⑫ | 通知タイトル | ntfTitle | TextBox | このアプリが通知をするときのタイトル名（デフォルト）テスト通知 |
-| ⑬ | 通知 | ntfSend | Button | 通知タイトルで通知する。 |
+| ② | アプリ名 | appName | Label | Rules.AppLabelの内容。                                                                           |
+| ③ | 検索タイトル | srhTitle | TextBox | Rules.SrhTitleの内容。                                                                           |
+| ④ | 音声メッセージ | voiceMsg | TextBox | Rules.VoiceMsgの内容。                                                                           |
+| ⑤ | コピー | copyRow | Icon | タップで選択している行のコピー※を通知検出ルール(Rules)に追加。※Rules.SrhTitleが一意になるように番号を付与。                            |
+| ⑥ | 削除 | deleteRow | Icon | タップで選択している行を削除する。削除前にユーザーに確認するダイアログを表示する。                                                    |
+| ⑦ | 有効 | enabled | SW Box | Rules.Enablesの内容。                                                                            |
+| ⑧ | プレイ | playVoice | Button | Rules.VoiceMsgをTTSで音声出力する。                                                                   |
+| ⑨ | 並び順 | sortList | SW Box | Rules表示の並び順False:Rules.IDの降順Rules:Rules: 1:PackageName, 2:Roules.IDの昇順                       |
+| ⑩ | ヘルプ | helpIcon | Icon | タップで、アプリのバージョンと簡単な説明を表示。後述のヘルプ表示内容を参照。                                                       |
+| ⑪ | 追加 | addRow | Button | 後述のの通知ログリストを表示する。スクロールエリアにあるが、このボタン位置は固定する。通知履歴リスト表示時は隠れるか、通知ログリスト非表示になるまで消す。                |
+| ⑫ | 通知タイトル | ntfTitle | TextBox | このアプリが通知をするときのタイトル名（デフォルト）テスト通知                                                              |
+| ⑬ | 通知 | ntfSend | Button | 通知タイトルで通知する。                                                                                 |
 
 ### ３．通知ログリスト
 
@@ -169,11 +171,11 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 ![image.png](image%201.png)
 
-| No. | 名称 | 識別子 | 型 | 説明及び動作 |
-| --- | --- | --- | --- | --- |
+| No. | 名称 | 識別子 | 型 | 説明及び動作                                                                                                 |
+| --- | --- | --- | --- |--------------------------------------------------------------------------------------------------------|
 | ① | アプリアイコン | appIcon | Image | NotificationLog.PackageNameをPackageManager（アプリアイコン）から取得して表示する。但し、オーバーヘッドを考慮し、イメージの保存はメモリキャッシュの利用を考慮する。 |
-| ② | アプリ名 | appName | Label | NotificationLog.PackageNameから変換したアプリ名。 |
-| ③ | 通知タイトル | ntfTitle | Label | NotificationLog.Titleの内容。 |
+| ② | アプリ名 | appName | Label | NotificationLog.AppLabelの内容。                                                                           |
+| ③ | 通知タイトル | ntfTitle | Label | NotificationLog.Titleの内容。                                                                              |
 - リストは通知ログの全レコードを全て設定せず、表示行＋バッファ（１０行※現時点で仮定義）といった形で保持し、下へのスクロールによって、順次データ読み取り・設定を行ってパフォーマンス低下を軽減すること。
 - リストの上部にキャプション「通知ログーダブルタップで追加」と表示する。キャプションはスクロールによって消えないこと。
 - 通知ログリストの消滅条件
@@ -184,12 +186,13 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
   以下の通り、タップ該当行の通知ログ（NotificationLog）のレコードを通知検出ルール（Rules）に追加する。
 
   | NotificationLog(source) | Rules(distination) | 操作 |
-      | --- | --- | --- |
-  | PackageName | PackageName | sourceを設定 |
-  | ChannelID | ChannelID | sourceを設定 |
-  | Title | SrhTitle | sourceを設定。但し、Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
-  | - | VoiceMsg | nullを設定 |
-  | - | Enabled | Falseを設定 |
+  |-------------------------|--------------------| --- |
+  | PackageName             | PackageName        | sourceを設定 |
+  | AppLabel                | AppLabel           | sourceを設定 |
+  | ChannelID               | ChannelID          | sourceを設定 |
+  | Title                   | SrhTitle           | sourceを設定。但し、Rules.SrhTitle=NotificationLog.Titleのレコードがある場合は、NotificationLog.Titleの末尾に数字を入れて一意になるようにする |
+  | -                       | VoiceMsg           | nullを設定 |
+  | -                       | Enabled            | Falseを設定 |
 
   ### ４．ヘルプ表示内容
 
@@ -198,6 +201,7 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
     - アプリ名とバージョン：Smart Notifire　2.x.x
     - ユーザー向けの要件と注意事項
     - GitHubのREADME.mdへのリンク
+    - プライバシーポリシーのリンク
     - 閉じるボタンのみ
 
 ## 機能
@@ -210,13 +214,13 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 
 ### 通知検出機能
 
-Riporitogy及び画面仕様で記述されている情報で通知モニタ機能により、ターゲットとなる通知を検出する。
+Repository及び画面仕様で記述されている情報で通知モニタ機能により、ターゲットとなる通知を検出する。
 
 検出した通知は、後述のTTS機能で音声を出力するが、連続検出による重複が懸念されるため、キュー構造を持った通知記憶域（以下、通知キュー）を使用する。
 
 ### 発声機能
 
-通知検出機能でヒットした通知をRiporitogyで登録したTextで発声する。
+通知検出機能でヒットした通知をRules.VoiceMassageで登録した内容をTTSで読み上げる。Rules.VoiceMassageが空白の場合はアプリ名の通知があったことを内容とする。
 
 通知音と同時に発声すると重複することで、ユーザーの混乱が起こる。
 
@@ -260,62 +264,9 @@ Riporitogy及び画面仕様で記述されている情報で通知モニタ機�
 ## 変更履歴
 
 - Rev 1: 2025-12-29 初版
-    - レビュー記録
-
-      ### **1. 表記・命名の統一**
-
-      **検索ワード**
-
-      **問題点**
-
-      **修正指針**
-
-      ### **2. 説明の集約（冗長記述）**
-
-      **検索ワード**
-
-      **問題点**
-
-      **修正指針**
-
-      ### **3. ロジック・仕様の明確化**
-
-      **検索ワード**
-
-      **問題点**
-
-      **修正指針**
-
-      ### **4. Android仕様との整合性**
-
-      **検索ワード**
-
-      **問題点**
-
-      **修正指針**
-
 - Rev2: 2025-12-31 通知確認機能追加
-- Rev3: 2026-01-05 Rule, NotoficationLogテーブルのIcon（Uri)は未使用とする。代わりにPaclageNameからのアイコン取得とし、オーバーヘッドを考慮して、イメージはメモリキャッシュを利用する。
+- Rev3: 2026-01-05 Rule, NotoficationLogテーブルのIcon（Uri)は未使用とする。代わりにPackageNameからのアイコン取得とし、オーバーヘッドを考慮して、イメージはメモリキャッシュを利用する。
 - Rev4: 2026-01-08 通知ログに一意制約インデックスを追加し、不要通知を追加しないようにした。
 - Rev5: 2026-01-11 アーキテクチャとデータフロー章のフォアグラウンドサービスを通知リスナーサービスに変更し、内容を見直し。
 - Rev6: 2026-01-12 ペルプ機能を明示。その他誤記等修正。
-
-## ChatGPTチャット履歴
-
-- 2025-12-30
-    - ステップ１進捗
-
-      [ステップ１](https://www.notion.so/2d9368ccc91980ef80d7c57362dd9a9e?pvs=21)
-
-      [ステップ２](https://www.notion.so/2d9368ccc91980aaa322db04480789ff?pvs=21)
-
-      [ステップ３](https://www.notion.so/2d9368ccc919801e9d09e3424d7528c6?pvs=21)
-
-      [ステップ４](https://www.notion.so/2d9368ccc91980bca31bc3f456b99e8c?pvs=21)
-
-- 2026-01-02
-    - App Sartupの実装
-
-      [ステップ１](https://www.notion.so/2dc368ccc919808b9fa7cf233d4ad474?pvs=21)
-
-      [画面実装](https://www.notion.so/2dc368ccc9198032b37cfaa82f46453b?pvs=21)
+- Rev7: 2026-01-23 アプリ名をテーブル項目に追加。TTSの読み上げ内容を変更。変更履歴を簡略化した。

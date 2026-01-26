@@ -16,7 +16,8 @@ data class NotificationLogEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 
-    val packageName: String,
-    val channelId: String,
-    val title: String
+    val packageName: String,    // PackageName
+    val appLabel: String,       // AppLabel
+    val channelId: String,      // ChannelID
+    val title: String = ""      // Title
 )

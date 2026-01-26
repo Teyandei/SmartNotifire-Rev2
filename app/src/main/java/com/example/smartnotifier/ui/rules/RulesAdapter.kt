@@ -18,12 +18,9 @@ package com.example.smartnotifier.ui.rules
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import android.content.pm.PackageManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -31,8 +28,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.databinding.ItemRuleBinding
 import com.example.smartnotifier.ui.common.util.IconCache
-import com.example.smartnotifier.R
-
 
 /**
  * ルール一覧表示用の RecyclerView.Adapter
@@ -40,11 +35,10 @@ import com.example.smartnotifier.R
  * トランザクションと保存最適化 (Debounce/FocusLost) を考慮
  */
 class RulesAdapter(
-    private val onEnabledChanged: (RuleEntity, Boolean, CompoundButton) -> Unit,
+    private val onEnabledChanged: (RuleEntity) -> Unit,
     private val onCopyClicked: (RuleEntity) -> Unit,
     private val onDeleteClicked: (RuleEntity) -> Unit,
     private val onPlayClicked: (RuleEntity) -> Unit,
-    private val onInvalidRuleFound: (RuleEntity) -> Unit,
     private val onRuleUpdated: (RuleEntity) -> Unit,         // Debounce保存用
     private val onRuleUpdatedImmediate: (RuleEntity) -> Unit // 即時保存用 (フォーカスロスト時)
 ) : ListAdapter<RuleEntity, RulesAdapter.RuleViewHolder>(DiffCallback) {
@@ -67,21 +61,6 @@ class RulesAdapter(
         holder.bind(getItem(position))
     }
 
-    /**
-     * 指定位置のルールを ViewHolder にバインドする。
-     */
-    override fun onBindViewHolder(
-        holder: RuleViewHolder,
-        position: Int,
-        payloads: MutableList<Any>
-    ) {
-        if (payloads.contains(PayloadPermissionChanged)) {
-            holder.bindPermissionOnly(getItem(position))
-            return
-        }
-        // ここで、通常、onBindViewHolderが呼ばれる
-        super.onBindViewHolder(holder, position, payloads)
-    }
     private var notificationAccessGranted: Boolean = false
 
     // イベントの種類を表す型安全なトークン
@@ -112,7 +91,7 @@ class RulesAdapter(
         private var suppressTextCallback = false
 
         init {
-            // フォーカスロスト時の即時保存
+           // フォーカスロスト時の即時保存
             binding.editSrhTitle.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     val rule = currentRule ?: return@OnFocusChangeListener
@@ -124,8 +103,7 @@ class RulesAdapter(
                 if (!hasFocus) {
                     val rule = currentRule ?: return@OnFocusChangeListener
                     val text = binding.editVoiceMsg.text?.toString().orEmpty()
-                    if (text != (rule.voiceMsg
-                            ?: "")
+                    if (text != rule.voiceMsg
                     ) onRuleUpdatedImmediate(rule.copy(voiceMsg = text))
                 }
             }
@@ -143,67 +121,7 @@ class RulesAdapter(
                 if (!binding.editVoiceMsg.hasFocus()) return@doAfterTextChanged
                 val rule = currentRule ?: return@doAfterTextChanged
                 val newText = editable?.toString().orEmpty()
-                if (newText != (rule.voiceMsg ?: "")) onRuleUpdated(rule.copy(voiceMsg = newText))
-            }
-        }
-
-        /**
-         * ルールに紐づくアプリ情報（アプリ名・アイコン）を表示する。
-         *
-         * packageName からアプリ情報を取得し、失敗した場合は
-         * フォールバックとして packageName 自体を表示する。
-         */
-        private fun bindAppInfo(rule: RuleEntity) {
-            val context = binding.root.context
-            val pm = context.packageManager
-
-            // ② アプリ名（packageName -> label）
-            try {
-                val appInfo = pm.getApplicationInfo(rule.packageName, 0)
-                binding.txtAppName.text = pm.getApplicationLabel(appInfo).toString()
-                binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
-            } catch (_: PackageManager.NameNotFoundException) {
-                Log.w(THIS_CLASS, "Package not found/visible: ${rule.packageName}")
-                // 取れない場合は packageName を表示
-                binding.txtAppName.text = context.getString(R.string.rule_app_not_found)
-                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
-
-                // DB更新依頼（無効化）
-                onInvalidRuleFound(rule)
-            } catch (e: Exception) {
-                Log.e(THIS_CLASS, "Exception in bindAppInfo", e)
-                binding.imgAppIcon.setImageResource(R.drawable.ic_default_app)
-            }
-        }
-
-        /**
-         * 許可スイッチの更新を処理する。
-         * 1. 許可スイッチのリスナーを追加
-         * 2. 権限がない場合は OFF 表示に寄せる（DBがtrueでもUIはOFF）
-         * 3. 権限が無い間は、許可スイッチを非活性にする。
-         *
-         * @param rule 表示対象のRulesレコード
-         */
-        fun bindPermissionOnly(rule: RuleEntity) {
-            currentRule = rule
-
-            // スイッチは従来通りリスナー付け直しでOK
-            binding.swEnabled.setOnCheckedChangeListener(null)
-            // 権限がないなら OFF 表示に寄せる（DBがtrueでもUIはOFF）
-            val effectiveEnabled = notificationAccessGranted && rule.enabled
-            binding.swEnabled.isChecked = effectiveEnabled
-
-            // 権限がない間は操作不能
-            binding.swEnabled.isEnabled = notificationAccessGranted
-
-            binding.swEnabled.setOnCheckedChangeListener { button, isChecked ->
-                if (!notificationAccessGranted) {
-                    // 保険（基本ここには来ない）
-                    button.setOnCheckedChangeListener(null)
-                    button.isChecked = false
-                    return@setOnCheckedChangeListener
-                }
-                onEnabledChanged(rule, isChecked, button)
+                if (newText != rule.voiceMsg) onRuleUpdated(rule.copy(voiceMsg = newText))
             }
         }
 
@@ -214,10 +132,12 @@ class RulesAdapter(
          * フォーカス状態と Debounce 保存仕様を考慮して表示を行う。
          */
         fun bind(rule: RuleEntity) {
-            // ①② アプリアイコン・アプリ名を表示
-            bindAppInfo(rule)
-
+            val context = binding.root.context
             currentRule = rule
+
+            // ①② アプリアイコン・アプリ名を表示
+            binding.txtAppName.text = rule.appLabel
+            binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
 
             // ★ setTextは「プログラム更新時だけ」発火させる
             //    その間 watcher を黙らせる（無限ループ防止）
@@ -229,7 +149,7 @@ class RulesAdapter(
                     if (now != want) binding.editSrhTitle.setText(want)
                 }
 
-                val wantVoice = rule.voiceMsg ?: ""
+                val wantVoice = rule.voiceMsg
                 if (!binding.editVoiceMsg.hasFocus()) {
                     val nowVoice = binding.editVoiceMsg.text?.toString().orEmpty()
                     if (nowVoice != wantVoice) binding.editVoiceMsg.setText(wantVoice)
@@ -238,8 +158,11 @@ class RulesAdapter(
                 suppressTextCallback = false
             }
 
-            bindPermissionOnly(rule)
-
+            binding.swEnabled.setOnCheckedChangeListener(null)
+            binding.swEnabled.isChecked = rule.enabled
+            binding.swEnabled.setOnCheckedChangeListener { _, isChecked ->
+                onEnabledChanged(rule.copy(enabled = isChecked))
+            }
             binding.btnCopyRow.setOnClickListener { onCopyClicked(rule) }
             binding.btnDeleteRow.setOnClickListener { onDeleteClicked(rule) }
             binding.btnPlayVoice.setOnClickListener { onPlayClicked(rule) }
@@ -261,7 +184,5 @@ class RulesAdapter(
             override fun areContentsTheSame(oldItem: RuleEntity, newItem: RuleEntity): Boolean =
                 oldItem == newItem
         }
-
-        private const val THIS_CLASS :String = "RulesAdapter"
     }
 }

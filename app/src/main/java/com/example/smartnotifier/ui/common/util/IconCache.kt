@@ -22,14 +22,28 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.core.graphics.drawable.toBitmap  // ← これをインポート！
 import androidx.collection.LruCache
 import com.example.smartnotifier.R
 
-
+/**
+ * アイコンイメージのキャッシュ
+ */
 object IconCache {
     private val cache = LruCache<String, Bitmap>(50)  // 50個キャッシュ（適宜調整）
+    private const val THIS_CLASS = "IconCache"
 
+    /**
+     * アイコンイメージの取得とキャッシュ
+     *
+     * - パッケージ名から見つからない場合は、デフォルトアイコンを使用する。
+     * - 本処理のコールで例外は発生しない
+     *
+     * @param context Context
+     * @param packageName パッケージ名
+     * @return Bitmap
+     */
     fun getAppIcon(context: Context, packageName: String): Bitmap? {
         cache.get(packageName)?.let { return it }
 
@@ -39,9 +53,10 @@ object IconCache {
             val bitmap = drawable.toBitmap()
             cache.put(packageName, bitmap)
             bitmap
-        } catch (_: PackageManager.NameNotFoundException) {
+        } catch (e: Exception) {
             // アプリが見つからない場合のフォールバック（デフォルトアイコン）
-            val default = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
+            Log.w(THIS_CLASS, "Could not get app icon for $packageName", e)
+            val default = BitmapFactory.decodeResource(context.resources, R.drawable.ic_default_app)
             cache.put(packageName, default)
             default
         }

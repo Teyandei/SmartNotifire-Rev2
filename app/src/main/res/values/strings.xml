@@ -30,7 +30,10 @@
         To work, it needs Android’s “Notification access” permission.\n\n
         SmartNotifire uses only the information needed to identify notifications and the notification title.\n
         It does not save or send other notification content.\n\n
-        Tap OK to open settings, then enable notification access for Smart Notifier.
+        Tapping OK will open the system settings screen.\n
+        Please find SmartNotifire in the list and enable notification access.\n
+        You may also choose not to enable this permission.\n
+        In that case, you can select Exit App to close the application.
 </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">Deleting a Rule</string>
@@ -68,5 +71,6 @@
     <string name="msg_add_failed_too_many_same_names">Failed to add the rule (too many with the same name).</string>
     <string name="msg_add_failed_generic">Failed to add the rule.</string>
     <string name="msg_failed_copy">Failed to copy.</string>
-    <string name="rule_app_not_found">App not found (may be uninstalled/disabled)</string>
+    <string name="spk_msg_default">You have received a notification from %1s.</string>
+    <string name="btn_exit">Exit App</string>
 </resources>

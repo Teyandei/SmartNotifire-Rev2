@@ -27,7 +27,7 @@ import java.util.Locale
  * システムデフォルトの TTS を管理するクラス
  * 設計書：TTS(Text-to-Speech) / 発声機能 に基づく
  */
-class TtsManager(private val context: Context) : TextToSpeech.OnInitListener {
+class TtsManager(context: Context) : TextToSpeech.OnInitListener {
 
     private var tts: TextToSpeech? = null
     private var isInitialized = false

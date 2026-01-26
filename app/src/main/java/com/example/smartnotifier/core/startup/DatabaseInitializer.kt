@@ -133,6 +133,7 @@ class DatabaseInitializer : Initializer<Unit> {
         val initialRule = RuleEntity(
             id = 0,
             packageName = packageName,
+            appLabel = context.getString(R.string.app_name),
             channelId = "check",
             srhTitle = context.getString(R.string.default_check_notification_title),
             voiceMsg = context.getString(R.string.default_check_voice_message),
