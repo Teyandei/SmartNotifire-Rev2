@@ -7,7 +7,7 @@
 **Smart Notifire** は、
 
 * アプリ名
-* 通知タイトルの一部又は全てのタイトル
+* 必要に応じて通知タイトルの一部
 
 といったユーザーが指定した条件に一致した通知が届いたとき、 **あらかじめ登録した文章を音声で読み上げる**アプリです。
 
@@ -19,11 +19,13 @@
 
 ## 🧩 動作の仕組み
 
-1. アプリ起動後、通知をモニタし、必要最小限の情報だけをアプリ内に記録します。
-2. 記録された通知をもとに、ユーザーは「音声案内ルール」を作成できます。
-3. 通知がルールに一致した場合、**通知音の約3秒後**に音声案内を行います。
+1. アプリ起動後、通知をモニタし、必要最小限<sup>※1</sup>の情報をアプリ内に記録します。
+2. 記録された通知をもとに、ユーザーは音声案内を行うアプリを決めます。また必要に応じて通知タイトルの一部に一致する条件も指定できます。
+3. 決めたアプリの通知を受信した場合、**通知音の約3秒後**に音声案内を行います。
 
 通知音と音声が重ならないため、落ち着いて内容を把握できます。
+
+<sup>※1</sup> 保存する通知情報をご覧ください。
 
 ---
 
@@ -36,27 +38,26 @@
 保存するのは、通知を識別するための最小限の情報のみです。
 
 * アプリのパッケージ名
-* アプリ名
+* アプリ名(パッケージ名から可読可能な名称に変換したもの。例：Gmail, YouTube)
 * 通知チャンネルID
-* 通知タイトル
 
-本文やメッセージ内容そのものは保存しません。
+タイトルやメッセージ内容を含む上記以外の情報は保存しません。
 
 ### 🚫 取り扱えない通知
 
 このアプリは、記録した通知ログから音声案内ルールを作成します。  
-よって、通知ログ記録時にアプリ名^＊^が取得できない通知は使用しません。
+よって、通知ログ記録時にアプリ名<sup>※2</sup>が取得できない通知は使用しません。
 
-^＊^ パッケージ名から可読できるアプリの名称です。
+<sup>※2</sup> パッケージ名から可読できるアプリの名称です。
 
 ### ✔️ 必要な権限
 
 本アプリを利用するには、次の権限が必要です。
 
 1. 通知へのアクセス権限
-2. 通知の表示権限
+2. 通知の表示に関する権限
 
-権限が付与されていない場合、機能は動作しません。
+権限が付与されていない場合、本アプリは動作しません。
 
 ---
 
@@ -167,29 +168,37 @@ SmartNotifire-Rev2
 
 ## 📣 About This App
 
-Most smartphone apps notify users using sounds.  
-However, notification sounds alone often make it difficult to understand **which app sent the notification** and **what it is about**.
+Many smartphone apps notify users using notification sounds.  
+However, notification sounds alone often make it difficult to understand **which app sent the notification**.
 
 **Smart Notifire** is an app that reads out a pre-registered voice message when a notification matches user-defined conditions such as:
 
-- App name
-- Part of, or the entire, notification title
+-   App name
 
-This allows you to understand the notification contents **by sound only**, without looking at the screen.
+-   _If necessary_, part of the notification title
 
-*Voice guidance is not played while the device is in Silent or Vibrate mode.*
 
----
+This allows you to understand the overview of a notification **by sound only**, without looking at the screen.
+
+_Voice guidance is not played while the device is in Silent or Vibrate mode._
+
+----------
 
 ## 🧩 How It Works
 
-1. After the app starts, it monitors notifications and records only the minimum information required.
-2. Based on the recorded notification logs, users can create *voice guidance rules*.
-3. When a notification matches a rule, a voice message is spoken **approximately 3 seconds after** the notification sound.
+1.  After the app starts, it monitors notifications and records only the **minimum required information** within the app. <sup>*1</sup>
 
-This prevents the notification sound and voice guidance from overlapping, allowing calm and clear listening.
+2.  Based on the recorded notifications, users select which apps should trigger voice guidance.  
+    If needed, conditions matching part of the notification title can also be specified.
 
----
+3.  When a notification from a selected app is received, a voice message is spoken **approximately 3 seconds after** the notification sound.
+
+
+This prevents notification sounds and voice guidance from overlapping, allowing calm and clear listening.
+
+<sup>*1</sup> See _Stored Notification Information_ below.
+
+----------
 
 ## ⚠️ Notification Handling Policy
 
@@ -198,36 +207,40 @@ For this reason, **Smart Notifire** strictly follows the policies below.
 
 ### 📁 Stored Notification Information
 
-Only the minimum information necessary to identify notifications is stored:
+Only the minimum information required to identify notifications is stored:
 
-- App package name
-- App name
-- Notification channel ID
-- Notification title
+-   App package name
 
-The notification message body itself is **never stored**.
+-   App name (a human-readable name resolved from the package name, e.g. Gmail, YouTube)
 
----
+-   Notification channel ID
+
+
+No other information, including notification titles or message contents, is stored.
+
+----------
 
 ### 🚫 Unsupported Notifications
 
-This app creates voice guidance rules based on recorded notification logs.  
-Therefore, notifications for which the app name* cannot be obtained at the time of logging are not supported.
+This app creates voice guidance settings based on recorded notification logs.  
+Therefore, notifications for which the app name <sup>*2</sup> cannot be obtained at the time of logging are not supported.
 
-\* The app name refers to a human-readable application name resolved from the package name.
+<sup>*2</sup> The app name refers to a human-readable application name resolved from the package name.
 
----
+----------
 
 ### ✔️ Required Permissions
 
 The following permissions are required to use this app:
 
-1. Notification access permission
-2. Notification display permission
+1.  Notification access permission
 
-If these permissions are not granted, the app will not function.
+2.  Permission related to notification display
 
----
+
+If these permissions are not granted, this app will not function.
+
+----------
 
 ## 🔤 How to Use
 
@@ -238,18 +251,20 @@ If these permissions are not granted, the app will not function.
 Immediately after installation, **one test voice guidance rule** is registered by default.  
 You can use this rule to verify that all features are working correctly.
 
----
+----------
 
 ### 🔔 Notification Check
 
 ![Notification Check](./docs/pictures/ntf_cheack.png)
 
-Tap the **Notification** button at the bottom of the screen to send a test notification.
+Tap the **Notification** button at the bottom of the screen to send a test notification from this app itself.
 
-- On first use, a notification permission request screen will appear
-- After permission is granted, the notification sound plays first, followed by the voice guidance
+-   On first use, a notification permission request screen will appear
 
----
+-   After permission is granted, the notification sound plays first, followed by the voice guidance
+
+
+----------
 
 ### 🏛️ Voice Guidance Rules
 
@@ -257,87 +272,91 @@ Tap the **Notification** button at the bottom of the screen to send a test notif
 
 This screen displays the list of rules used to convert notifications into voice messages.
 
----
+----------
 
 #### 🔑 Enable Rule ①
 
 Turning the switch ON activates the rule.  
 When a notification matches the rule conditions, voice guidance is played.
 
----
+----------
 
 #### 🔎 Search Title
 
 Specify keywords included in the notification title.
 
-1. When a keyword is specified, partial matching is applied.
-2. When the field is empty, **all notification titles** match.
+1.  When a keyword is specified, partial matching is applied.
 
----
+2.  When the field is empty, all notification titles match.
+
+
+----------
 
 #### 🎤 Voice Message
 
 Enter the text you want to be read aloud.  
-Text-to-Speech (TTS) provided by the device is used.
+The device’s built-in Text-to-Speech (TTS) function is used.
 
 If no voice message is specified, the app will read:
 
-> “A notification has arrived from \<App Name\>.”
+> “A notification has arrived from <App Name>.”
 
----
+----------
 
 #### 📑 Copy Rule ②
 
 You can copy an existing rule to create a new one.
 
-- A number is automatically appended to the search title to avoid duplication
+-   A number is automatically appended to ensure uniqueness
 
----
+
+----------
 
 #### 🗑️ Delete Rule ③
 
 Deletes the selected rule.
 
-- A confirmation dialog is shown before deletion
+-   A confirmation dialog is shown before deletion
 
----
+
+----------
 
 #### ▶️ Play Voice Message ④
 
 Plays the registered voice message immediately for confirmation.
 
----
+----------
 
 ## 🧭 Terminology Notes
 
-In this README, user-friendly terminology is prioritized over strict design document terms.
+In this README, user-friendly terms are prioritized over strict design document terminology.
 
 For example:
 
-- “Notification Detection Rule” → “Voice Guidance Rule”
-- “NotificationLog” → “Notification Log”
+-   “Notification Detection Rule” → “Voice Guidance Rule”
+
+-   “NotificationLog” → “Notification Log”
+
 
 The meanings remain the same.
 
----
+----------
 
 ## 📂 Directory Structure (Excerpt)
 
-```
-SmartNotifire-Rev2
+`SmartNotifire-Rev2
 ├─ app/
-│ └─ src/main/java/com/example/smartnotifier
-│ ├─ data/ # Data layer (Room / DataStore)
-│ ├─ core/ # Application core
-│ └─ ui/ # UI and ViewModels
+│  └─ src/main/java/com/example/smartnotifier
+│     ├─ data/ # Data layer (Room / DataStore) 
+│     ├─ core/ # Application core
+│     └─ ui/   # UI and ViewModels
 ├─ docs/
-│ └─ design/
-│ └─ SmartNotifire-Rev2.md
+│  └─ design/
+│     └─ SmartNotifire-Rev2.md
 ├─ README.md
-└─ LICENSE
+└─ LICENSE`
 
-```
----
+----------
 
 ## 🪪 License
 
