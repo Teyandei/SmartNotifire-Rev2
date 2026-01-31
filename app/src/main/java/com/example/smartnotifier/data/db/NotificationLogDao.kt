@@ -44,27 +44,23 @@ interface NotificationLogDao {
     fun getLatestLogs(limit: Int = 100): Flow<List<NotificationLogEntity>>
 
     /**
-     * 指定された条件（パッケージ名、チャンネルID、タイトル）に一致するログの件数を取得します。
+     * 指定された条件（パッケージ名、チャンネルIDに一致するログの件数を取得します。
      *
      * 主に、重複した内容のログをデータベースに挿入するのを防ぐために使用されます。
      *
      * @param packageName 検索対象のパッケージ名。
      * @param channelId 検索対象のチャンネルID。
-     * @param title 検索対象の通知タイトル。
      * @return 条件に一致したログの件数。
      */
-    @Query("SELECT Count(*) FROM notification_log WHERE packageName = :packageName AND channelId = :channelId AND title = :title")
-    suspend fun getLogCount(packageName: String, channelId: String, title: String): Int
+    @Query("SELECT appLabel FROM notification_log WHERE packageName = :packageName AND channelId = :channelId")
+    suspend fun getAppLabel(packageName: String, channelId: String): String?
 
     /**
      * 新しい通知ログをデータベースに挿入します。
      *
-     * 既に同じ内容のログが存在する場合（主キー以外での重複はここでは考慮されない）でも、
-     * [OnConflictStrategy.IGNORE] により競合を無視し、エラーを発生させません。
-     *
      * @param log 挿入する [NotificationLogEntity] インスタンス。
      */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     suspend fun insert(log: NotificationLogEntity)
 
     /**
@@ -86,5 +82,19 @@ interface NotificationLogDao {
      */
     @Query("DELETE FROM notification_log WHERE packageName = :packageName")
     suspend fun deleteByPackageName(packageName: String)
+
+    /**
+     * 受信カウントをインクリメントする
+     *
+     * @param packageName 受信カウントをインクリメントするログの対象となるパッケージ名。
+     * @param channelId 受信カウントをインクリメントするログの対象となるチャンネルID。
+     * @return 受信カウントの更新件数。(一意なので0 or 1)
+     */
+    @Query("""
+       UPDATE notification_log
+       SET receivedCount = receivedCount + 1
+       WHERE packageName = :packageName AND channelId = :channelId
+    """)
+    suspend fun incrementReceivedCount(packageName: String, channelId: String) : Int
 
 }

@@ -157,13 +157,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     packageName = log.packageName,
                     appLabel = log.appLabel,
                     channelId = log.channelId,
-                    srhTitle = log.title,
+                    srhTitle = "",
                     voiceMsg = "",
                     enabled = false
                 )
 
                 when (val result =
-                    rulesRepo.insertFromLog(ruleBase, log.title)
+                    rulesRepo.insertFromLog(ruleBase, "")
                 ) {
                     is RulesRepository.InsertRuleResult.Success -> {
                         setShowingLogList(false)

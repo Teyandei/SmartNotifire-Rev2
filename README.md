@@ -344,17 +344,19 @@ The meanings remain the same.
 
 ## 📂 Directory Structure (Excerpt)
 
-`SmartNotifire-Rev2
-├─ app/
-│  └─ src/main/java/com/example/smartnotifier
-│     ├─ data/ # Data layer (Room / DataStore) 
-│     ├─ core/ # Application core
-│     └─ ui/   # UI and ViewModels
-├─ docs/
-│  └─ design/
-│     └─ SmartNotifire-Rev2.md
-├─ README.md
-└─ LICENSE`
+```
+SmartNotifire-Rev2  
+├─ app/  
+│  └─ src/main/java/com/example/smartnotifier  
+│     ├─ data/ # Data layer (Room / DataStore)   
+│     ├─ core/ # Application core  
+│     └─ ui/   # UI and ViewModels  
+├─ docs/  
+│  └─ design/  
+│     └─ SmartNotifire-Rev2.md  
+├─ README.md  
+└─ LICENSE
+```  
 
 ----------
 

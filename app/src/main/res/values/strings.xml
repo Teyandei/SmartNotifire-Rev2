@@ -1,7 +1,6 @@
 <resources>
     <!-- Main screen (Rules list) -->
     <string name="copy">copy</string>
-    <string name="enabled">Enabled</string>
     <string name="play">Play</string>
     <string name="sort_order">Sort Order</string>
     <string name="help">Help</string>
@@ -10,10 +9,7 @@
     <string name="appName" translatable="false">Smart Notifier</string>
     <string name="sortList">Newest</string>
     <string name="captionAppOrder">By App</string>
-    <string name="captionOrder">Order</string>
-    <string name="descAbout">About this Application</string>
     <string name="hintNotificationTitle">Notification Title</string>
-    <string name="autoFillHistNotificationTitle">Input notification\'s title</string>
     <string name="captionNtfConfirm">Check\nNotification</string>
     <string name="captionConfirm">Notify</string>
     <string name="lbl_NtfLogListNote">Notification log - Double tap to add</string>
@@ -42,7 +38,6 @@
     <string name="btn_delete">Delete</string>
     <string name="dle_msg_delete_sucess">The rule was deleted</string>
     <string name="msg_notification_permission_denied">Notification permission denied.</string>
-    <string name="msg_no_voice_message">No voice message is set.</string>
     <string name="msg_wrn_dup_same_name">The same search title is already set for the same app.</string>
     <string name="msg_err_save_failed">Saving failed.</string>
     <string name="msg_text_message">This notification is for notification confirmation purposes.</string>
@@ -73,4 +68,7 @@
     <string name="msg_failed_copy">Failed to copy.</string>
     <string name="spk_msg_default">You have received a notification from %1s.</string>
     <string name="btn_exit">Exit App</string>
+    <string name="receivedCount" formatted="true">
+        Received: %1$,d
+    </string>
 </resources>

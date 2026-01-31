@@ -6,7 +6,7 @@ import androidx.room.*
     tableName = "notification_log",
     indices = [
         Index(
-            value = ["packageName", "channelId", "title"],
+            value = ["packageName", "channelId"],
             unique = true
         )
     ]
@@ -17,7 +17,7 @@ data class NotificationLogEntity(
     val id: Int = 0,
 
     val packageName: String,    // PackageName
-    val appLabel: String,       // AppLabel
     val channelId: String,      // ChannelID
-    val title: String = ""      // Title
+    val appLabel: String = "",  // AppLabel
+    val receivedCount: Long = 0 // Title
 )

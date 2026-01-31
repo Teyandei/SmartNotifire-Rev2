@@ -18,8 +18,11 @@ package com.example.smartnotifier.data.repository
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import android.util.Log
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * 通知ログ([NotificationLogEntity])のデータ操作を抽象化するリポジトリ。
@@ -34,20 +37,14 @@ class NotificationLogRepository(
     private val db: AppDatabase
 ) {
     private val dao = db.notificationLogDao()
-
-    /**
-     * 新しい通知ログをデータベースに挿入します。
-     *
-     * @param log 挿入する[NotificationLogEntity]インスタンス。
-     */
-    suspend fun insert(log: NotificationLogEntity) = dao.insert(log)
+    private val insertOrUpdateMutex = Mutex()
 
     /**
      * データベース内のログ件数を制限内に保つために、古いログを削除します。
      *
      * @param limit 保持するログの最大件数。
      */
-    suspend fun trimLogs(limit: Int = 100) = dao.trimLogs(limit)
+    private suspend fun trimLogs(limit: Int = 100) = dao.trimLogs(limit)
 
     /**
      * 最新の通知ログを監視するための[kotlinx.coroutines.flow.Flow]を返します。
@@ -59,19 +56,48 @@ class NotificationLogRepository(
     fun observeLatestLogs(limit: Int = 100) = dao.getLatestLogs(limit)
 
     /**
-     * 指定されたパッケージ名の通知ログを削除します。
-     *
-     * @param packageName 削除するログの対象となるパッケージ名。
-     */
-    suspend fun deleteLogsByPackageName(packageName: String) = dao.deleteByPackageName(packageName)
-
-    /**
      *  同一の条件（パッケージ名、チャンネルID、タイトル）に一致するログの件数を取得します。
      *
      * @param packageName 検索対象のパッケージ名。
      * @param channelId 検索対象のチャンネルID。
-     * @param title 検索対象の通知タイトル。
      * @return 条件に一致したログの件数。
      */
-    suspend fun getLogCount(packageName: String, channelId: String, title: String): Int = dao.getLogCount(packageName, channelId, title)
+    suspend fun getAppLabel(packageName: String, channelId: String): String? = dao.getAppLabel(packageName, channelId)
+
+    /**
+     * ログの追加又は更新
+     *
+     * @param log ログの内容　※追加時はappLabelにアプリ名を設定しておくこと。
+     */
+    suspend fun insertOrCount(log: NotificationLogEntity) {
+        insertOrUpdateMutex.withLock {
+            val update = dao.incrementReceivedCount(log.packageName, log.channelId)
+            if (update == 0) {
+                try {
+                    dao.insert(
+                        NotificationLogEntity(
+                            packageName = log.packageName,
+                            channelId = log.channelId,
+                            appLabel = log.appLabel,
+                            receivedCount = 1
+                        )
+                    )
+                    trimLogs(100)   // 100行に制限
+                } catch (_: android.database.sqlite.SQLiteConstraintException) {
+                    dao.incrementReceivedCount(log.packageName, log.channelId)
+                } catch (e: Exception) {
+                    Log.e(THIS_CLASS, """
+                        |insertOrCount: 
+                        |packageName = "${log.packageName}",
+                        |channelId = "${log.channelId}",
+                        |appLabel = "${log.appLabel}"
+                        """.trimMargin(), e)
+                }
+            }
+        }
+    }
+
+    companion object {
+        private const val THIS_CLASS = "NotificationLogRepository"
+    }
 }

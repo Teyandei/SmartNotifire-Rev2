@@ -39,15 +39,13 @@ class NotificationHelper(private val context: Context) {
      * 設計書に従い、テスト通知用のチャンネルを作成する
      */
     fun createNotificationChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Test Notification"
-            val descriptionText = "Channel for checking notification functionality"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID_CHECK, name, importance).apply {
-                description = descriptionText
-            }
-            notificationManager.createNotificationChannel(channel)
+        val name = "Test Notification"
+        val descriptionText = "Channel for checking notification functionality"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(CHANNEL_ID_CHECK, name, importance).apply {
+            description = descriptionText
         }
+        notificationManager.createNotificationChannel(channel)
     }
 
     /**

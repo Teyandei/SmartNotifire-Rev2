@@ -2,7 +2,6 @@
 <resources>
     <!-- メイン画面（Rulesリスト） -->
     <string name="copy">コピー</string>
-    <string name="enabled">有効</string>
     <string name="play">プレイ</string>
     <string name="sort_order">並び順</string>
     <string name="help">ヘルプ</string>
@@ -10,10 +9,7 @@
     <string name="app_name">SmartNotifier</string>
     <string name="sortList">新しい順</string>
     <string name="captionAppOrder">アプリ順</string>
-    <string name="captionOrder">表示順</string>
-    <string name="descAbout">このアプリについて</string>
     <string name="hintNotificationTitle">通知タイトル</string>
-    <string name="autoFillHistNotificationTitle">通知タイトルを入力してください</string>
     <string name="captionNtfConfirm">通知確認</string>
     <string name="captionConfirm">通知</string>
     <string name="lbl_NtfLogListNote">通知ログーダブルタップで追加</string>
@@ -40,7 +36,6 @@
     <string name="btn_delete">削除</string>
     <string name="dle_msg_delete_sucess">ルールを削除しました</string>
     <string name="msg_notification_permission_denied">通知権限が拒否されました。</string>
-    <string name="msg_no_voice_message">音声メッセージが設定されていません。</string>
     <string name="msg_wrn_dup_same_name">同じアプリに同じ検索タイトルが既に設定されています。</string>
     <string name="msg_err_save_failed">保存に失敗しました。</string>
     <string name="msg_text_message">通知確認を目的とした通知です。</string>
@@ -69,4 +64,7 @@
     <string name="msg_failed_copy">コピーに失敗しました。</string>
     <string name="spk_msg_default">%1sから通知が届きました。</string>
     <string name="btn_exit">アプリ終了</string>
+    <string name="receivedCount" formatted="true">
+        受信: %1$,d件
+    </string>
 </resources>

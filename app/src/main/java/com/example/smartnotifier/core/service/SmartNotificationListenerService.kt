@@ -20,6 +20,8 @@ package com.example.smartnotifier.core.service
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -64,6 +66,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
         }
 
         private const val THIS_CLASS :String = "SmartNotificationListenerService"
+        private const val DO_NOT_SELECT: String = "ERR: Don't select this."
     }
 
     override fun onCreate() {
@@ -75,9 +78,14 @@ class SmartNotificationListenerService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        ttsManager.shutdown()
+        Log.w(THIS_CLASS, "onDestroy")
         serviceScope.cancel()
+        ttsManager.shutdown()
+        super.onDestroy()
+    }
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.w(THIS_CLASS, "onTaskRemoved")
+        super.onTaskRemoved(rootIntent)
     }
 
     /**
@@ -90,48 +98,51 @@ class SmartNotificationListenerService : NotificationListenerService() {
      */
     override fun onNotificationPosted(sbn : StatusBarNotification?) {
         sbn ?: return
-        val pm = this.packageManager
-        val packageName = sbn.packageName
-        var appLabel: String
-        try {
-            val appInfo = pm.getApplicationInfo(packageName, 0)
-            appLabel = pm.getApplicationLabel(appInfo).toString()
-        } catch (e: Exception) {
-            Log.w(THIS_CLASS, "onNotificationPosted： $packageName. ", e)
-            appLabel = ""
-        }
-        val log = NotificationLogEntity(
-            packageName = packageName,
-            appLabel = appLabel,
-            channelId = sbn.notification.channelId,
-            title = sbn
-                .notification.extras
-                .getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
-                .orEmpty()
-        )
+        val pm = applicationContext.packageManager
+        val packageName = sbn.packageName   // パッケージ名
+        val channelId = sbn.notification.channelId?: return
+        var appLabel = DO_NOT_SELECT        // アプリ名 ※途中エラーではこの初期値を生かすこと
+        /**
+         * 通知タイトル
+         */
+        val title = sbn
+            .notification.extras
+            .getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
+            .orEmpty()
+
         serviceScope.launch {
-            if (!log.appLabel.isEmpty()) saveToLog(log)  // アプリ名がある時のみ通知ログに保存
+            try {
+                val label: String = logRepo.getAppLabel(packageName, channelId)?: ""
+                if (label.isEmpty()) {
+                    /*
+                     * 既存レコードが無い可能性がある場合はアプリ名を取得する
+                     */
+                    val appInfo = pm.getApplicationInfo(packageName, 0)
+                    appLabel = pm.getApplicationLabel(appInfo).toString()
+                } else {
+                    appLabel = label
+                }
+            } catch (_: PackageManager.NameNotFoundException) {
+                Log.w(THIS_CLASS, "onNotificationPosted NameNotFoundException： $packageName. ")
+            } catch (e: Exception) {
+                Log.e(THIS_CLASS, "onNotificationPosted： $packageName. ", e)
+            }
 
-            // 音を慣らして良いときのみTTS
-            if (canSpeakNow(applicationContext)) checkRulesAndSpeak(log)
-            else Log.w(THIS_CLASS, "tts disabled")
-        }
-    }
 
-    /**
-     * 通知ログに保存する
-     *
-     * @param log 通知ログ
-     */
-    private suspend fun saveToLog(log: NotificationLogEntity) {
-        try {
-            val logCount = logRepo.getLogCount(log.packageName, log.channelId, log.title)
-            if (logCount == 0) logRepo.insert(log)  // 新規のみ保存
-        } catch (e: Exception) {
-            Log.e(THIS_CLASS, "saveToLog: $log", e)
-        }
-        finally {
-            logRepo.trimLogs(100)
+            /**
+             * 通知ログ
+             */
+            val log = NotificationLogEntity(
+                packageName = packageName,
+                channelId = channelId,
+                appLabel = appLabel,
+            )
+
+            if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank()) {
+                logRepo.insertOrCount(log)  // ログの追加又はカウント
+                if (canSpeakNow(applicationContext)) checkRulesAndSpeak(log, title)
+                else Log.w(THIS_CLASS, "tts disabled")
+            }
         }
     }
 
@@ -160,15 +171,16 @@ class SmartNotificationListenerService : NotificationListenerService() {
      * 検索タイトルのヒット確認とTTS読み上げ
      *
      * @param log 通知ログ
+     * @param title 受信した通知タイトル
      */
-    private suspend fun checkRulesAndSpeak(log: NotificationLogEntity) {
+    private suspend fun checkRulesAndSpeak(log: NotificationLogEntity, title: String) {
         val rules = ruleRepo.getRulesByPackageAndChannel(log.packageName, log.channelId).first()
 
         val matchedRule = rules.find { rule ->
             rule.enabled &&
             rule.packageName == log.packageName &&
             rule.channelId == log.channelId &&
-            (rule.srhTitle.isBlank() || log.title.contains(rule.srhTitle, ignoreCase = true))
+            (rule.srhTitle.isBlank() || title.contains(rule.srhTitle, ignoreCase = true))
         }
 
         matchedRule?.let { rules ->
@@ -180,6 +192,15 @@ class SmartNotificationListenerService : NotificationListenerService() {
         }
     }
 
+    /**
+     * TTSによる読み上げ
+     *
+     * キュー形式のバッファを持ち、後続に同じ文字列があった場合はTTSを使わずリターンする。。
+     * 文字列の内容は呼び出し側で操作すること。
+     * この関数の呼び出し->3秒待->TTS発声->5病後メッセージ削除
+     *
+     * @param message 読み上げる文字列
+     */
     private suspend fun processVoiceQueue(message: String) {
         val isNew = recentlySpokenMessages.add(message)
         if (!isNew) return
@@ -193,10 +214,22 @@ class SmartNotificationListenerService : NotificationListenerService() {
                 }
             }
         } finally {
-            serviceScope.launch {
+            // serviceScope が cancel 済みでも、ここだけは確実に走らせる
+            withContext(NonCancellable) {
                 delay(5000)
                 recentlySpokenMessages.remove(message)
             }
         }
     }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.i(THIS_CLASS, "onListenerConnected")
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        Log.w(THIS_CLASS, "onListenerDisconnected")
+    }
+
 }
