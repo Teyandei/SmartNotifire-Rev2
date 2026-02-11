@@ -30,7 +30,7 @@ import com.example.smartnotifier.data.db.entity.NotificationsEntity
         NotificationLogEntity::class,
         NotificationsEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 

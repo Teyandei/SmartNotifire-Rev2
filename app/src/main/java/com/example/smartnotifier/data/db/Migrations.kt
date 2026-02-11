@@ -95,4 +95,31 @@ object Migrations {
             )
         }
     }
+
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                ALTER TABLE rules ADD COLUMN channelName TEXT NOT NULL DEFAULT ''
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                UPDATE rules
+                SET channelName = (
+                    SELECT n.channelName
+                    FROM notification_log AS n
+                    WHERE n.packageName = rules.packageName 
+                    AND n.channelId = rules.channelId
+                )
+                WHERE EXISTS (
+                    SELECT 1 
+                    FROM notification_log AS n
+                    WHERE n.packageName = rules.packageName
+                    AND n.channelId = rules.channelId
+                )
+                """.trimIndent()
+            )
+        }
+    }
 }
