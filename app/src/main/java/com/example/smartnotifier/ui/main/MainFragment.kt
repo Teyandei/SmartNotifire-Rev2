@@ -19,6 +19,7 @@ package com.example.smartnotifier.ui.main
  */
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Typeface
@@ -57,6 +58,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.smartnotifier.R
 import com.example.smartnotifier.ui.log.NotificationLogAdapter
 import com.example.smartnotifier.BuildConfig
+import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 
 /**
  * 画面の表示とユーザー入力の収集を担当するメイン画面 Fragment。
@@ -106,20 +108,7 @@ class MainFragment : Fragment() {
      */
     private lateinit var rulesAdapter: RulesAdapter
 
-
-    /**
-     * 通知ログ一覧（NotificationLog）を表示する RecyclerView 用アダプター。
-     *
-     * ログ行のダブルタップ操作は、設計書の「通知ログからルール追加」動作に対応し、
-     * [MainViewModel.addRuleFromLog] に委譲する。
-     */
-    private val logAdapter by lazy {
-        NotificationLogAdapter(
-            onLogDoubleTapped = { log ->
-                viewModel.addRuleFromLog(log)
-            }
-        )
-    }
+    private lateinit var logAdapter: NotificationLogAdapter
 
     /**
      * ルール一覧の収集（Flow collect）を管理するジョブ。
@@ -162,6 +151,23 @@ class MainFragment : Fragment() {
             onRuleUpdated = { rule -> viewModel.updateRuleDebounced(rule) },
             onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) }
         )
+
+        /**
+         * 通知ログ一覧（NotificationLog）を表示する RecyclerView 用アダプター。
+         *
+         * ログ行のダブルタップ操作は、設計書の「通知ログからルール追加」動作に対応し、
+         * [MainViewModel.addRuleFromLog] に委譲する。
+         */
+        logAdapter = NotificationLogAdapter(
+            onLogDoubleTapped = { log ->
+                if (log.importance < NotificationManager.IMPORTANCE_DEFAULT) {
+                    showSilentWarning(log)
+                } else {
+                    viewModel.addRuleFromLog(log)
+                }
+            }
+        )
+
         notificationHelper = NotificationHelper(requireContext())
         ttsManager = TtsManager(requireContext())
 
@@ -434,6 +440,22 @@ class MainFragment : Fragment() {
      */
     private fun sendTestNotification() {
         notificationHelper.sendTestNotification(viewModel.notificationTitle.value)
+    }
+
+    /**
+     * サイレント通知をルールに追加する際の⚠警告ダイアログ
+     *
+     * @param log ルールに追加する通知ログ内容
+     */
+    private fun showSilentWarning(log: NotificationLogEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.wrn_dnd_title)
+            .setMessage(R.string.wrn_dnd_msg)
+            .setNegativeButton(R.string.btn_cancel, null)
+            .setPositiveButton(R.string.captionAddBtn) { _, _ ->
+                viewModel.addRuleFromLog(log)
+            }
+            .show()
     }
 
     /**

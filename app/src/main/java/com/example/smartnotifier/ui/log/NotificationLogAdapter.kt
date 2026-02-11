@@ -18,10 +18,12 @@ package com.example.smartnotifier.ui.log
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import android.app.NotificationManager
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -29,6 +31,7 @@ import com.example.smartnotifier.R
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.databinding.ItemNotificationLogBinding
 import com.example.smartnotifier.ui.common.util.IconCache
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 通知ログ([NotificationLogEntity])の一覧を[RecyclerView]に表示するためのアダプターです。
@@ -71,12 +74,28 @@ class NotificationLogAdapter(
         fun bind(log: NotificationLogEntity) {
             val context = binding.root.context
 
-           // アプリ情報の表示
+            // アプリ情報の表示
             binding.txtAppName.text = log.appLabel
             binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, log.packageName))
 
+            // チャンネル名
+            binding.txtNtfTitle.text = log.channelName
+
             // 受信回数
-            binding.txtNtfTitle.text = context.getString(R.string.receivedCount, log.receivedCount)
+            val diffDays = (log.lastReceived - log.created).milliseconds.inWholeDays + 1L
+            val receivedParDay = log.receivedCount.toDouble() / diffDays
+            binding.txtReceived.text = context.getString(R.string.receivedCount, receivedParDay)
+
+            // Importance
+            if (log.importance < NotificationManager.IMPORTANCE_DEFAULT) {
+                binding.root.alpha = 0.5f
+                binding.txtSilent.isVisible = true
+                binding.txtSilent.text = context.getString(R.string.importance_silent)
+            } else {
+                binding.root.alpha = 1.0f
+                binding.txtSilent.isVisible = false
+                binding.txtSilent.text = ""
+            }
 
             // ダブルタップ検知
             val gestureDetector =

@@ -48,4 +48,15 @@
 
     </application>
 
+    <queries>
+        <!-- 一般的な“ランチャーに出るアプリ”を見える化 -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+
+        <!-- （必要なら）個別パッケージを追加 -->
+        <!-- <package android:name="jp.naver.line.android" /> -->
+    </queries>
+
 </manifest>

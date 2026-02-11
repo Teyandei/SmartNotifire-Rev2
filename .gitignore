@@ -8,6 +8,7 @@
 *.bin
 *.dat
 *.tmp
+*.db
 
 # Build outputs
 /build/

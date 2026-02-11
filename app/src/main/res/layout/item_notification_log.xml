@@ -42,11 +42,33 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/txtReceived"
             app:layout_constraintStart_toStartOf="@+id/txtAppName"
             app:layout_constraintTop_toBottomOf="@+id/txtAppName"
             tools:text="This is a notification title text." />
+
+        <TextView
+            android:id="@+id/txtReceived"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="Received: 1.0/day"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            app:layout_constraintEnd_toStartOf="@+id/txtSilent"
+            app:layout_constraintTop_toTopOf="@+id/txtSilent" />
+
+        <TextView
+            android:id="@+id/txtSilent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text="Silent"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            app:layout_constraintEnd_toEndOf="@+id/txtAppName"
+            app:layout_constraintTop_toBottomOf="@+id/txtAppName" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

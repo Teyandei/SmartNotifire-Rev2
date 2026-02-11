@@ -71,7 +71,7 @@ class NotificationLogRepository(
      */
     suspend fun insertOrCount(log: NotificationLogEntity) {
         insertOrUpdateMutex.withLock {
-            val update = dao.incrementReceivedCount(log.packageName, log.channelId)
+            val update = dao.incrementReceivedCount(log.packageName, log.channelId, log.lastReceived)
             if (update == 0) {
                 try {
                     dao.insert(
@@ -79,12 +79,16 @@ class NotificationLogRepository(
                             packageName = log.packageName,
                             channelId = log.channelId,
                             appLabel = log.appLabel,
-                            receivedCount = 1
+                            receivedCount = 1,
+                            importance = log.importance,
+                            channelName = log.channelName,
+                            created = log.created,
+                            lastReceived = log.lastReceived
                         )
                     )
                     trimLogs(100)   // 100行に制限
                 } catch (_: android.database.sqlite.SQLiteConstraintException) {
-                    dao.incrementReceivedCount(log.packageName, log.channelId)
+                    dao.incrementReceivedCount(log.packageName, log.channelId, log.lastReceived)
                 } catch (e: Exception) {
                     Log.e(THIS_CLASS, """
                         |insertOrCount: 
@@ -96,6 +100,21 @@ class NotificationLogRepository(
             }
         }
     }
+
+    /**
+     * 通知ログの追加・更新
+     *
+     * @param log ログの内容　
+     *            # 以下の内容は呼び出し前に設定しておくこと
+     *            packageName,
+     *            channelId,
+     *            appLabel,
+     *            importance,
+     *            channelName,
+     *            lastReceived,
+     *
+     */
+    suspend fun upsertNotificationLog(log: NotificationLogEntity) = dao.upsertNotificationLog(log)
 
     companion object {
         private const val THIS_CLASS = "NotificationLogRepository"

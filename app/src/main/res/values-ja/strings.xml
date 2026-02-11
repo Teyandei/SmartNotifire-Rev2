@@ -65,6 +65,14 @@
     <string name="spk_msg_default">%1sから通知が届きました。</string>
     <string name="btn_exit">アプリ終了</string>
     <string name="receivedCount" formatted="true">
-        受信: %1$,d件
+        受信: %1$,.1f 件/日
+    </string>
+    <string name="importance_silent">サイレント</string>
+    <string name="wrn_dnd_title">⚠️サイレント通知</string>
+    <string name="wrn_dnd_msg">
+        この通知は端末側でサイレント設定のため、音声案内されません。\n\n
+        音声案内を有効にするには：\n
+        設定 ＞ 通知 ＞ アプリの通知 で対象アプリを開き、該当チャンネルを「デフォルト（通知音あり）」に変更してください。\n
+        ※設定画面の名称や手順は端末により異なる場合があります。
     </string>
 </resources>

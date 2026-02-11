@@ -1,4 +1,4 @@
-package com.example.smartnotifier.data.db
+package com.example.smartnotifier.data.repository
 
 /*
  * SmartNotifier-Rev2
@@ -18,24 +18,26 @@ package com.example.smartnotifier.data.db
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import com.example.smartnotifier.data.db.entity.RuleEntity
-import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.NotificationsEntity
 
-@Database(
-    entities = [
-        RuleEntity::class,
-        NotificationLogEntity::class,
-        NotificationsEntity::class
-    ],
-    version = 4,
-    exportSchema = true
-)
+/**
+ *  NotificationDAOを扱うRepository
+ *
+ */
+class NotificationsRepository(private val db: AppDatabase
+) {
+    private val dao = db.notificationsDao()
 
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun ruleDao(): RuleDao
-    abstract fun notificationLogDao(): NotificationLogDao
-    abstract fun notificationsDao(): NotificationsDao
+
+    fun getAll() = dao.getAll()
+    fun getAllSortByAppLabel() = dao.getAllSortByAppLabel()
+    fun getAllSortByReceivedCount() = dao.getAllSortByReceivedCount()
+
+    /**
+     * 通知情報の追加と更新
+     *
+     * @param notification 通知情報。StatusBarNotificationで取得した情報及びその情報を元に取得したものは全てセットしておくこと。
+     */
+    suspend fun upsertNotification(notification: NotificationsEntity) = dao.upsertNotification(notification)
 }

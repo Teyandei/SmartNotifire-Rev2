@@ -69,6 +69,13 @@
     <string name="spk_msg_default">You have received a notification from %1s.</string>
     <string name="btn_exit">Exit App</string>
     <string name="receivedCount" formatted="true">
-        Received: %1$,d
+        Received: %1$,.1f /day
+    </string>
+    <string name="importance_silent">DND</string>
+    <string name="desc_app_icon" translatable="false">Application Icon</string>
+    <string name="wrn_dnd_title">⚠️ Silent Notification</string>
+    <string name="wrn_dnd_msg">
+        This notification is set to Silent (Do Not Disturb),so voice guidance will not be played.\n\n
+        To enable it, change the notification channel to Default (with sound) in your device settings.
     </string>
 </resources>

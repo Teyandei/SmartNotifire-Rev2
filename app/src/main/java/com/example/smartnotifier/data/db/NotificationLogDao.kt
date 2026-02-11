@@ -44,13 +44,13 @@ interface NotificationLogDao {
     fun getLatestLogs(limit: Int = 100): Flow<List<NotificationLogEntity>>
 
     /**
-     * 指定された条件（パッケージ名、チャンネルIDに一致するログの件数を取得します。
+     * 指定された条件（パッケージ名、チャンネルIDに一致するアプリ名を取得します。
      *
      * 主に、重複した内容のログをデータベースに挿入するのを防ぐために使用されます。
      *
      * @param packageName 検索対象のパッケージ名。
      * @param channelId 検索対象のチャンネルID。
-     * @return 条件に一致したログの件数。
+     * @return 条件に一致したアプリ名。
      */
     @Query("SELECT appLabel FROM notification_log WHERE packageName = :packageName AND channelId = :channelId")
     suspend fun getAppLabel(packageName: String, channelId: String): String?
@@ -92,9 +92,45 @@ interface NotificationLogDao {
      */
     @Query("""
        UPDATE notification_log
-       SET receivedCount = receivedCount + 1
+       SET receivedCount = receivedCount + 1,
+           lastReceived = :lastReceived
        WHERE packageName = :packageName AND channelId = :channelId
     """)
-    suspend fun incrementReceivedCount(packageName: String, channelId: String) : Int
+    suspend fun incrementReceivedCount(packageName: String, channelId: String, lastReceived: Long) : Int
 
+    @Query("SELECT * FROM notification_log WHERE packageName = :packageName AND channelId = :channelId")
+    fun getIndex(packageName: String, channelId: String): NotificationLogEntity?
+
+    @Upsert
+    suspend fun upsert(notificationLog: NotificationLogEntity)
+
+    /**
+     * 通知ログの追加・更新
+     *
+     * @param log ログの内容　
+     *            # 以下の内容は呼び出し前に設定しておくこと
+     *            packageName,
+     *            channelId,
+     *            appLabel,
+     *            importance,
+     *            channelName,
+     *            lastReceived,
+     *
+     */
+    @Transaction
+    suspend fun upsertNotificationLog(log: NotificationLogEntity) {
+        val existing = getIndex(log.packageName, log.channelId)
+        val saveToLog =  if (existing == null) {
+            log.copy(
+                created = log.lastReceived,
+                receivedCount = 1L
+            )
+        } else {
+            existing.copy(
+                receivedCount = existing.receivedCount + 1L,
+                lastReceived = log.lastReceived
+            )
+        }
+        upsert(saveToLog)
+    }
 }

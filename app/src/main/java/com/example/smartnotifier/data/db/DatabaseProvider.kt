@@ -33,6 +33,11 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "smart_notifier.db"
-            ).build().also { instance = it }
+            ).addMigrations(
+                Migrations.MIGRATION_1_2,
+                Migrations.MIGRATION_2_3,
+                Migrations.MIGRATION_3_4
+            )
+             .build().also { instance = it }
         }
 }

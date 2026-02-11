@@ -31,7 +31,9 @@ import com.example.smartnotifier.R
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import com.example.smartnotifier.data.db.entity.NotificationsEntity
 import com.example.smartnotifier.data.repository.NotificationLogRepository
+import com.example.smartnotifier.data.repository.NotificationsRepository
 import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -43,6 +45,8 @@ class SmartNotificationListenerService : NotificationListenerService() {
 
     private lateinit var logRepo: NotificationLogRepository
     private lateinit var ruleRepo: RulesRepository
+    private lateinit var notificationsRepo: NotificationsRepository
+
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var ttsManager: TtsManager
@@ -74,6 +78,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
         val db = DatabaseProvider.get(applicationContext)
         logRepo = NotificationLogRepository(db)
         ruleRepo = RulesRepository(db)
+        notificationsRepo = NotificationsRepository(db)
         ttsManager = TtsManager(this)
     }
 
@@ -96,12 +101,23 @@ class SmartNotificationListenerService : NotificationListenerService() {
      *
      * @param sbn システムから渡される通知情報
      */
-    override fun onNotificationPosted(sbn : StatusBarNotification?) {
+    override fun onNotificationPosted(sbn : StatusBarNotification?, rankingMap: RankingMap) {
         sbn ?: return
         val pm = applicationContext.packageManager
         val packageName = sbn.packageName   // パッケージ名
         val channelId = sbn.notification.channelId?: return
         var appLabel = DO_NOT_SELECT        // アプリ名 ※途中エラーではこの初期値を生かすこと
+        val ranking = Ranking()
+        val rankingOk = rankingMap.getRanking(sbn.key, ranking)
+        val isBlocked = if (rankingOk) !ranking.matchesInterruptionFilter() else true   // おやすみモードなどのブロック
+        val importance = if (rankingOk) ranking.importance else -1  // 重要度
+        val channel = if (rankingOk) ranking.channel else null
+        val channelName = channel?.name?.toString() ?: ""           // チャンネル名
+        val groupKey = sbn.groupKey         // グループKey
+        val isGoing = sbn.isOngoing         // 連続的な通知(進捗など)
+        val now = System.currentTimeMillis()
+
+
         /**
          * 通知タイトル
          */
@@ -136,12 +152,34 @@ class SmartNotificationListenerService : NotificationListenerService() {
                 packageName = packageName,
                 channelId = channelId,
                 appLabel = appLabel,
+                importance = importance,
+                channelName = channelName,
+                lastReceived = now
             )
 
-            if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank()) {
-                logRepo.insertOrCount(log)  // ログの追加又はカウント
-                if (canSpeakNow(applicationContext)) checkRulesAndSpeak(log, title)
-                else Log.w(THIS_CLASS, "tts disabled")
+            /**
+             * 通知内容
+             */
+            val ntf = NotificationsEntity(
+                packageName = packageName,
+                channelId = channelId,
+                appLabel = appLabel,
+                groupKey = groupKey,
+                isBlocked = isBlocked,
+                importance = importance,
+                channelName = channelName,
+                isGoing = isGoing,
+                lastReceived = now
+            )
+            notificationsRepo.upsertNotification(ntf)
+
+
+            if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank() && !isGoing) {
+                logRepo.upsertNotificationLog(log)  // ログの追加又はカウント
+                if (canSpeakNow(applicationContext) && (importance >= NotificationManager.IMPORTANCE_DEFAULT))
+                    checkRulesAndSpeak(log, title)
+                else
+                    Log.w(THIS_CLASS, "tts disabled")
             }
         }
     }

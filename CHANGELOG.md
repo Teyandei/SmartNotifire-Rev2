@@ -1,3 +1,15 @@
+## CL-0008 通知モニタによる改修 2026-02-11
+
+### 変更内容
+
+- 通知テーブル(Notifications)追加と記録
+- 通知がonGoing(連続的な通知)であるものを無視
+- 重要度(Importance)によるTTS使用判断を追加(IMPORTANCE_DEFAULT以上の通知のみTTS)
+- 通知ログにImportance、channelName, created、lastReceivedを追加
+- 通知ログリスト表示にchannelName, 受信件数(件/日)、サイレント(IMPORTANCE_DEFAULT未満)を追加
+- サイレント通知のルール追加に警告ダイアログで注意を促す
+- その他改修
+
 ## CL-0007 通知ログ改修　他 2026-02-01
 
 ### 変更内容
