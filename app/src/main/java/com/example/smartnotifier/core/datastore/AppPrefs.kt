@@ -43,3 +43,4 @@ object AppPrefs {
 val Context.appPrefsDataStore by preferencesDataStore(
     name = AppPrefs.NAME
 )
+
