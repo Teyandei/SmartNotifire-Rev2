@@ -138,6 +138,7 @@ class RulesAdapter(
             // ①② アプリアイコン・アプリ名を表示
             binding.txtAppName.text = rule.appLabel
             binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
+            binding.txtChannelName.text = rule.channelName
 
             // ★ setTextは「プログラム更新時だけ」発火させる
             //    その間 watcher を黙らせる（無限ループ防止）

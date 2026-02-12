@@ -31,13 +31,25 @@
             android:layout_marginEnd="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/imgAppIcon"
             app:layout_constraintEnd_toStartOf="@+id/swEnabled"
             app:layout_constraintStart_toEndOf="@+id/imgAppIcon"
             app:layout_constraintTop_toTopOf="@+id/imgAppIcon"
             tools:text="Sample App Name" />
 
         <!-- ⑦ 有効スイッチ -->
+
+        <TextView
+            android:id="@+id/txtChannelName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:text="Sample Channel Name"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            app:layout_constraintEnd_toStartOf="@+id/swEnabled"
+            app:layout_constraintStart_toStartOf="@+id/txtAppName"
+            app:layout_constraintTop_toBottomOf="@+id/txtAppName" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swEnabled"
             android:layout_width="wrap_content"

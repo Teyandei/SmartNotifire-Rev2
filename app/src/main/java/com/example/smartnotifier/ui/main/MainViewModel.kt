@@ -159,7 +159,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     channelId = log.channelId,
                     srhTitle = "",
                     voiceMsg = "",
-                    enabled = false
+                    enabled = false,
+                    channelName = log.channelName
                 )
 
                 when (val result =

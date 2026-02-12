@@ -82,7 +82,7 @@ class NotificationLogAdapter(
             binding.txtNtfTitle.text = log.channelName
 
             // 受信回数
-            val diffDays = (log.lastReceived - log.created).milliseconds.inWholeDays + 1L
+            val diffDays = (System.currentTimeMillis() - log.created).milliseconds.inWholeDays + 1L
             val receivedParDay = log.receivedCount.toDouble() / diffDays
             binding.txtReceived.text = context.getString(R.string.receivedCount, receivedParDay)
 

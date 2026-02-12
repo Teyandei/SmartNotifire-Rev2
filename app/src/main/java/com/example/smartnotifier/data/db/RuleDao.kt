@@ -37,7 +37,7 @@ interface RuleDao {
      *
      * 同一 PackageName 内では ID 昇順で並ぶ。
      */
-    @Query("SELECT * FROM rules ORDER BY packageName ASC, id ASC")
+    @Query("SELECT * FROM rules ORDER BY appLabel ASC, id ASC")
     fun getRulesOrderByPackageAsc(): Flow<List<RuleEntity>>
 
     /**

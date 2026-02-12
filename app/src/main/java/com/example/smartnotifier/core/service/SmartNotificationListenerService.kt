@@ -176,7 +176,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
 
             if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank() && !isGoing) {
                 logRepo.upsertNotificationLog(log)  // ログの追加又はカウント
-                if (canSpeakNow(applicationContext) && (importance >= NotificationManager.IMPORTANCE_DEFAULT))
+                if (!isBlocked && canSpeakNow(applicationContext) && (importance >= NotificationManager.IMPORTANCE_DEFAULT))
                     checkRulesAndSpeak(log, title)
                 else
                     Log.w(THIS_CLASS, "tts disabled")
