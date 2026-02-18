@@ -42,7 +42,9 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.smartnotifier.core.notification.NotificationHelper
 import com.example.smartnotifier.core.service.SmartNotificationListenerService
@@ -70,6 +72,8 @@ class MainFragment : Fragment() {
 
     private val viewModel: MainViewModel by viewModels()
     private var _binding: FragmentMainBinding? = null
+
+    private var pendingScrollRuleId: Long? = null   // スクロール表示するルールのId
 
     /**
      * ViewBinding への非nullアクセサ。
@@ -223,22 +227,19 @@ class MainFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.addRuleFromLogEvent.collect { ev ->
-                val message = when (ev) {
-                    is AddRuleFromLogEvent.Success ->
-                        getString(R.string.msg_added_success_with_title, ev.title)
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.effect.collect { eff ->
+                    when (eff) {
+                        is UiEffect.ShowSnackbar ->
+                            Snackbar.make(binding.root, eff.message, Snackbar.LENGTH_LONG).show()
 
-                    AddRuleFromLogEvent.TooManySameNames ->
-                        getString(R.string.msg_add_failed_too_many_same_names)
-
-                    AddRuleFromLogEvent.Failed ->
-                        getString(R.string.msg_add_failed_generic)
-
-                    AddRuleFromLogEvent.FailedCopy ->
-                        getString(R.string.msg_failed_copy)
+                        is UiEffect.ScrollToRule -> {
+                            scrollToRuleId(eff.ruleId)
+                        }
+                        is UiEffect.ShowLogList ->
+                            viewModel.setShowingLogList(eff.show)
+                    }
                 }
-
-                Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -258,6 +259,31 @@ class MainFragment : Fragment() {
             }
         }
 
+    }
+
+    /**
+     * 指定ルールをスクロール表示する
+     *
+     * @param ruleId スクロール表示するルールのId
+     */
+    private fun scrollToRuleId(ruleId: Long) {
+        pendingScrollRuleId = ruleId
+        tryScrollToPending()
+    }
+
+    /**
+     * [pendingScrollRuleId]によるスクロール表示
+     * pendingScrollRuleIdがリスト内にあれば、該当ルールがUI上見える位置に一度だけスクロールする。
+     */
+    private fun tryScrollToPending() {
+        val id = pendingScrollRuleId ?: return
+        val pos = rulesAdapter.currentList.indexOfFirst { it.id.toLong() == id }
+        if (pos >= 0) {
+            pendingScrollRuleId = null
+            binding.recyclerRules.post {
+                binding.recyclerRules.smoothScrollToPosition(pos)
+            }
+        }
     }
 
     /**
@@ -486,7 +512,9 @@ class MainFragment : Fragment() {
         rulesCollectJob?.cancel()
         rulesCollectJob = viewLifecycleOwner.lifecycleScope.launch {
             viewModel.rules(orderNewest = !orderByPackageAsc).collect { list ->
-                rulesAdapter.submitList(list)
+                rulesAdapter.submitList(list) {     // ルール表示
+                    tryScrollToPending()            // 新規ルールのスクロール表示を試みる
+                }
             }
         }
     }

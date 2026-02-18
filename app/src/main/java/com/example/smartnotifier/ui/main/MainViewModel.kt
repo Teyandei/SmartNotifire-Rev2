@@ -20,7 +20,6 @@ package com.example.smartnotifier.ui.main
 
 import android.app.Application
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,11 +37,13 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 
-sealed interface AddRuleFromLogEvent {
-    data class Success(val title: String) : AddRuleFromLogEvent
-    data object TooManySameNames : AddRuleFromLogEvent
-    data object Failed : AddRuleFromLogEvent
-    data object FailedCopy : AddRuleFromLogEvent
+/**
+ * UIエフェクト
+ */
+sealed interface UiEffect {
+    data class ShowLogList(val show: Boolean) : UiEffect        // 通知ログ画面の表示・非表示
+    data class ShowSnackbar(val message: String) : UiEffect     // スナックバー表示メッセージ
+    data class ScrollToRule(val ruleId: Long) : UiEffect        // 指定ルールをスクロール表示
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -58,6 +59,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = DatabaseProvider.get(appContext)
     val rulesRepo = RulesRepository(db)
 
+    private val _effect = MutableSharedFlow<UiEffect>(extraBufferCapacity = 16)
+    val effect = _effect.asSharedFlow()
+
     private val notificationLogRepo = NotificationLogRepository(db)
 
     /**
@@ -72,12 +76,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private val _errorMessage = MutableSharedFlow<String>()
     val errorMessage = _errorMessage.asSharedFlow()
-
-    /**
-     * UIに通知するメッセージ用 Flow。
-     */
-    private val _addRuleFromLogEvent = MutableSharedFlow<AddRuleFromLogEvent>()
-    val addRuleFromLogEvent = _addRuleFromLogEvent.asSharedFlow()
 
     /**
      * 最新の通知ログ一覧。
@@ -167,23 +165,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     rulesRepo.insertFromLog(ruleBase, "")
                 ) {
                     is RulesRepository.InsertRuleResult.Success -> {
-                        setShowingLogList(false)
-                        _addRuleFromLogEvent.emit(
-                            AddRuleFromLogEvent.Success(result.adoptedTitle)
-                        )
+                        _effect.emit(UiEffect.ShowLogList(false))
+                        _effect.tryEmit(UiEffect.ScrollToRule(result.rowId))
+                        _effect.tryEmit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_added_success_with_title, result.adoptedTitle)))
                     }
 
                     RulesRepository.InsertRuleResult.TooManySameNames -> {
-                        _addRuleFromLogEvent.emit(
-                            AddRuleFromLogEvent.TooManySameNames
-                        )
+                        _effect.tryEmit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_add_failed_too_many_same_names)))
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "addRuleFromLog failed", e)
-                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.Failed)
+            } catch (_: Exception) {
+                _effect.tryEmit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_add_failed_generic)))
             }
         }
     }
@@ -244,18 +238,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun duplicateRule(rule: RuleEntity) {
         viewModelScope.launch {
             try {
-                when (rulesRepo.duplicateRule(rule.id)) {
+                when (val result = rulesRepo.duplicateRule(rule.id)) {
                     is RulesRepository.InsertRuleResult.Success -> {
-                        // UI通知不要なら何もしない
+                        _effect.emit(UiEffect.ScrollToRule(result.rowId))
+                        _effect.emit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_added_success_with_title, result.adoptedTitle)))
                     }
                     RulesRepository.InsertRuleResult.TooManySameNames -> {
-                        _addRuleFromLogEvent.emit(
-                            AddRuleFromLogEvent.TooManySameNames
-                        )
+                        _effect.emit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_add_failed_too_many_same_names)))
+
                     }
                 }
             } catch (_: Exception) {
-                _addRuleFromLogEvent.emit(AddRuleFromLogEvent.FailedCopy)
+                _effect.emit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_failed_copy)))
             }
         }
     }
