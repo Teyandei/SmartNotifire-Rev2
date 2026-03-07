@@ -12,7 +12,7 @@ android {
         applicationId = "com.teyanday.smartnotifier"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
+        versionCode = 14
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -23,8 +23,22 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("debug") {
+            // デバッグ版のパッケージ名を com.teyanday.smartnotifier.debug に変更
+            applicationIdSuffix = ".debug"
+
+            // アプリ名の語尾に (Debug) を付けるための設定
+            manifestPlaceholders["appName"] = "SmartNotifier(D)"
+
+            // デバッグ時はビルド速度優先（必要に応じて）
             isMinifyEnabled = false
+        }
+
+        release {
+            // リリース版（内部テスト版）の設定
+            isMinifyEnabled = false
+            manifestPlaceholders["appName"] = "SmartNotifier"
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -35,6 +49,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+}
+
+ksp {
+    // @Database exportSchema = trueによる出力先の指定
+    arg("room.schemaLocation", "${projectDir}/schemas")
 }
 
 kotlin {

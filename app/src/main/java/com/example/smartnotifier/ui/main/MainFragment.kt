@@ -35,6 +35,8 @@ import android.text.style.URLSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -87,6 +89,11 @@ class MainFragment : Fragment() {
      * テスト通知送信など、通知に関する補助処理を行うヘルパー。
      */
     private lateinit var notificationHelper: NotificationHelper
+
+    /**
+     * NotificationLogのソートに使うSpinnerの初期値取得準備完了フラグ
+     */
+    private var readyToPersistSpinner = false
 
     /**
      * ルールの音声メッセージ試聴などに利用する TTS 管理オブジェクト。
@@ -172,6 +179,27 @@ class MainFragment : Fragment() {
             }
         )
 
+        val orderNames = listOf(
+            getString(R.string.list_log_order_nerswst),
+            getString(R.string.list_log_order_app),
+            getString(R.string.list_log_order_recvCount)
+        )
+
+        val spinnerAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            orderNames
+        )
+        spinnerAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item
+        )
+        binding.spinnerSort.adapter = spinnerAdapter
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sortOrder.collect { order ->
+                binding.spinnerSort.setSelection(order.ordinal)
+            }
+        }
+
         notificationHelper = NotificationHelper(requireContext())
         ttsManager = TtsManager(requireContext())
 
@@ -180,6 +208,7 @@ class MainFragment : Fragment() {
         setupClickListeners()
         setupSortListUi()
         setupNotificationTitleUi()
+        setNotificationOrderBySpinner()
     }
 
     private var permissionDialogShowing = false
@@ -249,13 +278,13 @@ class MainFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationLogs.collect { logs ->
-                logAdapter.submitList(logs)
+            viewModel.notificationAccessGranted.collect { granted ->
+                rulesAdapter.setNotificationAccessGranted(granted)
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationAccessGranted.collect { granted ->
-                rulesAdapter.setNotificationAccessGranted(granted)
+            viewModel.logs.collect { logs ->
+                logAdapter.submitList(logs)
             }
         }
 
@@ -534,6 +563,26 @@ class MainFragment : Fragment() {
         }
         binding.editNotificationTitle.doAfterTextChanged { text ->
             viewModel.updateNotificationTitle(text?.toString() ?: "")
+        }
+    }
+
+    private fun setNotificationOrderBySpinner() {
+        binding.spinnerSort.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                if (!readyToPersistSpinner) {
+                    readyToPersistSpinner = true
+                    return
+                }
+
+                viewModel.onLogOrderSelected(position)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
     }
 

@@ -55,6 +55,10 @@ class NotificationLogRepository(
      */
     fun observeLatestLogs(limit: Int = 100) = dao.getLatestLogs(limit)
 
+    fun getLogByAppLabel() = dao.getLogsByAppLabel()
+
+    fun getLogByReceivedCount() = dao.getLogsByReceivedCount()
+
     /**
      *  同一の条件（パッケージ名、チャンネルID、タイトル）に一致するログの件数を取得します。
      *

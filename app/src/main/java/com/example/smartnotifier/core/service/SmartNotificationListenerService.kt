@@ -27,6 +27,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import com.example.smartnotifier.BuildConfig
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
@@ -157,22 +158,23 @@ class SmartNotificationListenerService : NotificationListenerService() {
                 lastReceived = now
             )
 
-            /**
-             * 通知内容
-             */
-            val ntf = NotificationsEntity(
-                packageName = packageName,
-                channelId = channelId,
-                appLabel = appLabel,
-                groupKey = groupKey,
-                isBlocked = isBlocked,
-                importance = importance,
-                channelName = channelName,
-                isGoing = isGoing,
-                lastReceived = now
-            )
-            notificationsRepo.upsertNotification(ntf)
-
+            if (BuildConfig.DEBUG) {
+                /**
+                 * 通知内容
+                 */
+                val ntf = NotificationsEntity(
+                    packageName = packageName,
+                    channelId = channelId,
+                    appLabel = appLabel,
+                    groupKey = groupKey,
+                    isBlocked = isBlocked,
+                    importance = importance,
+                    channelName = channelName,
+                    isGoing = isGoing,
+                    lastReceived = now
+                )
+                notificationsRepo.upsertNotification(ntf)
+            }
 
             if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank() && !isGoing) {
                 logRepo.upsertNotificationLog(log)  // ログの追加又はカウント

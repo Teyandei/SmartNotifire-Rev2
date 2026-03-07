@@ -21,11 +21,35 @@ package com.example.smartnotifier.core.datastore
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 
+/**
+ * アプリケーションのプリファレンス定義
+ *
+ * @property NAME プリファレンスファイル名
+ * @property KEY_IS_FIRST_LAUNCH 初回起動フラグ
+ * @property KEY_SORT_LIST_ORDER リスト表示順
+ * @property KEY_NOTIFICATION_TITLE 通知タイトル
+ * @property KEY_TYPE_LOG_ORDER 通知ログ表示順
+ * @property SortOrder 並び順
+ *
+ */
 object AppPrefs {
     const val NAME = "app_prefs"
+
+    enum class SortOrder {
+        ORDER_BY_NEWEST,    // 新着順
+        ORDER_BY_NAME,      // 名称順
+        ORDER_BY_COUNT;     // 回数順　*回数等の大きい順
+        companion object {
+            fun fromOrdinal(ord: Int): SortOrder {
+                // Kotlin 1.9+ なら entries が使える
+                return entries.getOrNull(ord) ?: ORDER_BY_NEWEST
+            }
+        }
+    }
 
     // 初回起動
     val KEY_IS_FIRST_LAUNCH: Preferences.Key<Boolean> =
@@ -38,6 +62,10 @@ object AppPrefs {
     // ⑫ 通知タイトル
     val KEY_NOTIFICATION_TITLE: Preferences.Key<String> =
         stringPreferencesKey("notification_title")
+
+    // 通知ログ表示順
+    val KEY_TYPE_LOG_ORDER: Preferences.Key<Int> =
+        intPreferencesKey("type_log_order")
 }
 
 val Context.appPrefsDataStore by preferencesDataStore(

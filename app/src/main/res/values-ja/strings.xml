@@ -12,7 +12,7 @@
     <string name="hintNotificationTitle">通知タイトル</string>
     <string name="captionNtfConfirm">通知確認</string>
     <string name="captionConfirm">通知</string>
-    <string name="lbl_NtfLogListNote">通知ログーダブルタップで追加</string>
+    <string name="lbl_NtfLogListNote">ダブルタップで追加</string>
     <string name="captionSearchTitle">検索タイトル</string>
     <string name="captionVoiceMsg">音声メッセージ</string>
     <string name="captionAddBtn">追加</string>
@@ -75,4 +75,7 @@
         設定 ＞ 通知 ＞ アプリの通知 で対象アプリを開き、該当チャンネルを「デフォルト（通知音あり）」に変更してください。\n
         ※設定画面の名称や手順は端末により異なる場合があります。
     </string>
+    <string name="list_log_order_nerswst">新帰順</string>
+    <string name="list_log_order_app">アプリ順</string>
+    <string name="list_log_order_recvCount">回数順</string>
 </resources>

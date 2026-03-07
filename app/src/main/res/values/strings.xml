@@ -12,7 +12,7 @@
     <string name="hintNotificationTitle">Notification Title</string>
     <string name="captionNtfConfirm">Check\nNotification</string>
     <string name="captionConfirm">Notify</string>
-    <string name="lbl_NtfLogListNote">Notification log - Double tap to add</string>
+    <string name="lbl_NtfLogListNote">Double tap to add</string>
     <string name="captionSearchTitle">Search Title</string>
     <string name="captionVoiceMsg">Voice Message</string>
     <string name="captionAddBtn">Add</string>
@@ -78,4 +78,7 @@
         This notification is set to Silent (Do Not Disturb),so voice guidance will not be played.\n\n
         To enable it, change the notification channel to Default (with sound) in your device settings.
     </string>
+    <string name="list_log_order_nerswst">By Newest</string>
+    <string name="list_log_order_app">By App</string>
+    <string name="list_log_order_recvCount">By Receive Count</string>
 </resources>

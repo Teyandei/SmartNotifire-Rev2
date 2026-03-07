@@ -43,6 +43,12 @@ interface NotificationLogDao {
     @Query("SELECT * FROM notification_log ORDER BY id DESC LIMIT :limit")
     fun getLatestLogs(limit: Int = 100): Flow<List<NotificationLogEntity>>
 
+    @Query("SELECT * FROM notification_log ORDER BY appLabel ASC")
+    fun getLogsByAppLabel(): Flow<List<NotificationLogEntity>>
+
+    @Query("SELECT * FROM notification_log ORDER BY receivedCount DESC")
+    fun getLogsByReceivedCount(): Flow<List<NotificationLogEntity>>
+
     /**
      * 指定された条件（パッケージ名、チャンネルIDに一致するアプリ名を取得します。
      *

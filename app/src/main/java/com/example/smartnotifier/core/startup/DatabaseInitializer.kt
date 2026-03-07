@@ -20,6 +20,7 @@ package com.example.smartnotifier.core.startup
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.startup.Initializer
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.datastore.AppPrefs
@@ -78,7 +79,7 @@ class DatabaseInitializer : Initializer<Unit> {
     override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()
 
     /**
-     * [androidx.datastore.preferences.DataStore]をチェックし、アプリが初回起動かどうかを判定します。
+     * [preferencesDataStore]をチェックし、アプリが初回起動かどうかを判定します。
      *
      * @param context アプリケーションコンテキスト。
      * @return 初回起動の場合は`true`、それ以外は`false`。
@@ -89,7 +90,7 @@ class DatabaseInitializer : Initializer<Unit> {
     }
 
     /**
-     * アプリが起動されたことを記録するため、[DataStore]にフラグを書き込みます。
+     * アプリが起動されたことを記録するため、[preferencesDataStore]にフラグを書き込みます。
      *
      * @param context アプリケーションコンテキスト。
      */
@@ -100,7 +101,7 @@ class DatabaseInitializer : Initializer<Unit> {
     }
 
     /**
-     * UIに関連する設定のデフォルト値を[DataStore]に保存します。
+     * UIに関連する設定のデフォルト値を[preferencesDataStore]に保存します。
      *
      * 設計書「⑨ 並び順」「⑫ 通知タイトル」の初期値を設定します。
      *
@@ -113,6 +114,9 @@ class DatabaseInitializer : Initializer<Unit> {
             }
             if (!prefs.contains(AppPrefs.KEY_NOTIFICATION_TITLE)) {
                 prefs[AppPrefs.KEY_NOTIFICATION_TITLE] = context.getString(R.string.default_check_notification_title)
+            }
+            if (!prefs.contains(AppPrefs.KEY_TYPE_LOG_ORDER)) {
+                prefs[AppPrefs.KEY_TYPE_LOG_ORDER] = AppPrefs.SortOrder.ORDER_BY_NEWEST.ordinal
             }
         }
     }

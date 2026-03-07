@@ -98,16 +98,23 @@
         <TextView
             android:id="@+id/txtLogCaption"
             android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="1"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp"
             android:text="@string/lbl_NtfLogListNote"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/btnCloseLog"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <Spinner
+            android:id="@+id/spinnerSort"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:spinnerMode="dropdown"
+            app:layout_constraintBottom_toBottomOf="@+id/btnCloseLog"
+            app:layout_constraintEnd_toStartOf="@+id/btnCloseLog"
+            app:layout_constraintTop_toTopOf="@+id/btnCloseLog" />
         <ImageButton
             android:id="@+id/btnCloseLog"
             android:layout_width="48dp"
@@ -122,13 +129,13 @@
             android:id="@+id/recyclerLogs"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:layout_marginTop="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/txtLogCaption" />
+            app:layout_constraintTop_toBottomOf="@id/btnCloseLog" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     <!-- ⑪ 追加ボタン (固定) -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton

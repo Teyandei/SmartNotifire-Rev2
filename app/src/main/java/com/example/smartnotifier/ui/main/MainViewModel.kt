@@ -31,6 +31,7 @@ import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.repository.NotificationLogRepository
 import com.example.smartnotifier.data.repository.RulesRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -78,14 +79,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val errorMessage = _errorMessage.asSharedFlow()
 
     /**
-     * 最新の通知ログ一覧。
-     *
-     * NotificationLogDao から取得し、StateFlow として公開する。
-     */
-    val notificationLogs: StateFlow<List<NotificationLogEntity>> = notificationLogRepo.observeLatestLogs()
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    /**
      * 通知ログ一覧を表示中かどうかを示す状態。
      */
     private val _isShowingLogList = MutableStateFlow(false)
@@ -104,6 +97,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _notificationAccessGranted.value = granted
     }
 
+    val sortOrder: StateFlow<AppPrefs.SortOrder> =
+        dataStore.data
+            .map { prefs ->
+                val ord = prefs[AppPrefs.KEY_TYPE_LOG_ORDER]
+                    ?: AppPrefs.SortOrder.ORDER_BY_NEWEST.ordinal
+                AppPrefs.SortOrder.fromOrdinal(ord)
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                AppPrefs.SortOrder.ORDER_BY_NEWEST
+            )
+
+   @OptIn(ExperimentalCoroutinesApi::class)
+   val logs: Flow<List<NotificationLogEntity>> =
+       sortOrder.flatMapLatest { order ->
+           when (order) {
+               AppPrefs.SortOrder.ORDER_BY_NEWEST -> notificationLogRepo.observeLatestLogs()
+               AppPrefs.SortOrder.ORDER_BY_NAME -> notificationLogRepo.getLogByAppLabel()
+               AppPrefs.SortOrder.ORDER_BY_COUNT -> notificationLogRepo.getLogByReceivedCount()
+           }
+       }
+
+    fun setLogOrder(order: AppPrefs.SortOrder) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[AppPrefs.KEY_TYPE_LOG_ORDER] = order.ordinal
+            }
+        }
+    }
+
+    fun onLogOrderSelected(position: Int) {
+        val order = when (position) {
+            0 -> AppPrefs.SortOrder.ORDER_BY_NEWEST
+            1 -> AppPrefs.SortOrder.ORDER_BY_NAME
+            2 -> AppPrefs.SortOrder.ORDER_BY_COUNT
+            else -> AppPrefs.SortOrder.ORDER_BY_NEWEST
+        }
+        setLogOrder(order) // DataStoreに保存
+    }
     init {
         observeRuleUpdates()
     }
