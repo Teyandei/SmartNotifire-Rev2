@@ -1,6 +1,10 @@
 
 ---
+title: SmartNotifire-Rev2 設計書
+layout: default
 ---
+
+# SmartNotifire-Rev2
 
 # SmartNotifire-Rev2
 
