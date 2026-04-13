@@ -1,12 +1,6 @@
 
 ---
-title: SmartNotifire-Rev2 設計書
-layout: default
 ---
-
-# SmartNotifire-Rev2
-
-# SmartNotifire-Rev2
 
 Document Rev8 2026-01-29 T.Yoshizawa
 
