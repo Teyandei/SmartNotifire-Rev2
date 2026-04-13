@@ -19,15 +19,15 @@ package com.example.smartnotifier.ui.log
  */
 
 import android.app.NotificationManager
-import android.view.GestureDetector
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smartnotifier.R
+import com.example.smartnotifier.data.db.NotificationLogListItem
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.databinding.ItemNotificationLogBinding
 import com.example.smartnotifier.ui.common.util.IconCache
@@ -37,15 +37,15 @@ import kotlin.time.Duration.Companion.milliseconds
  * 通知ログ([NotificationLogEntity])の一覧を[RecyclerView]に表示するためのアダプターです。
  *
  * 設計書「３．通知ログリスト」の仕様に基づき、ユーザーが過去の通知履歴を確認し、
- * アイテムをダブルタップすることで新しいルールとして簡単に追加する機能を提供します。
+ * 追加ボタンをタップすることで新しいルールとして簡単に追加する機能を提供します。
  *
- * @param onLogDoubleTapped ユーザーがリストのアイテムをダブルタップした際に呼び出されるコールバック。
+ * @param onAddRuleClicked ユーザーがリストのプラスのpタンをタップした際に呼び出されるコールバック。
  *                          タップされた[NotificationLogEntity]を引数として受け取り、
  *                          ViewModelにルールの追加処理を依頼します。
  */
 class NotificationLogAdapter(
-    private val onLogDoubleTapped: (NotificationLogEntity) -> Unit,
-) : ListAdapter<NotificationLogEntity, NotificationLogAdapter.LogViewHolder>(DiffCallback) {
+    private val onAddRuleClicked: (NotificationLogListItem) -> Unit,
+) : ListAdapter<NotificationLogListItem, NotificationLogAdapter.LogViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogViewHolder {
         val binding = ItemNotificationLogBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -65,13 +65,13 @@ class NotificationLogAdapter(
         /**
          * 指定された[NotificationLogEntity]のデータをビューにバインドします。
          *
-         * アプリ名、通知タイトル、および[IconCache]から取得したアプリアイコンを対応するビューに設定します。
-         * また、アイテムビューに対するダブルタップを検出するための[GestureDetector]をセットアップし、
-         * ダブルタップが検出された際には[onLogDoubleTapped]コールバックを呼び出します。
+         * アプリ名、チャンネル名、および[IconCache]から取得したアプリアイコンを対応するビューに設定します。
+         * また、アイテムビューに対するルール追加ボタンタップを検出するためのリスナーをセットアップし、
+         * タップした際には[onAddRuleClicked]コールバックを呼び出します。
          *
-         * @param log 表示する[NotificationLogEntity]インスタンス。
+         * @param log 表示する[NotificationLogListItem]インスタンス。
          */
-        fun bind(log: NotificationLogEntity) {
+        fun bind(log: NotificationLogListItem) {
             val context = binding.root.context
 
             // アプリ情報の表示
@@ -87,40 +87,50 @@ class NotificationLogAdapter(
             binding.txtReceived.text = context.getString(R.string.receivedCount, receivedParDay)
 
             // Importance
-            if (log.importance < NotificationManager.IMPORTANCE_DEFAULT) {
-                binding.root.alpha = 0.5f
-                binding.txtSilent.isVisible = true
-                binding.txtSilent.text = context.getString(R.string.importance_silent)
-            } else {
-                binding.root.alpha = 1.0f
-                binding.txtSilent.isVisible = false
-                binding.txtSilent.text = ""
-            }
-
-            // ダブルタップ検知
-            val gestureDetector =
-                GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-                    override fun onDoubleTap(e: MotionEvent): Boolean {
-                        onLogDoubleTapped(log)
-                        return true
+            val silent = log.importance < NotificationManager.IMPORTANCE_DEFAULT
+            binding.root.setCardBackgroundColor(
+                ContextCompat.getColor(
+                    context,
+                    if (silent) {
+                        R.color.notification_log_card_silent
+                    } else {
+                        R.color.notification_log_card_normal
                     }
-                })
+                )
+            )
+            binding.txtAppName.setTextColor(
+                ContextCompat.getColor(context, R.color.notification_log_text_primary)
+            )
+            binding.txtNtfTitle.setTextColor(
+                ContextCompat.getColor(context, R.color.notification_log_text_secondary)
+            )
+            binding.txtReceived.setTextColor(
+                ContextCompat.getColor(context, R.color.notification_log_text_secondary)
+            )
+            binding.txtSilent.setTextColor(
+                ContextCompat.getColor(context, com.google.android.material.R.color.design_default_color_on_primary)
+            )
 
-            binding.root.setOnTouchListener { v, event ->
-                gestureDetector.onTouchEvent(event)
-                v.performClick()
-                true
+            binding.txtSilent.isVisible = silent
+            binding.txtSilent.text =
+                if (silent) context.getString(R.string.importance_silent) else ""
+
+            binding.textHasRule.isVisible = log.hasRule
+            binding.textHasRule.text =
+                if (log.hasRule) context.getString(R.string.has_rule_text) else ""
+
+            binding.btnAddRule.setOnClickListener {
+                onAddRuleClicked(log)
             }
         }
     }
 
     companion object {
-        private const val THIS_CLASS :String = "NotificationLogAdapter"
-        private val DiffCallback = object : DiffUtil.ItemCallback<NotificationLogEntity>() {
-            override fun areItemsTheSame(oldItem: NotificationLogEntity, newItem: NotificationLogEntity): Boolean =
+        private val DiffCallback = object : DiffUtil.ItemCallback<NotificationLogListItem>() {
+            override fun areItemsTheSame(oldItem: NotificationLogListItem, newItem: NotificationLogListItem): Boolean =
                 oldItem.id == newItem.id
 
-            override fun areContentsTheSame(oldItem: NotificationLogEntity, newItem: NotificationLogEntity): Boolean =
+            override fun areContentsTheSame(oldItem: NotificationLogListItem, newItem: NotificationLogListItem): Boolean =
                 oldItem == newItem
         }
     }

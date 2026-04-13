@@ -2,4 +2,16 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- NotificationLog card background -->
+    <color name="notification_log_card_normal">#FFFFFFFF</color>
+    <color name="notification_log_card_silent">#FFEAEAEA</color>
+
+    <!-- NotificationLog text -->
+    <color name="notification_log_text_primary">#FF111111</color>
+    <color name="notification_log_text_secondary">#FF555555</color>
+
+    <!-- Silent Status Text-->
+    <color name="state_silent_text">#E6EE9C</color>
+
+
 </resources>

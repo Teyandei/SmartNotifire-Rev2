@@ -18,11 +18,9 @@ package com.example.smartnotifier.data.repository
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import android.util.Log
 import com.example.smartnotifier.data.db.AppDatabase
+import com.example.smartnotifier.data.db.DbConstants
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 /**
  * 通知ログ([NotificationLogEntity])のデータ操作を抽象化するリポジトリ。
@@ -37,27 +35,30 @@ class NotificationLogRepository(
     private val db: AppDatabase
 ) {
     private val dao = db.notificationLogDao()
-    private val insertOrUpdateMutex = Mutex()
 
     /**
-     * データベース内のログ件数を制限内に保つために、古いログを削除します。
+     * 表示用ログリストの取得(Idの降順)
      *
-     * @param limit 保持するログの最大件数。
-     */
-    private suspend fun trimLogs(limit: Int = 100) = dao.trimLogs(limit)
-
-    /**
-     * 最新の通知ログを監視するための[kotlinx.coroutines.flow.Flow]を返します。
-     * UI層はこのFlowを購読することで、データベースの変更をリアクティブに受け取ることができます。
-     *
-     * @param limit 取得するログの最大件数。
+     * @param limit 取得するログの最大件数。デフォルト=[DbConstants.NOTIFICATION_LOG_LIMIT]。
      * @return 通知ログのリストを放出する[kotlinx.coroutines.flow.Flow]。
      */
-    fun observeLatestLogs(limit: Int = 100) = dao.getLatestLogs(limit)
+    fun getLogItemsByLatest(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT) = dao.getLatestLogsForList(limit)
 
-    fun getLogByAppLabel() = dao.getLogsByAppLabel()
+    /**
+     * 表示用ログリストの取得(アプリ名の昇順)
+     *
+     * @param limit 取得するログの最大件数。デフォルト=[DbConstants.NOTIFICATION_LOG_LIMIT]。
+     * @return 通知ログのリストを放出する[kotlinx.coroutines.flow.Flow]。
+     */
+    fun getLogItemsByAppLabel(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT) = dao.getLLogByAppLabelForList(limit)
 
-    fun getLogByReceivedCount() = dao.getLogsByReceivedCount()
+    /**
+     * 表示用ログリストの取得(受信件数の降順)
+     *
+     * @param limit 取得するログの最大件数。デフォルト=[DbConstants.NOTIFICATION_LOG_LIMIT]。
+     * @return 通知ログのリストを放出する[kotlinx.coroutines.flow.Flow]。
+     */
+    fun getLogItemsByReceivedCount(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT) = dao.getLLogByReceivedCountForList(limit)
 
     /**
      *  同一の条件（パッケージ名、チャンネルID、タイトル）に一致するログの件数を取得します。
@@ -67,43 +68,6 @@ class NotificationLogRepository(
      * @return 条件に一致したログの件数。
      */
     suspend fun getAppLabel(packageName: String, channelId: String): String? = dao.getAppLabel(packageName, channelId)
-
-    /**
-     * ログの追加又は更新
-     *
-     * @param log ログの内容　※追加時はappLabelにアプリ名を設定しておくこと。
-     */
-    suspend fun insertOrCount(log: NotificationLogEntity) {
-        insertOrUpdateMutex.withLock {
-            val update = dao.incrementReceivedCount(log.packageName, log.channelId, log.lastReceived)
-            if (update == 0) {
-                try {
-                    dao.insert(
-                        NotificationLogEntity(
-                            packageName = log.packageName,
-                            channelId = log.channelId,
-                            appLabel = log.appLabel,
-                            receivedCount = 1,
-                            importance = log.importance,
-                            channelName = log.channelName,
-                            created = log.created,
-                            lastReceived = log.lastReceived
-                        )
-                    )
-                    trimLogs(100)   // 100行に制限
-                } catch (_: android.database.sqlite.SQLiteConstraintException) {
-                    dao.incrementReceivedCount(log.packageName, log.channelId, log.lastReceived)
-                } catch (e: Exception) {
-                    Log.e(THIS_CLASS, """
-                        |insertOrCount: 
-                        |packageName = "${log.packageName}",
-                        |channelId = "${log.channelId}",
-                        |appLabel = "${log.appLabel}"
-                        """.trimMargin(), e)
-                }
-            }
-        }
-    }
 
     /**
      * 通知ログの追加・更新
@@ -119,8 +83,4 @@ class NotificationLogRepository(
      *
      */
     suspend fun upsertNotificationLog(log: NotificationLogEntity) = dao.upsertNotificationLog(log)
-
-    companion object {
-        private const val THIS_CLASS = "NotificationLogRepository"
-    }
 }

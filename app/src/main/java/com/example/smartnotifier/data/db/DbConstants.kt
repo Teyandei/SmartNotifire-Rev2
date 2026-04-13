@@ -18,28 +18,10 @@ package com.example.smartnotifier.data.db
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import android.content.Context
-import androidx.room.Room
-import kotlin.jvm.Volatile
-
-object DatabaseProvider {
-
-    @Volatile
-    private var instance: AppDatabase? = null
-
-    fun get(context: Context): AppDatabase =
-        instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "smart_notifier.db"
-            ).addMigrations(
-                Migrations.MIGRATION_1_2,
-                Migrations.MIGRATION_2_3,
-                Migrations.MIGRATION_3_4,
-                Migrations.MIGRATION_4_5,
-                Migrations.MIGRATION_5_6
-            )
-             .build().also { instance = it }
-        }
+/**
+ * データベース関連定数
+ */
+object DbConstants {
+    const val NOTIFICATION_LOG_LIMIT = 200
+    const val NOTIFICATION_TITLE_CACHE_LIMIT = 5
 }

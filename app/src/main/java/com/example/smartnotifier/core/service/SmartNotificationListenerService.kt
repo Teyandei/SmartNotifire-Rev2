@@ -18,6 +18,7 @@ package com.example.smartnotifier.core.service
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -34,12 +35,17 @@ import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.NotificationsEntity
 import com.example.smartnotifier.data.repository.NotificationLogRepository
+import com.example.smartnotifier.data.repository.NotificationTitleCacheRepository
 import com.example.smartnotifier.data.repository.NotificationsRepository
 import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 class SmartNotificationListenerService : NotificationListenerService() {
@@ -47,6 +53,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
     private lateinit var logRepo: NotificationLogRepository
     private lateinit var ruleRepo: RulesRepository
     private lateinit var notificationsRepo: NotificationsRepository
+    private lateinit var titleCacheRepo : NotificationTitleCacheRepository
 
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -60,6 +67,18 @@ class SmartNotificationListenerService : NotificationListenerService() {
 
     private val speakMutex = Mutex()
 
+    private val recentNotificationKeys = mutableMapOf<String, Long>()
+
+    private enum class SpeakDecision {
+        SPEAK,
+        SKIP_BLOCKED,
+        SKIP_CANNOT_SPEAK_NOW,
+        SKIP_LOW_IMPORTANCE,
+        SKIP_ONGOING,
+        SKIP_GROUP_SUMMARY,
+        SKIP_DUPLICATE_KEY,
+        SKIP_IS_AMBIENT
+    }
 
     companion object {
         /**
@@ -72,6 +91,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
 
         private const val THIS_CLASS :String = "SmartNotificationListenerService"
         private const val DO_NOT_SELECT: String = "ERR: Don't select this."
+        private const val DUPLICATE_WINDOW_MS = 10_000L
     }
 
     override fun onCreate() {
@@ -81,6 +101,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
         ruleRepo = RulesRepository(db)
         notificationsRepo = NotificationsRepository(db)
         ttsManager = TtsManager(this)
+        titleCacheRepo = NotificationTitleCacheRepository(db.notificationTitleCacheDao())
     }
 
     override fun onDestroy() {
@@ -113,6 +134,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
         val isBlocked = if (rankingOk) !ranking.matchesInterruptionFilter() else true   // おやすみモードなどのブロック
         val importance = if (rankingOk) ranking.importance else -1  // 重要度
         val channel = if (rankingOk) ranking.channel else null
+        val isAmbient = if (rankingOk) ranking.isAmbient else false
         val channelName = channel?.name?.toString() ?: ""           // チャンネル名
         val groupKey = sbn.groupKey         // グループKey
         val isGoing = sbn.isOngoing         // 連続的な通知(進捗など)
@@ -124,7 +146,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
          */
         val title = sbn
             .notification.extras
-            .getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
+            .getCharSequence(Notification.EXTRA_TITLE)?.toString()
             .orEmpty()
 
         serviceScope.launch {
@@ -176,12 +198,27 @@ class SmartNotificationListenerService : NotificationListenerService() {
                 notificationsRepo.upsertNotification(ntf)
             }
 
+            val decision = shouldSpeakNotification(sbn, isBlocked, importance, isAmbient)
+
             if (appLabel != DO_NOT_SELECT && appLabel.isNotBlank() && !isGoing) {
                 logRepo.upsertNotificationLog(log)  // ログの追加又はカウント
-                if (!isBlocked && canSpeakNow(applicationContext) && (importance >= NotificationManager.IMPORTANCE_DEFAULT))
-                    checkRulesAndSpeak(log, title)
-                else
-                    Log.w(THIS_CLASS, "tts disabled")
+                titleCacheRepo.saveTitle(packageName, channelId, title) // 検索タイトル入力補助用キャッシュ
+
+                when (decision) {
+                    SpeakDecision.SPEAK -> {
+                        if (checkRulesAndSpeak(log, title)) {
+                            rememberSpokenNotification(sbn)
+                            writeDecisionLog("SPEAK", "RULE_MATCH", sbn, title)
+                        } else {
+                            writeDecisionLog("SKIP", "NO_RULE_MATCH", sbn, title)
+                        }
+                    }
+                    else -> {
+                        writeDecisionLog("SKIP", decision.name, sbn, title)
+                    }
+                }
+            } else {
+                writeDecisionLog("IGNORE", decision.name, sbn, title)
             }
         }
     }
@@ -212,8 +249,9 @@ class SmartNotificationListenerService : NotificationListenerService() {
      *
      * @param log 通知ログ
      * @param title 受信した通知タイトル
+     * @return true:ルールにヒットしてTTS, false: ルールにヒットしなかった
      */
-    private suspend fun checkRulesAndSpeak(log: NotificationLogEntity, title: String) {
+    private suspend fun checkRulesAndSpeak(log: NotificationLogEntity, title: String): Boolean {
         val rules = ruleRepo.getRulesByPackageAndChannel(log.packageName, log.channelId).first()
 
         val matchedRule = rules.find { rule ->
@@ -230,6 +268,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
             }
             processVoiceQueue(message)
         }
+        return matchedRule != null
     }
 
     /**
@@ -250,6 +289,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
 
             speakMutex.withLock {
                 withContext(Dispatchers.Main) {
+                    speakAt(message)
                     ttsManager.speak(message)
                 }
             }
@@ -270,6 +310,68 @@ class SmartNotificationListenerService : NotificationListenerService() {
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
         Log.w(THIS_CLASS, "onListenerDisconnected")
+    }
+
+    private fun formatTime(millis: Long): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+        return Instant.ofEpochMilli(millis)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
+    }
+
+    private fun speakAt(text: String) {
+        val file = File(filesDir, "notif_log.txt")
+        if (BuildConfig.DEBUG) {
+            file.appendText("🟩Speak：${text} at ${formatTime(System.currentTimeMillis())}\n")
+        }
+    }
+
+    private fun isRecentDuplicate(key: String, now: Long): Boolean {
+        val lastTime = recentNotificationKeys[key] ?: return false
+        return (now - lastTime) < DUPLICATE_WINDOW_MS
+    }
+
+    private fun rememberSpokenNotification(sbn: StatusBarNotification) {
+        val now = System.currentTimeMillis()
+        recentNotificationKeys[sbn.key] = now
+
+        // 古いキーを軽く掃除
+        recentNotificationKeys.entries.removeAll { (_, time) ->
+            now - time > DUPLICATE_WINDOW_MS
+        }
+    }
+
+    private fun shouldSpeakNotification(
+        sbn: StatusBarNotification,
+        isBlocked: Boolean,
+        importance: Int,
+        isAmbient: Boolean
+    ): SpeakDecision {
+        if (isBlocked) return SpeakDecision.SKIP_BLOCKED
+        if (!canSpeakNow(applicationContext)) return SpeakDecision.SKIP_CANNOT_SPEAK_NOW
+        if (importance < NotificationManager.IMPORTANCE_DEFAULT) return SpeakDecision.SKIP_LOW_IMPORTANCE
+        if (sbn.isOngoing) return SpeakDecision.SKIP_ONGOING
+
+        val isGroupSummary =
+            (sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
+        if (isGroupSummary) return SpeakDecision.SKIP_GROUP_SUMMARY
+
+        val now = System.currentTimeMillis()
+        if (isRecentDuplicate(sbn.key, now)) return SpeakDecision.SKIP_DUPLICATE_KEY
+        if (isAmbient) return SpeakDecision.SKIP_IS_AMBIENT
+        return SpeakDecision.SPEAK
+    }
+
+    private fun writeDecisionLog(
+        action: String,
+        reason: String,
+        sbn: StatusBarNotification,
+        title: String
+    ) {
+        if (!BuildConfig.DEBUG) return
+
+        val text = "[${formatTime(System.currentTimeMillis())}] $action $reason pkg=${sbn.packageName} title=$title key=${sbn.key}\n"
+        File(filesDir, "notif_log.txt").appendText(text)
     }
 
 }

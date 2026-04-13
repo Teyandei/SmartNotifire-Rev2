@@ -12,7 +12,7 @@
     <string name="hintNotificationTitle">Notification Title</string>
     <string name="captionNtfConfirm">Check\nNotification</string>
     <string name="captionConfirm">Notify</string>
-    <string name="lbl_NtfLogListNote">Double tap to add</string>
+    <string name="lbl_NtfLogListNote">Add rule from notification</string>
     <string name="captionSearchTitle">Search Title</string>
     <string name="captionVoiceMsg">Voice Message</string>
     <string name="captionAddBtn">Add</string>
@@ -81,4 +81,6 @@
     <string name="list_log_order_nerswst">By Newest</string>
     <string name="list_log_order_app">By App</string>
     <string name="list_log_order_recvCount">By Receive Count</string>
+    <string name="add_rule">Add rule</string>
+    <string name="has_rule_text">Configured</string>
 </resources>

@@ -37,16 +37,144 @@ interface NotificationLogDao {
      *
      * UIがデータベースの変更をリアクティブに監視できるよう、結果を[Flow]でラップして返します。
      *
-     * @param limit 取得するログの最大件数。デフォルトは100件です。
+     * @param limit 取得するログの最大件数。デフォルトは[DbConstants.NOTIFICATION_LOG_LIMIT]件です。
      * @return 通知ログのリストを放出する[Flow]。
      */
-    @Query("SELECT * FROM notification_log ORDER BY id DESC LIMIT :limit")
-    fun getLatestLogs(limit: Int = 100): Flow<List<NotificationLogEntity>>
+    @Query(
+        """
+            SELECT
+                nl.id,
+                nl.packageName,
+                nl.channelId,
+                nl.appLabel,
+                nl.importance,
+                nl.channelName,
+                nl.lastReceived,
+                nl.created,
+                nl.receivedCount,
+                EXISTS (
+                    SELECT 1
+                    FROM Rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                ) AS hasRule
+            FROM notification_log AS nl
+            ORDER BY nl.id DESC 
+            LIMIT :limit
+        """
+    )
+    fun getLatestLogsForList(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT): Flow<List<NotificationLogListItem>>
 
-    @Query("SELECT * FROM notification_log ORDER BY appLabel ASC")
+    /**
+     * 最新の通知ログを指定された件数だけ、アプリ名の昇順で取得します。
+     *
+     * UIがデータベースの変更をリアクティブに監視できるよう、結果を[Flow]でラップして返します。
+     *
+     * @param limit 取得するログの最大件数。デフォルトは[DbConstants.NOTIFICATION_LOG_LIMIT]件です。
+     * @return 通知ログのリストを放出する[Flow]。
+     */
+    @Query(
+        """
+            SELECT
+                nl.id,
+                nl.packageName,
+                nl.channelId,
+                nl.appLabel,
+                nl.importance,
+                nl.channelName,
+                nl.lastReceived,
+                nl.created,
+                nl.receivedCount,
+                EXISTS (
+                    SELECT 1
+                    FROM Rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                ) AS hasRule
+            FROM notification_log AS nl
+            ORDER BY nl.appLabel ASC 
+            LIMIT :limit
+        """
+    )
+    fun getLLogByAppLabelForList(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT): Flow<List<NotificationLogListItem>>
+
+    /**
+     * 最新の通知ログを指定された件数だけ、受信件数の降順で取得します。
+     *
+     * UIがデータベースの変更をリアクティブに監視できるよう、結果を[Flow]でラップして返します。
+     *
+     * @param limit 取得するログの最大件数。デフォルトは[DbConstants.NOTIFICATION_LOG_LIMIT]件です。
+     * @return 通知ログのリストを放出する[Flow]。
+     */
+    @Query(
+        """
+            SELECT
+                nl.id,
+                nl.packageName,
+                nl.channelId,
+                nl.appLabel,
+                nl.importance,
+                nl.channelName,
+                nl.lastReceived,
+                nl.created,
+                nl.receivedCount,
+                EXISTS (
+                    SELECT 1
+                    FROM Rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                ) AS hasRule
+            FROM notification_log AS nl
+            ORDER BY nl.receivedCount DESC 
+            LIMIT :limit
+        """
+    )
+    fun getLLogByReceivedCountForList(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT): Flow<List<NotificationLogListItem>>
+
+    @Query(
+        """
+            SELECT * 
+            FROM notification_log AS nl
+            WHERE 
+                NOT EXISTS (SELECT 1
+                    FROM rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                )
+            ORDER BY nl.id DESC 
+            LIMIT :limit
+        """
+    )
+    fun getLatestLogs(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT): Flow<List<NotificationLogEntity>>
+
+    @Query(
+        """
+            SELECT * 
+            FROM notification_log AS nl
+            WHERE 
+                NOT EXISTS (SELECT 1
+                    FROM rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                )
+            ORDER BY nl.appLabel ASC
+        """
+    )
     fun getLogsByAppLabel(): Flow<List<NotificationLogEntity>>
 
-    @Query("SELECT * FROM notification_log ORDER BY receivedCount DESC")
+    @Query(
+        """
+            SELECT * 
+            FROM notification_log AS nl
+            WHERE 
+                NOT EXISTS (SELECT 1
+                    FROM rules AS r
+                    WHERE r.packageName = nl.packageName
+                        AND r.channelId = nl.channelId
+                )
+            ORDER BY nl.receivedCount DESC
+         """
+    )
     fun getLogsByReceivedCount(): Flow<List<NotificationLogEntity>>
 
     /**
@@ -79,7 +207,7 @@ interface NotificationLogDao {
      */
     @Query("DELETE FROM notification_log WHERE id NOT IN (" +
             "SELECT id FROM notification_log ORDER BY id DESC LIMIT :limit)")
-    suspend fun trimLogs(limit: Int = 100)
+    suspend fun trimLogs(limit: Int = DbConstants.NOTIFICATION_LOG_LIMIT)
 
     /**
      * 指定されたパッケージ名の通知ログを削除します。
@@ -88,6 +216,32 @@ interface NotificationLogDao {
      */
     @Query("DELETE FROM notification_log WHERE packageName = :packageName")
     suspend fun deleteByPackageName(packageName: String)
+
+    /**
+     * クリーンアップ
+     *
+     * 最終受信日時が指定日時以前のログを削除する。
+     * 削除対象は、Rulesに登録されていない通知
+     *
+     * @param limit 指定日時
+     *
+     */
+    @Query(
+        """
+            DELETE 
+            FROM notification_log
+            WHERE 
+                NOT EXISTS (
+                    SELECT 1
+                    FROM rules AS r
+                    WHERE r.packageName = packageName
+                        AND r.channelId = channelId
+                )
+                AND
+                    lastReceived < :limit
+        """
+    )
+    suspend fun cleanupLog(limit: Long)
 
     /**
      * 受信カウントをインクリメントする
@@ -139,4 +293,12 @@ interface NotificationLogDao {
         }
         upsert(saveToLog)
     }
+
+    @Query("""
+        UPDATE notification_log
+        SET lastReceived = :lastReceived
+        WHERE packageName = :packageName AND channelId = :channelId
+        """
+    )
+    suspend fun updateLastReceivedForLog(packageName: String, channelId: String, lastReceived: Long)
 }

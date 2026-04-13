@@ -21,36 +21,27 @@ package com.example.smartnotifier.data.db.entity
 import androidx.room.*
 
 /**
- * 通知検出ルール
+ * **通知タイトル保持キャッシュ**
+ * - 検索タイトル追加・編集時に表示する既存通知タイトルを保持する
  *
  * @property id 主キー
- * @property packageName パッケージ名
- * @property appLabel アプリ名
- * @property channelId チャンネルID
- * @property srhTitle 検索タイトル
- * @property voiceMsg 音声メッセージ
- * @property enabled 許可
- * @property channelName チャンネル名
+ * @property packageName 通知パッケージ名（検索用）
+ * @property channelId 通知チャンネルID（検索用）
+ * @property title 通知タイトル（リスト表示用）
+ * @property lastUsed 最終通知日時（削除判定用）
  */
 @Entity(
-    tableName = "rules",
+    tableName = "notification_title_cache",
     indices = [
-        Index(
-                value = ["packageName", "channelId", "srhTitle"],
-                unique = true
-        )
+        Index(value = ["packageName", "channelId", "title"], unique = true)
     ]
 )
-
-data class RuleEntity(
+data class NotificationTitleCacheEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
 
-    val packageName: String,       // PackageName
-    val appLabel: String,          // AppLabel
-    val channelId: String,         // ChannelID
-    val srhTitle: String = "",     // SrhTitle
-    val voiceMsg: String = "",     // VoiceMsg
-    val enabled: Boolean = false,  // Enabled
-    val channelName:String = ""    // ChannelName
+    val packageName: String,
+    val channelId: String,
+    val title: String,
+    val lastUsed: Long
 )

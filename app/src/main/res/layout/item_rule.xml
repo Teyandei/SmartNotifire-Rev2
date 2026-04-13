@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:ellipsize="end"
-            android:text="Sample Channel Name"
+            tools:text="Sample Channel Name"
             android:textAppearance="@style/TextAppearance.AppCompat"
             app:layout_constraintEnd_toStartOf="@+id/swEnabled"
             app:layout_constraintStart_toStartOf="@+id/txtAppName"
@@ -69,11 +69,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imgAppIcon">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/editSrhTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:completionThreshold="0"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- ⑤ コピー -->
@@ -86,7 +91,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/tilSrhTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tilSrhTitle"
-            app:srcCompat="@android:drawable/ic_menu_edit" />
+            app:srcCompat="?attr/actionModeCopyDrawable" />
 
         <!-- ④ 音声メッセージ -->
         <com.google.android.material.textfield.TextInputLayout
@@ -104,7 +109,10 @@
                 android:id="@+id/editVoiceMsg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:inputType="text"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textSize="14sp"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- ⑧ プレイ -->

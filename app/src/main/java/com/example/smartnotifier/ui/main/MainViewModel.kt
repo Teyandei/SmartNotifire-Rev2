@@ -27,9 +27,10 @@ import com.example.smartnotifier.R
 import com.example.smartnotifier.core.datastore.AppPrefs
 import com.example.smartnotifier.core.datastore.appPrefsDataStore
 import com.example.smartnotifier.data.db.DatabaseProvider
-import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import com.example.smartnotifier.data.db.NotificationLogListItem
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.repository.NotificationLogRepository
+import com.example.smartnotifier.data.repository.NotificationTitleCacheRepository
 import com.example.smartnotifier.data.repository.RulesRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -59,6 +60,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val dataStore = appContext.appPrefsDataStore
     private val db = DatabaseProvider.get(appContext)
     val rulesRepo = RulesRepository(db)
+
+    val titleCacheRepo = NotificationTitleCacheRepository(db.notificationTitleCacheDao())
 
     private val _effect = MutableSharedFlow<UiEffect>(extraBufferCapacity = 16)
     val effect = _effect.asSharedFlow()
@@ -97,7 +100,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _notificationAccessGranted.value = granted
     }
 
-    val sortOrder: StateFlow<AppPrefs.SortOrder> =
+    val sortLogOrder: StateFlow<AppPrefs.SortOrder> =
         dataStore.data
             .map { prefs ->
                 val ord = prefs[AppPrefs.KEY_TYPE_LOG_ORDER]
@@ -110,15 +113,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AppPrefs.SortOrder.ORDER_BY_NEWEST
             )
 
-   @OptIn(ExperimentalCoroutinesApi::class)
-   val logs: Flow<List<NotificationLogEntity>> =
-       sortOrder.flatMapLatest { order ->
-           when (order) {
-               AppPrefs.SortOrder.ORDER_BY_NEWEST -> notificationLogRepo.observeLatestLogs()
-               AppPrefs.SortOrder.ORDER_BY_NAME -> notificationLogRepo.getLogByAppLabel()
-               AppPrefs.SortOrder.ORDER_BY_COUNT -> notificationLogRepo.getLogByReceivedCount()
-           }
-       }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val logItems: Flow<List<NotificationLogListItem>> =
+        sortLogOrder.flatMapLatest { order ->
+            when (order) {
+                AppPrefs.SortOrder.ORDER_BY_NEWEST -> notificationLogRepo.getLogItemsByLatest()
+                AppPrefs.SortOrder.ORDER_BY_NAME -> notificationLogRepo.getLogItemsByAppLabel()
+                AppPrefs.SortOrder.ORDER_BY_COUNT -> notificationLogRepo.getLogItemsByReceivedCount()
+            }
+        }
 
     fun setLogOrder(order: AppPrefs.SortOrder) {
         viewModelScope.launch {
@@ -180,7 +183,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      *
      * 同一タイトルが存在する場合は連番を付与する。
      */
-    fun addRuleFromLog(log: NotificationLogEntity) {
+    fun addRuleFromLog(log: NotificationLogListItem) {
         viewModelScope.launch {
             try {
                 val ruleBase = RuleEntity(
@@ -263,7 +266,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * 指定されたルールを削除する。
      */
-    suspend fun delete(rule: RuleEntity) = rulesRepo.delete(rule)
+    suspend fun delete(rule: RuleEntity) = rulesRepo.deleteRule(rule)
 
     /**
      * 指定されたルールを複製する。
@@ -336,5 +339,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             rulesRepo.updateEnabled(id, enabled)
         }
+    }
+
+    suspend fun loadRecentTitleStringsMap(
+        rules: List<RuleEntity>
+    ): Map<Pair<String, String>, List<String>> {
+        val result = mutableMapOf<Pair<String, String>, List<String>>()
+
+        rules.forEach { rule ->
+            val key = rule.packageName to rule.channelId
+            if (key !in result) {
+                result[key] = titleCacheRepo.getRecentTitleStrings(
+                    packageName = rule.packageName,
+                    channelId = rule.channelId
+                )
+            }
+        }
+        return result
     }
 }

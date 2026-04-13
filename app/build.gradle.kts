@@ -79,4 +79,10 @@ dependencies {
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.material)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.rxjava2)
+    implementation(libs.androidx.work.gcm)
+    implementation(libs.androidx.work.testing)
+    implementation(libs.androidx.work.multiprocess)
 }

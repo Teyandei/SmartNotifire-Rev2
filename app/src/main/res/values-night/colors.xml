@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NotificationLog card background -->
+    <color name="notification_log_card_normal">#FF202124</color>
+    <color name="notification_log_card_silent">#FF2B2C2F</color>
+
+    <!-- NotificationLog text -->
+    <color name="notification_log_text_primary">#FFF1F3F4</color>
+    <color name="notification_log_text_secondary">#FFBDC1C6</color>
+
+</resources>

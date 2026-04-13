@@ -1,4 +1,4 @@
-package com.example.smartnotifier.data.db
+package com.example.smartnotifier.core.service
 
 /*
  * SmartNotifier-Rev2
@@ -19,27 +19,29 @@ package com.example.smartnotifier.data.db
  */
 
 import android.content.Context
-import androidx.room.Room
-import kotlin.jvm.Volatile
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.example.smartnotifier.data.db.DatabaseProvider
 
-object DatabaseProvider {
+private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
 
-    @Volatile
-    private var instance: AppDatabase? = null
+/**
+ * 通知ログのクリーンアップ
+ *
+ * [CoroutineWorker]を使用した定期クリーンアップ
+ */
+class LogCleanupWorker(
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
 
-    fun get(context: Context): AppDatabase =
-        instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "smart_notifier.db"
-            ).addMigrations(
-                Migrations.MIGRATION_1_2,
-                Migrations.MIGRATION_2_3,
-                Migrations.MIGRATION_3_4,
-                Migrations.MIGRATION_4_5,
-                Migrations.MIGRATION_5_6
-            )
-             .build().also { instance = it }
-        }
+    override suspend fun doWork(): Result {
+        val dao = DatabaseProvider
+            .get(applicationContext)
+            .notificationLogDao()
+
+        val limit = System.currentTimeMillis() - 90L * MILLIS_PER_DAY
+        dao.cleanupLog(limit)
+        return Result.success()
+    }
 }

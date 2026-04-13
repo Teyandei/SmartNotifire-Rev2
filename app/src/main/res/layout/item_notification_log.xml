@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="2dp"
     app:cardElevation="1dp">
@@ -13,17 +12,15 @@
         android:layout_height="wrap_content"
         android:padding="8dp">
 
-        <!-- ① アプリアイコン -->
+        <!-- アイコン -->
         <ImageView
             android:id="@+id/imgAppIcon"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@tools:sample/avatars" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ② アプリ名 -->
+        <!-- AppName -->
         <TextView
             android:id="@+id/txtAppName"
             android:layout_width="0dp"
@@ -31,12 +28,11 @@
             android:layout_marginStart="12dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imgAppIcon"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="App Name" />
+            app:layout_constraintEnd_toStartOf="@id/btnAddRule"
+            app:layout_constraintStart_toEndOf="@id/imgAppIcon"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- ③ 通知タイトル -->
+        <!-- タイトル -->
         <TextView
             android:id="@+id/txtNtfTitle"
             android:layout_width="0dp"
@@ -44,31 +40,75 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintEnd_toStartOf="@+id/txtReceived"
-            app:layout_constraintStart_toStartOf="@+id/txtAppName"
-            app:layout_constraintTop_toBottomOf="@+id/txtAppName"
-            tools:text="This is a notification title text." />
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            app:layout_constraintEnd_toStartOf="@id/btnAddRule"
+            app:layout_constraintStart_toStartOf="@id/txtAppName"
+            app:layout_constraintTop_toBottomOf="@id/txtAppName" />
 
+        <!-- 受信頻度 -->
+
+        <!-- has Rule-->
         <TextView
             android:id="@+id/txtReceived"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="Received: 1.0/day"
+            android:layout_marginTop="8dp"
+            android:text="1.0/day"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintEnd_toStartOf="@+id/txtSilent"
-            app:layout_constraintTop_toTopOf="@+id/txtSilent" />
+            app:layout_constraintStart_toStartOf="@id/txtAppName"
+            app:layout_constraintTop_toBottomOf="@id/txtNtfTitle" />
 
         <TextView
-            android:id="@+id/txtSilent"
-            android:layout_width="0dp"
+            android:id="@+id/textHasRule"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            tools:text="Silent"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_state_has_rule"
+            android:minHeight="24dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/has_rule_text"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintEnd_toEndOf="@+id/txtAppName"
-            app:layout_constraintTop_toBottomOf="@+id/txtAppName" />
+            android:textColor="?attr/colorError"
+            app:layout_constraintEnd_toStartOf="@+id/txtSilent"
+            app:layout_constraintTop_toTopOf="@id/txtSilent"
+            app:layout_constraintBottom_toBottomOf="@id/txtSilent" />
+
+        <!-- Silent -->
+        <TextView
+            android:id="@+id/txtSilent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_state_silent"
+            android:minHeight="24dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:letterSpacing="-0.04"
+            android:text="@string/importance_silent"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            android:textColor="@color/state_silent_text"
+            app:layout_constraintEnd_toEndOf="@+id/txtNtfTitle"
+            app:layout_constraintTop_toTopOf="@id/txtReceived"
+            app:layout_constraintBottom_toBottomOf="@id/txtReceived" />
+
+        <!-- 追加ボタン -->
+        <ImageButton
+            android:id="@+id/btnAddRule"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/add_rule"
+            android:src="@drawable/ic_add_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/colorOnSurface" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </com.google.android.material.card.MaterialCardView>

@@ -23,14 +23,16 @@ import androidx.room.RoomDatabase
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
 import com.example.smartnotifier.data.db.entity.NotificationsEntity
+import com.example.smartnotifier.data.db.entity.NotificationTitleCacheEntity
 
 @Database(
     entities = [
         RuleEntity::class,
         NotificationLogEntity::class,
-        NotificationsEntity::class
+        NotificationsEntity::class,
+        NotificationTitleCacheEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 
@@ -38,4 +40,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun ruleDao(): RuleDao
     abstract fun notificationLogDao(): NotificationLogDao
     abstract fun notificationsDao(): NotificationsDao
+    abstract fun notificationTitleCacheDao(): NotificationTitleCacheDao
 }

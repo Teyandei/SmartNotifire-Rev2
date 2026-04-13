@@ -1,5 +1,23 @@
 package com.example.smartnotifier.data.db.entity
 
+/*
+ * SmartNotifier-Rev2
+ * Copyright (C) 2026  Takeaki Yoshizawa
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -19,8 +37,8 @@ import androidx.room.PrimaryKey
  * @param importance 通知の最終的な重要度。
  * @param receivedCount 通知の受信回数。
  * @param lastReceived 通知の最終受信時刻。
- * @see [Roomライブラリ](https://developer.android.com/training/data-storage/room)
- * @see [設計書](https://teyandei.github.io/SmartNotifire-Rev2/design/SmartNotifire-Rev2.html)
+ * [Roomライブラリ](https://developer.android.com/training/data-storage/room)
+ * [設計書](https://teyandei.github.io/SmartNotifire-Rev2/design/SmartNotifire-Rev2.html)
  */
 @Entity(
     tableName = "notifications",

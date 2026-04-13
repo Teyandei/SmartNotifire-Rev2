@@ -12,7 +12,7 @@
     <string name="hintNotificationTitle">通知タイトル</string>
     <string name="captionNtfConfirm">通知確認</string>
     <string name="captionConfirm">通知</string>
-    <string name="lbl_NtfLogListNote">ダブルタップで追加</string>
+    <string name="lbl_NtfLogListNote">通知からルール追加</string>
     <string name="captionSearchTitle">検索タイトル</string>
     <string name="captionVoiceMsg">音声メッセージ</string>
     <string name="captionAddBtn">追加</string>
@@ -78,4 +78,6 @@
     <string name="list_log_order_nerswst">新帰順</string>
     <string name="list_log_order_app">アプリ順</string>
     <string name="list_log_order_recvCount">回数順</string>
+    <string name="add_rule">ルールを追加</string>
+    <string name="has_rule_text">設定済</string>
 </resources>

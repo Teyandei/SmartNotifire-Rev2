@@ -22,6 +22,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.startup.Initializer
+import androidx.work.WorkManagerInitializer
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.datastore.AppPrefs
 import com.example.smartnotifier.core.datastore.appPrefsDataStore
@@ -57,8 +58,10 @@ class DatabaseInitializer : Initializer<Unit> {
      */
     override fun create(context: Context) {
         val appContext = context.applicationContext
-        val db: AppDatabase = DatabaseProvider.get(appContext)
+        val db = DatabaseProvider.get(appContext)
         val rulesRepository = RulesRepository(db)
+
+        LogCleanupScheduler.enqueue(appContext)
 
         scope.launch {
             if (isFirstLaunch(appContext)) {
@@ -72,11 +75,13 @@ class DatabaseInitializer : Initializer<Unit> {
     /**
      * このInitializerの依存関係を定義します。
      *
-     * 今回は依存する他のInitializerがないため、空のリストを返します。
+     * DatabaseInitializer が WorkManager に依存する
      *
      * @return 依存する[Initializer]のクラスリスト。
      */
-    override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        return listOf(WorkManagerInitializer::class.java)
+    }
 
     /**
      * [preferencesDataStore]をチェックし、アプリが初回起動かどうかを判定します。

@@ -62,7 +62,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.smartnotifier.R
 import com.example.smartnotifier.ui.log.NotificationLogAdapter
 import com.example.smartnotifier.BuildConfig
-import com.example.smartnotifier.data.db.entity.NotificationLogEntity
+import com.example.smartnotifier.data.db.NotificationLogListItem
 
 /**
  * 画面の表示とユーザー入力の収集を担当するメイン画面 Fragment。
@@ -128,6 +128,8 @@ class MainFragment : Fragment() {
      */
     private var rulesCollectJob: Job? = null
 
+    private var titleSuggestionsMap: Map<Pair<String, String>, List<String>> = emptyMap()
+
     /**
      * ViewBinding を初期化し、Fragment のルートビューを生成する。
      */
@@ -159,8 +161,10 @@ class MainFragment : Fragment() {
                     ttsManager?.speak(getString(R.string.spk_msg_default, rule.appLabel))
                 }
             },
-            onRuleUpdated = { rule -> viewModel.updateRuleDebounced(rule) },
-            onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) }
+            onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) },
+            getTitleSuggestions = { rule ->
+                titleSuggestionsMap[rule.packageName to rule.channelId].orEmpty()
+            }
         )
 
         /**
@@ -170,7 +174,7 @@ class MainFragment : Fragment() {
          * [MainViewModel.addRuleFromLog] に委譲する。
          */
         logAdapter = NotificationLogAdapter(
-            onLogDoubleTapped = { log ->
+            onAddRuleClicked = { log ->
                 if (log.importance < NotificationManager.IMPORTANCE_DEFAULT) {
                     showSilentWarning(log)
                 } else {
@@ -195,7 +199,7 @@ class MainFragment : Fragment() {
         )
         binding.spinnerSort.adapter = spinnerAdapter
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.sortOrder.collect { order ->
+            viewModel.sortLogOrder.collect { order ->
                 binding.spinnerSort.setSelection(order.ordinal)
             }
         }
@@ -283,11 +287,16 @@ class MainFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.logs.collect { logs ->
-                logAdapter.submitList(logs)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.logItems.collect { logItems ->
+                    logAdapter.submitList(logItems) {
+                        binding.recyclerLogs.post {
+                            binding.recyclerLogs.scrollToPosition(0)
+                        }
+                    }
+                }
             }
         }
-
     }
 
     /**
@@ -502,7 +511,7 @@ class MainFragment : Fragment() {
      *
      * @param log ルールに追加する通知ログ内容
      */
-    private fun showSilentWarning(log: NotificationLogEntity) {
+    private fun showSilentWarning(log: NotificationLogListItem) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.wrn_dnd_title)
             .setMessage(R.string.wrn_dnd_msg)
@@ -541,6 +550,7 @@ class MainFragment : Fragment() {
         rulesCollectJob?.cancel()
         rulesCollectJob = viewLifecycleOwner.lifecycleScope.launch {
             viewModel.rules(orderNewest = !orderByPackageAsc).collect { list ->
+                titleSuggestionsMap = viewModel.loadRecentTitleStringsMap(list)
                 rulesAdapter.submitList(list) {     // ルール表示
                     tryScrollToPending()            // 新規ルールのスクロール表示を試みる
                 }

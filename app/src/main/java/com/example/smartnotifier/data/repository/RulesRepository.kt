@@ -18,12 +18,14 @@ package com.example.smartnotifier.data.repository
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import androidx.room.Transaction
+import androidx.room.withTransaction
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.db.RuleDao
 import kotlinx.coroutines.flow.Flow
 
-class RulesRepository(db: AppDatabase) {
+class RulesRepository(private val db: AppDatabase) {
 
     sealed interface InsertRuleResult {
         data class Success(
@@ -41,7 +43,7 @@ class RulesRepository(db: AppDatabase) {
      * データ取得・更新の窓口を一本化する。
      */
     val dao = db.ruleDao() // ViewModel から利用可能にする
-
+    val logDao = db.notificationLogDao()
     /**
      * ルールを新規追加する。
      */
@@ -56,6 +58,20 @@ class RulesRepository(db: AppDatabase) {
      * ルールを削除する。
      */
     suspend fun delete(rule: RuleEntity) = dao.delete(rule)
+
+    @Transaction
+    suspend fun deleteRule(rule: RuleEntity) {
+        db.withTransaction {
+            delete(rule)
+            if (!dao.existRule(rule.packageName, rule.channelId)) {
+                logDao.updateLastReceivedForLog(
+                    rule.packageName,
+                    rule.channelId,
+                    System.currentTimeMillis()
+                )
+            }
+        }
+    }
 
     /**
      * ルール一覧を「新しい順（ID 降順相当）」で監視する。

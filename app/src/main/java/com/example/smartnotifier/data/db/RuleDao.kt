@@ -41,6 +41,25 @@ interface RuleDao {
     fun getRulesOrderByPackageAsc(): Flow<List<RuleEntity>>
 
     /**
+     * NotificationLogレコードを削除する前にRuleで使用されているか確認するためのクエリ
+     *
+     * @param packageName パッケージ名
+     * @param channelId チャンネルID
+     * @return ルールが存在する場合はtrue
+     */
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1
+            FROM Rules
+            WHERE packageName = :packageName
+            AND channelId = :channelId
+        )
+        """
+    )
+    suspend fun existRule(packageName: String, channelId: String): Boolean
+
+    /**
      * ルールを新規追加する。
      *
      * 一意制約に違反した場合は例外を送出する。

@@ -122,4 +122,19 @@ object Migrations {
             )
         }
     }
+
+    val MIGRATION_5_6= object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `notification_title_cache` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `packageName` TEXT NOT NULL, `channelId` TEXT NOT NULL, `title` TEXT NOT NULL, `lastUsed` INTEGER NOT NULL);
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS `index_notification_title_cache_packageName_channelId_title` ON `notification_title_cache` (`packageName`, `channelId`, `title`);
+                """.trimIndent()
+            )
+        }
+    }
 }
