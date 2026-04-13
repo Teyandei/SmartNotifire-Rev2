@@ -1,8 +1,5 @@
 
 ---
-title: SmartNotifire-Rev2 設計書
-layout: default
-permalink: https://github.com/Teyandei/SmartNotifire-Rev2/blob/0c37bf1ca25d9ecc9983f024eb91763577e7611c/docs/design/SmartNotifire-Rev2.md
 ---
 
 # SmartNotifire-Rev2
