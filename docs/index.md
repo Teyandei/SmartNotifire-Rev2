@@ -11,3 +11,4 @@ based on user-defined rules.
 ## Links
 - [GitHub Repository](https://github.com/Teyandei/SmartNotifire-Rev2)
 - [Privacy Policy](privacy.html)
+- [Design document](docs/design/SmartNotifire-Rev2.html)
