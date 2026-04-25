@@ -242,7 +242,7 @@ Android Studioでバージョン不整合が原因で発生する警告がでな
 | ③ | チャンネル名 | channelName | Label | NotificationLog.ChannelNameの内容。 |  
 | ④ | 受信回数 | receiveCount | Label | 初回通知から現在までの１日あたりの通知回数。<br> NotificationLog.ReceivedCount / (現在日時 - NotificationLog.created + １日)|  
 | ⑤ | 設定済み | hasRule | Label | NotificationLog.PackageName, NotificationLog.ChannelIDのペアがRulesに存在する時に表示。 |  
-| ⑥ | サイレント | NotificationLog.Importance < 3 の場合に表示。|  
+| ⑥ | サイレント | txtSilent | Label | NotificationLog.Importance < 3 の場合に表示。|  
 | ⑦ | ルール追加 | addRule | Button | 該当行のNotificationLog.PackageName, NtotificationLog.ChannelIDでRuleにレコードを追加する。<br>詳細は後述のルール追加を参照のこと。 |  
 | ⑧ | 閉じる | btnClose | Button | 通知ログリストを閉じる |  
 | ⑨ | 表示順 | sortLog | Spinner | 通知ログリストの表示順を決める。「新着順」「名前順」「回数順」|  
