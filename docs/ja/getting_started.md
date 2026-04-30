@@ -1,11 +1,15 @@
----
----
+---  
+title: Getting Started  
+layout: default  
+---  
 
 # Getting Started
 
 Smart Notifire(以下、本アプリ)は受けた通知が音声案内の対象になります。  
 従って、インストール直後は通知を受けていない限り音声案内ルールを追加できません。  
-このため本アプリは確認のため、あらかじめ音声案内ルールを一つ持っています。  
+本アプリは確認のため、あらかじめ音声案内ルールを一つ持っています。  
+  
+![Basic Rule](https://teyandei.github.io/SmartNotifire-Rev2/images/ja/basic_rule.png "初期ルール")
   
 この音声案内ルールを使って本アプリの機能を確認してみましょう。  
 
