@@ -29,6 +29,7 @@ class NotificationHelper(private val context: Context) {
 
     companion object {
         const val CHANNEL_ID_CHECK = "check"
+        const val CHANNEL_NAME_CHECK = "Test Notification"
         private const val NOTIFICATION_ID_TEST = 1001
     }
 
@@ -39,7 +40,7 @@ class NotificationHelper(private val context: Context) {
      * 設計書に従い、テスト通知用のチャンネルを作成する
      */
     fun createNotificationChannels() {
-        val name = "Test Notification"
+        val name = CHANNEL_NAME_CHECK
         val descriptionText = "Channel for checking notification functionality"
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel(CHANNEL_ID_CHECK, name, importance).apply {

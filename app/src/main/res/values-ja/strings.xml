@@ -22,12 +22,19 @@
     <string name="default_check_voice_message">通知確認が成功しました。</string>
     <string name="dlg_title_notification_access_required">通知へのアクセス権限が必要です</string>
     <string name="dlg_msg_notification_access_required">
-        Smart Notifire は、通知に対してあなたが設定したルールに従い、対象の通知内容を音声で読み上げるアプリです。\n
+        Smart Notifire は、通知に対してあなたが設定したルールに従い、\n
+        対象の通知内容を音声で読み上げるアプリです。\n\n
         この機能のために、Android の「通知へのアクセス」権限を有効にする必要があります。\n\n
-        アプリは通知を識別するための情報と、通知のタイトルを利用します。\n
-        それ以外の通知内容は保存・送信しません。\n\n
-        OK をタップすると設定画面が開きます。一覧から SmartNotifire を見つけて、権限を有効にしてください。\n
-        この権限を有効にしない選択も可能です。その場合は、「アプリ終了」を選んで、このアプリを終了できます。
+        本アプリは、通知を識別するための情報（アプリ名・チャンネル情報）と、\n
+        通知のタイトルのみを利用します。\n
+        通知の本文や個人情報を収集・保存・外部送信することはありません。\n\n
+        プライバシーの取り扱いについては、以下をご確認ください。
+    </string>>
+    <string name="dlg_msg_notification_access_required_part2">
+        \nOK をタップすると設定画面が開きます。\n
+        一覧から SmartNotifire を見つけて、権限を有効にしてください。\n\n
+        この権限を有効にしない選択も可能です。\n
+        その場合は「アプリ終了」を選んで、このアプリを終了できます。\n
     </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">ルールの削除</string>

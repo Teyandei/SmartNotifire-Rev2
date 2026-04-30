@@ -22,15 +22,19 @@
     <string name="default_check_voice_message">Notification check succeeded.</string>
     <string name="dlg_title_notification_access_required">Notification access required</string>
     <string name="dlg_msg_notification_access_required">
-        SmartNotifire reads notifications and speaks them aloud based on your rules.\n
-        To work, it needs Android’s “Notification access” permission.\n\n
-        SmartNotifire uses only the information needed to identify notifications and the notification title.\n
-        It does not save or send other notification content.\n\n
-        Tapping OK will open the system settings screen.\n
-        Please find SmartNotifire in the list and enable notification access.\n
-        You may also choose not to enable this permission.\n
-        In that case, you can select Exit App to close the application.
-</string>
+        Smart Notifire is an app that reads notifications aloud based on rules you define.\n\n
+        To enable this feature, you need to grant the Android "Notification Access" permission.\n\n
+        This app only uses the information necessary to identify notifications\n
+        (such as app name and channel information) and the notification title.\n
+        It does NOT collect, store, or transmit notification content or personal data.\n\n
+        For more details on how your data is handled, please see our Privacy Policy:
+    </string>
+    <string name="dlg_msg_notification_access_required_part2">
+        \nTap "OK" to open the settings screen.\n
+        Find Smart Notifire in the list and enable the permission.\n
+        You may choose not to grant this permission.\n\n
+        In that case, select "Exit App" to close the application.\n
+    </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">Deleting a Rule</string>
     <string name="dlg_msg_delete_confirm">Are you sure you want to delete this rule?</string>

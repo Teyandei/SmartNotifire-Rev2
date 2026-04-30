@@ -376,9 +376,14 @@ class MainFragment : Fragment() {
         if (permissionDialogShowing) return
         permissionDialogShowing = true
 
-        MaterialAlertDialogBuilder(requireContext())
+        val sb = SpannableStringBuilder()
+        sb.appendBody(getString(R.string.dlg_msg_notification_access_required))
+        sb.appendURL(getString(R.string.msg_privacy_title), getString(R.string.msg_privacy_url))
+        sb.appendBody(getString(R.string.dlg_msg_notification_access_required_part2))
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.dlg_title_notification_access_required))
-            .setMessage(getString(R.string.dlg_msg_notification_access_required))
+            .setMessage(sb)
             .setCancelable(false)
             .setNegativeButton(getString(R.string.btn_exit)) {_,_ ->
                 activity?.finish()
@@ -388,6 +393,13 @@ class MainFragment : Fragment() {
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }
             .show()
+
+        // message TextView にリンク処理を有効化
+        dialog.findViewById<TextView>(android.R.id.message)?.apply {
+            movementMethod = LinkMovementMethod.getInstance()
+            linksClickable = true
+        }
+
     }
 
     /**
@@ -408,73 +420,73 @@ class MainFragment : Fragment() {
     }
 
     /**
+     * 見出し風効果の装飾を入れたtextをsbに追加
+     *
+     * @param text 装飾対象文字列
+     * @param rep textの末尾に改行を入れる個数
+     */
+    private fun SpannableStringBuilder.appendHeading(text: String, rep: Int = 1) {
+        val start = length
+        append(text).append("\n".repeat(rep))
+        val end = length
+
+        setSpan(
+            StyleSpan(Typeface.BOLD),
+            start,
+            end,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        setSpan(
+            RelativeSizeSpan(1.15f),
+            start,
+            end,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+
+    /**
+     *  sbへのテキスト追加
+     *
+     *  @param text 追加するテキスト
+     *  @param rep textの末尾に改行を入れる個数
+     */
+    private fun SpannableStringBuilder.appendBody(text: String, rep: Int = 1) {
+        append(text).append("\n".repeat(rep))
+    }
+
+    /**
+     *  Markdown風([text](url))の装飾をつけたテキストをsbに追加
+     *
+     * @param text 装飾対象文字列
+     * @param url リンク先URL
+     */
+    private fun SpannableStringBuilder.appendURL(text: String, url: String = text) {
+        val start = length
+        append(text)
+        val end = length
+
+        setSpan(
+            URLSpan(url),
+            start,
+            end,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        append("\n")
+    }
+
+    /**
      * ダイアログの文字列装飾
      */
     private fun buildHelpText(): CharSequence {
         val sb = SpannableStringBuilder()
 
-        /**
-         * 見出し風効果の装飾を入れたtextをsbに追加
-         *
-         * @param text 装飾対象文字列
-         * @param rep textの末尾に改行を入れる個数
-         */
-        fun appendHeading(text: String, rep: Int = 1) {
-            val start = sb.length
-            sb.append(text).append("\n".repeat(rep))
-            val end = sb.length
-
-            sb.setSpan(
-                StyleSpan(Typeface.BOLD),
-                start,
-                end,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            sb.setSpan(
-                RelativeSizeSpan(1.15f),
-                start,
-                end,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-
-        /**
-         *  sdへのテキスト追加
-         *
-         *  @param text 追加するテキスト
-         *  @param rep textの末尾に改行を入れる個数
-         */
-        fun appendBody(text: String, rep: Int = 1) {
-            sb.append(text).append("\n".repeat(rep))
-        }
-
-        /**
-         *  Markdown風([text](url))の装飾をつけたテキストをsbに追加
-         *
-         * @param text 装飾対象文字列
-         * @param url リンク先URL
-         */
-        fun appendURL(text: String, url: String = text) {
-            val start = sb.length
-            sb.append(text)
-            val end = sb.length
-
-            sb.setSpan(
-                URLSpan(url),
-                start,
-                end,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            sb.append("\n")
-        }
-
-        appendHeading(getString(R.string.appName), 0)
-        appendBody(" ${BuildConfig.VERSION_NAME}")
-        appendBody(getString(R.string.msg_about_app_part1), 2)
-        appendHeading(getString(R.string.msg_about_app_part2))
-        appendBody(getString(R.string.msg_about_app_part3), 1)
-        appendURL(getString(R.string.msg_about_app_part4), getString(R.string.msg_about_aoo_part5))
-        appendURL(getString(R.string.msg_privacy_title), getString(R.string.msg_privacy_url))
+        sb.appendHeading(getString(R.string.appName), 0)
+        sb.appendBody(" ${BuildConfig.VERSION_NAME}")
+        sb.appendBody(getString(R.string.msg_about_app_part1), 2)
+        sb.appendHeading(getString(R.string.msg_about_app_part2))
+        sb.appendBody(getString(R.string.msg_about_app_part3), 1)
+        sb.appendURL(getString(R.string.msg_about_app_part4), getString(R.string.msg_about_aoo_part5))
+        sb.appendURL(getString(R.string.msg_privacy_title), getString(R.string.msg_privacy_url))
 
         return sb
     }

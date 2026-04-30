@@ -26,7 +26,8 @@ import androidx.work.WorkManagerInitializer
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.datastore.AppPrefs
 import com.example.smartnotifier.core.datastore.appPrefsDataStore
-import com.example.smartnotifier.data.db.AppDatabase
+import com.example.smartnotifier.core.notification.NotificationHelper.Companion.CHANNEL_NAME_CHECK
+import com.example.smartnotifier.core.notification.NotificationHelper.Companion.CHANNEL_ID_CHECK
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.repository.RulesRepository
@@ -143,10 +144,11 @@ class DatabaseInitializer : Initializer<Unit> {
             id = 0,
             packageName = packageName,
             appLabel = context.getString(R.string.app_name),
-            channelId = "check",
+            channelId = CHANNEL_ID_CHECK,
             srhTitle = context.getString(R.string.default_check_notification_title),
             voiceMsg = context.getString(R.string.default_check_voice_message),
-            enabled = false
+            enabled = false,
+            channelName = CHANNEL_NAME_CHECK
         )
 
         rulesRepository.insert(initialRule)
