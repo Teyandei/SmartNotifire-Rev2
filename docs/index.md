@@ -12,3 +12,4 @@ based on user-defined rules.
 - [GitHub Repository](https://github.com/Teyandei/SmartNotifire-Rev2)
 - [Privacy Policy](privacy.html)
 - [Design document](https://teyandei.github.io/SmartNotifire-Rev2/design/SmartNotifire-Rev2.html)
+- [日本語ページ](./ja/index)
