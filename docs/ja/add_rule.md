@@ -20,7 +20,7 @@ layout: default
 
 - 今まで受信した通知の一覧を表示します。
 
-- <img src="/icons/add_24.svg" width="16" style="vertical-align: middle;">
+- <img src="../icons/add_24.svg" width="16" style="vertical-align: middle;">
 
 > [ルールの複製](./copy_rule)  
 > [先頭ページへ](./index)
