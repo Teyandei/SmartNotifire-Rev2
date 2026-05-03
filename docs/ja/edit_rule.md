@@ -4,5 +4,8 @@ layout: default
 ---  
 # 📝 ルールの編集
 
-> [ルールの削除](./delete_rule)  
+<img alt="Basic Rule" src="../images/ja/basic_rule.png" title="初期ルール" width="30%"/>
+
+
+
 > [先頭ページへ](./index)
