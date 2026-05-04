@@ -31,5 +31,5 @@ layout: default
 
 ---
 
-> [ルールの編集](./edit_rule)  
+> 次は、[ルールの編集](./edit_rule)をご覧ください。  
 > [先頭ページへ](./index)
