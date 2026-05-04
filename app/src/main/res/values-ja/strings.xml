@@ -61,6 +61,7 @@
         表示される通知は本アプリが通知をモニターして取得しますが、Andoroidの制限や、Googleプライバシーポリシーの要件により全ての通知を扱うことはできません。\n\n
         本アプリの詳しい使い方やライセンス条項は以下のURLをご参照ください。
     </string>
+    <string name="msg_about_aoo_part5">https://teyandei.github.io/SmartNotifire-Rev2/ja/</string>
     <string name="captionClose">閉じる</string>
     <string name="msg_privacy_title">プライバシーポリシー</string>
     <string name="msg_privacy_url">https://teyandei.github.io/SmartNotifire-Rev2/ja/privacy.html</string>
@@ -87,4 +88,5 @@
     <string name="list_log_order_recvCount">回数順</string>
     <string name="add_rule">ルールを追加</string>
     <string name="has_rule_text">設定済</string>
+    <string name="msg_about_app_part4">Smart Notifire ホームページ</string>
 </resources>
