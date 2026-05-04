@@ -33,8 +33,8 @@
     <string name="dlg_msg_notification_access_required_part2">
         \nOK をタップすると設定画面が開きます。\n
         一覧から SmartNotifire を見つけて、権限を有効にしてください。\n\n
-        この権限を有効にしない選択も可能です。\n
-        その場合は「アプリ終了」を選んで、このアプリを終了できます。\n
+        この権限は任意です。\n
+        有効にしない場合は「アプリ終了」を選択してください。\n
     </string>
     <string name="btn_ok">OK</string>
     <string name="dlg_title_delete_confirm">ルールの削除</string>
