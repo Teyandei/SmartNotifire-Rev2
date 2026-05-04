@@ -25,7 +25,7 @@ layout: default
 - 上段は通知を送信したアプリ名、その下はチャンネル名です。
 - **受信**は1日あたりの通知件数です。
 - <span style="background-color:#F9DEDC; color:red; padding:0 4px; border-radius:4px;">設定済</span>は、既に音声案内ルールを作った通知です。
-- **サイレント**は、通知受信時に通知がサイレント通知であったことを示します。
+- <span style="background-color:#6750A4; color:white; padding:0 4px; border-radius:4px;">サイレント</span>は、通知受信時に通知がサイレント通知であったことを示します。
     > **サイレント通知**とは、通知音のならない通知のことです。  
     > 通常アプリ側が設定しますが、ユーザーによる変更が可能です。  
 
