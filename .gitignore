@@ -49,3 +49,6 @@ captures/
 .cxx/
 /tree_app_src_main.txt
 art/
+
+# Visual Studio Code
+.vscode/
