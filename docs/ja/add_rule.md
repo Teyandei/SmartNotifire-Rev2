@@ -8,7 +8,7 @@ layout: default
  
 ## 1⃣ ルールの追加画面へ
 
-<img src="https://teyandei.github.io/SmartNotifire-Rev2/images/ja/add_rule_button.png" title="Add Rule" width="30%" alt="ルール追加ボタン"/>
+<img src="https://teyandei.github.io/SmartNotifire-Rev2/images/ja/add_rule_button.png" title="Add Rule" alt="ルール追加ボタン" style="width:clamp(30%,calc(60000px - 10000vw),80vw);height:auto;max-width:100%;"/>
 
 - 画面の追加ボタンをタップします。  
 
@@ -16,7 +16,7 @@ layout: default
 
 - 今まで受信した通知の一覧を表示します。  
 
-  <img src="https://teyandei.github.io/SmartNotifire-Rev2/images/ja/add_rule_screen.png" title="ルール追加画面" width="30%" alt="インストール後、時間をおいたときの状態。"/>
+  <img src="https://teyandei.github.io/SmartNotifire-Rev2/images/ja/add_rule_screen.png" title="ルール追加画面" alt="インストール後、時間をおいたときの状態。" style="width:clamp(30%,calc(60000px - 10000vw),80vw);height:auto;max-width:100%;"/>
 
 - <img src="../icons/add_24.svg" width="16" style="vertical-align: middle;" alt="追加ボタン"> 選択行のルールを追加します。  
 

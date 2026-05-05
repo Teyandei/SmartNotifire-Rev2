@@ -6,7 +6,7 @@ layout: default
 
 作成したルールの内容を変更したい場合に行います。  
   
-<img alt="Basic Rule" src="../images/ja/basic_rule.png" title="初期ルール" width="30%"/>
+<img alt="Basic Rule" src="../images/ja/basic_rule.png" title="初期ルール" style="width:clamp(30%,calc(60000px - 10000vw),80vw);height:auto;max-width:100%;"/>
 
 ## 🆎 検索タイトル
 
