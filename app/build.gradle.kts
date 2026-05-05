@@ -12,7 +12,7 @@ android {
         applicationId = "com.teyanday.smartnotifier"
         minSdk = 26
         targetSdk = 36
-        versionCode = 14
+        versionCode = 15
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
