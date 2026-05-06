@@ -46,6 +46,14 @@
     <string name="msg_wrn_dup_same_name">同じアプリに同じ検索タイトルが既に設定されています。</string>
     <string name="msg_err_save_failed">保存に失敗しました。</string>
     <string name="msg_text_message">通知確認を目的とした通知です。</string>
+    <string name="dlg_title_tts_hint">音声が聞こえない場合</string>
+    <string name="dlg_msg_tts_hint">
+        ・端末がマナーモード、バイブ、またはおやすみモードになっている可能性があります\n
+        ・対象アプリの通知がサイレントになっている可能性があります\n
+        ・端末のサウンド設定と通知設定をご確認ください\n\n
+        ※本アプリの音声案内は、端末のサウンド状態と通知設定の影響を受けます
+    </string>
+    <string name="chk_do_not_show_again">今後表示しない</string>
 
     <!-- ヘルプダイアログ（No.10 helpIcon） -->
     <string name="help_dialog_title">Smart Notifire について</string>

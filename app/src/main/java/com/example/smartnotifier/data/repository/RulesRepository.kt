@@ -84,6 +84,11 @@ class RulesRepository(private val db: AppDatabase) {
     fun observeRulesOrderByPackageAsc(): Flow<List<RuleEntity>> = dao.getRulesOrderByPackageAsc()
 
     /**
+     * 有効なルールが存在するかを監視する。
+     */
+    fun observeHasEnabledRule(): Flow<Boolean> = dao.observeHasEnabledRule()
+
+    /**
      * 指定 ID のルールを複製する。
      *
      * DAO 側のトランザクション処理を呼び出し、複製の一貫性を担保する。

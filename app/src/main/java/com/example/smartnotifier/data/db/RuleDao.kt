@@ -41,6 +41,14 @@ interface RuleDao {
     fun getRulesOrderByPackageAsc(): Flow<List<RuleEntity>>
 
     /**
+     * 有効なルールが存在するかを監視する。
+     *
+     * 音声案内を使い始めたタイミングのヒント表示判定に使用する。
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM rules WHERE enabled = 1)")
+    fun observeHasEnabledRule(): Flow<Boolean>
+
+    /**
      * NotificationLogレコードを削除する前にRuleで使用されているか確認するためのクエリ
      *
      * @param packageName パッケージ名

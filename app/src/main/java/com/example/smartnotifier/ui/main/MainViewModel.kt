@@ -46,6 +46,7 @@ sealed interface UiEffect {
     data class ShowLogList(val show: Boolean) : UiEffect        // 通知ログ画面の表示・非表示
     data class ShowSnackbar(val message: String) : UiEffect     // スナックバー表示メッセージ
     data class ScrollToRule(val ruleId: Long) : UiEffect        // 指定ルールをスクロール表示
+    data object ShowTtsHint : UiEffect                          // 音声案内ヒント表示
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -67,6 +68,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val effect = _effect.asSharedFlow()
 
     private val notificationLogRepo = NotificationLogRepository(db)
+
+    /**
+     * 同一プロセス内で音声案内ヒントを重複表示しないためのフラグ。
+     */
+    private var ttsHintShownInSession = false
 
     /**
      * ルール更新要求を一時的にバッファリングする SharedFlow。
@@ -142,6 +148,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     init {
         observeRuleUpdates()
+        observeTtsHintTrigger()
     }
 
      @OptIn(FlowPreview::class)
@@ -153,6 +160,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _ruleUpdateBuffer
                 .debounce(500.milliseconds)
                 .collect { saveRuleSafely(it) }
+        }
+    }
+
+    /**
+     * 有効なルールが存在する場合に、音声案内ヒントの表示イベントを送信する。
+     *
+     * DataStore 未設定時は true として扱い、アップデート後の既存ユーザーにも表示する。
+     */
+    private fun observeTtsHintTrigger() {
+        viewModelScope.launch {
+            combine(
+                dataStore.data.map { prefs -> prefs[AppPrefs.KEY_SHOW_TTS_HINT] ?: true },
+                rulesRepo.observeHasEnabledRule(),
+                notificationAccessGranted
+            ) { showHint, hasEnabledRule, accessGranted ->
+                showHint && hasEnabledRule && accessGranted
+            }
+                .distinctUntilChanged()
+                .collect { shouldShow ->
+                    if (shouldShow) emitTtsHintIfNeeded()
+                }
+        }
+    }
+
+    /**
+     * 音声案内ヒントの表示イベントを必要時だけ送信する。
+     */
+    private suspend fun emitTtsHintIfNeeded() {
+        if (ttsHintShownInSession) return
+        ttsHintShownInSession = true
+        _effect.emit(UiEffect.ShowTtsHint)
+    }
+
+    /**
+     * 音声案内ヒントを今後表示しない設定にする。
+     */
+    fun disableTtsHint() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[AppPrefs.KEY_SHOW_TTS_HINT] = false
+            }
         }
     }
 
@@ -338,6 +386,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updateRuleOfEnabled(id: Int, enabled: Boolean) {
         viewModelScope.launch {
             rulesRepo.updateEnabled(id, enabled)
+            if (enabled) {
+                // 有効化操作の直後にも音声案内ヒントの表示を試みる。
+                val showHint = dataStore.data
+                    .map { prefs -> prefs[AppPrefs.KEY_SHOW_TTS_HINT] ?: true }
+                    .first()
+                if (showHint) emitTtsHintIfNeeded()
+            }
         }
     }
 

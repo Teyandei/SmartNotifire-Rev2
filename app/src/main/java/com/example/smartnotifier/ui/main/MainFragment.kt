@@ -37,6 +37,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.LinearLayout
+import android.widget.Space
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -271,6 +274,9 @@ class MainFragment : Fragment() {
                         }
                         is UiEffect.ShowLogList ->
                             viewModel.setShowingLogList(eff.show)
+
+                        UiEffect.ShowTtsHint ->
+                            showTtsHintDialog()
                     }
                 }
             }
@@ -530,6 +536,45 @@ class MainFragment : Fragment() {
             .setNegativeButton(R.string.btn_cancel, null)
             .setPositiveButton(R.string.captionAddBtn) { _, _ ->
                 viewModel.addRuleFromLog(log)
+            }
+            .show()
+    }
+
+    /**
+     * 音声案内が聞こえない場合に確認する端末設定のヒントを表示する。
+     */
+    private fun showTtsHintDialog() {
+        val contentView = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = (24 * resources.displayMetrics.density).toInt()
+            setPadding(padding, 0, padding, 0)
+        }
+        val messageView = TextView(requireContext()).apply {
+            text = getString(R.string.dlg_msg_tts_hint)
+        }
+        val doNotShowAgainCheck = CheckBox(requireContext()).apply {
+            text = getString(R.string.chk_do_not_show_again)
+        }
+        val messageCheckGap = Space(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (16 * resources.displayMetrics.density).toInt()
+            )
+        }
+
+        // 本文とチェックボックスを同時に表示するため、ダイアログ本文をカスタムViewにまとめる。
+        contentView.addView(messageView)
+        contentView.addView(messageCheckGap)
+        contentView.addView(doNotShowAgainCheck)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dlg_title_tts_hint)
+            .setView(contentView)
+            .setPositiveButton(R.string.captionClose) { _, _ ->
+                if (doNotShowAgainCheck.isChecked) {
+                    // ユーザーが明示した場合のみ、次回以降の表示を止める。
+                    viewModel.disableTtsHint()
+                }
             }
             .show()
     }

@@ -45,6 +45,14 @@
     <string name="msg_wrn_dup_same_name">The same search title is already set for the same app.</string>
     <string name="msg_err_save_failed">Saving failed.</string>
     <string name="msg_text_message">This notification is for notification confirmation purposes.</string>
+    <string name="dlg_title_tts_hint">If voice guidance cannot be heard</string>
+    <string name="dlg_msg_tts_hint">
+        - Your device may be in silent, vibrate, or Do Not Disturb mode.\n
+        - The target app notification may be set to silent.\n
+        - Check your device sound settings and notification settings.\n\n
+        Voice guidance from this app is affected by your device sound state and notification settings.
+    </string>
+    <string name="chk_do_not_show_again">Do not show again</string>
 
     <!-- Help dialog (No.10 helpIcon) -->
     <string name="help_dialog_title">About Smart Notifire</string>

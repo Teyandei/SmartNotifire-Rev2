@@ -33,6 +33,7 @@ import androidx.datastore.preferences.preferencesDataStore
  * @property KEY_SORT_LIST_ORDER リスト表示順
  * @property KEY_NOTIFICATION_TITLE 通知タイトル
  * @property KEY_TYPE_LOG_ORDER 通知ログ表示順
+ * @property KEY_SHOW_TTS_HINT 音声案内ヒント表示フラグ
  * @property SortOrder 並び順
  *
  */
@@ -66,9 +67,12 @@ object AppPrefs {
     // 通知ログ表示順
     val KEY_TYPE_LOG_ORDER: Preferences.Key<Int> =
         intPreferencesKey("type_log_order")
+
+    // 音声案内ヒント表示
+    val KEY_SHOW_TTS_HINT: Preferences.Key<Boolean> =
+        booleanPreferencesKey("show_tts_hint")
 }
 
 val Context.appPrefsDataStore by preferencesDataStore(
     name = AppPrefs.NAME
 )
-
