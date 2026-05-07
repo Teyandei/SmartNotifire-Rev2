@@ -96,11 +96,7 @@ class RulesAdapter(
             }
             binding.editVoiceMsg.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
-                    val rule = currentRule ?: return@OnFocusChangeListener
-                    val text = binding.editVoiceMsg.text?.toString().orEmpty()
-                    if (text != rule.voiceMsg) {
-                        onRuleUpdatedImmediate(rule.copy(voiceMsg = text))
-                    }
+                    saveCurrentVoiceMessage()
                 }
             }
 
@@ -154,7 +150,20 @@ class RulesAdapter(
 
             binding.btnCopyRow.setOnClickListener { onCopyClicked(rule) }
             binding.btnDeleteRow.setOnClickListener { onDeleteClicked(rule) }
-            binding.btnPlayVoice.setOnClickListener { onPlayClicked(rule) }
+            binding.btnPlayVoice.setOnClickListener {
+                onPlayClicked(saveCurrentVoiceMessage() ?: rule)
+            }
+        }
+
+        private fun saveCurrentVoiceMessage(): RuleEntity? {
+            val rule = currentRule ?: return null
+            val text = binding.editVoiceMsg.text?.toString().orEmpty()
+            if (text == rule.voiceMsg) return rule
+
+            val updatedRule = rule.copy(voiceMsg = text)
+            currentRule = updatedRule
+            onRuleUpdatedImmediate(updatedRule)
+            return updatedRule
         }
     }
 

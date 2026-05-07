@@ -13,7 +13,7 @@
     <string name="captionNtfConfirm">通知確認</string>
     <string name="captionConfirm">通知</string>
     <string name="lbl_NtfLogListNote">通知からルール追加</string>
-    <string name="captionSearchTitle">検索タイトル</string>
+    <string name="captionSearchTitle">通知タイトル条件</string>
     <string name="captionVoiceMsg">音声メッセージ</string>
     <string name="captionAddBtn">追加</string>
 
@@ -43,7 +43,7 @@
     <string name="btn_delete">削除</string>
     <string name="dle_msg_delete_sucess">ルールを削除しました</string>
     <string name="msg_notification_permission_denied">通知権限が拒否されました。</string>
-    <string name="msg_wrn_dup_same_name">同じアプリに同じ検索タイトルが既に設定されています。</string>
+    <string name="msg_wrn_dup_same_name">同じアプリに同じ通知タイトル条件が既に設定されています。</string>
     <string name="msg_err_save_failed">保存に失敗しました。</string>
     <string name="msg_text_message">通知確認を目的とした通知です。</string>
     <string name="dlg_title_tts_hint">音声が聞こえない場合</string>
@@ -91,7 +91,7 @@
         設定 ＞ 通知 ＞ アプリの通知 で対象アプリを開き、該当チャンネルを「デフォルト（通知音あり）」に変更してください。\n
         ※設定画面の名称や手順は端末により異なる場合があります。
     </string>
-    <string name="list_log_order_nerswst">新帰順</string>
+    <string name="list_log_order_nerswst">新着順</string>
     <string name="list_log_order_app">アプリ順</string>
     <string name="list_log_order_recvCount">回数順</string>
     <string name="add_rule">ルールを追加</string>
