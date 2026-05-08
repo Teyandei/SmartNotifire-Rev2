@@ -63,69 +63,9 @@
 
 ## 🔤 使い方
 
-### 初期状態  
+詳しい使い方は GitHub Pages のドキュメントをご覧ください。
 
-![初期画面](./docs/pictures/ja/initialScreen.png)
-
-インストール直後は、**動作確認用の音声案内ルールが1件**登録されています。 このルールを使って、すべての機能を確認できます。
-
----
-
-### 🔔 通知確認  
-
-![通知確認画面](./docs/pictures/ja/ntf_cheack.png)
-
-画面下部の「通知」ボタンをタップすると、 このアプリ自身がテスト通知を送信します。
-
-* 初回は通知権限の許可画面が表示されます
-* 許可後、通知音 → 音声案内の順で再生されます
-
----
-
-### 🏛️ 音声案内ルール  
-
-![音声案内ルール](./docs/pictures/ja/rule_useage.png)
-
-通知を音声化するためのルール一覧画面です。
-
-#### 🔑 ルールの有効化 ①
-
-スイッチを ON にすると、そのルールが有効になり、ルールが一致した通知に対して、音声案内が行われます。
-
----
-
-#### 🔎 検索タイトル
-
-通知タイトルに含まれるキーワードを指定します。
-1. キーワードを指定したときは、通知タイトルの部分一致。
-2. キーワードが空欄のときは、全ての通知タイトル。
-
----
-
-#### 🎤 音声メッセージ
-
-読み上げたい文章を入力します。 TTS（端末の音声読み上げ機能）を使用します。
-音声メッセージを指定しない場合は、「＜アプリ名＞から通知が届きました。」と音声読み上げを行います。
-
----
-
-#### 📑 ルールのコピー ②
-
-既存ルールをコピーして、新しいルールを作成できます。
-
-* 検索タイトルは重複しないよう、自動で番号が付与されます
-
----
-
-#### 🗑️ ルールの削除 ③
-
-選択したルールを削除します。 削除前には確認ダイアログが表示されます。
-
----
-
-#### ▶️ 音声メッセージの再生 ④
-
-登録した音声メッセージを、その場で再生できます。
+👉 [Smart Notifire Rev2 使い方ガイド](https://teyandei.github.io/SmartNotifire-Rev2/ja/)
 
 ---
 
@@ -244,86 +184,9 @@ If these permissions are not granted, this app will not function.
 
 ## 🔤 How to Use
 
-### Initial State
+For detailed usage instructions, please see the GitHub Pages documentation.
 
-![Initial Screen](./docs/pictures/initialScreen.png)
-
-Immediately after installation, **one test voice guidance rule** is registered by default.  
-You can use this rule to verify that all features are working correctly.
-
-----------
-
-### 🔔 Notification Check
-
-![Notification Check](./docs/pictures/ntf_cheack.png)
-
-Tap the **Notification** button at the bottom of the screen to send a test notification from this app itself.
-
--   On first use, a notification permission request screen will appear
-
--   After permission is granted, the notification sound plays first, followed by the voice guidance
-
-
-----------
-
-### 🏛️ Voice Guidance Rules
-
-![Voice Guidance Rules](./docs/pictures/rule_useage.png)
-
-This screen displays the list of rules used to convert notifications into voice messages.
-
-----------
-
-#### 🔑 Enable Rule ①
-
-Turning the switch ON activates the rule.  
-When a notification matches the rule conditions, voice guidance is played.
-
-----------
-
-#### 🔎 Search Title
-
-Specify keywords included in the notification title.
-
-1.  When a keyword is specified, partial matching is applied.
-
-2.  When the field is empty, all notification titles match.
-
-
-----------
-
-#### 🎤 Voice Message
-
-Enter the text you want to be read aloud.  
-The device’s built-in Text-to-Speech (TTS) function is used.
-
-If no voice message is specified, the app will read:
-
-> “A notification has arrived from <App Name>.”
-
-----------
-
-#### 📑 Copy Rule ②
-
-You can copy an existing rule to create a new one.
-
--   A number is automatically appended to ensure uniqueness
-
-
-----------
-
-#### 🗑️ Delete Rule ③
-
-Deletes the selected rule.
-
--   A confirmation dialog is shown before deletion
-
-
-----------
-
-#### ▶️ Play Voice Message ④
-
-Plays the registered voice message immediately for confirmation.
+👉 [Smart Notifire Rev2 User Guide](https://teyandei.github.io/SmartNotifire-Rev2/)
 
 ----------
 
