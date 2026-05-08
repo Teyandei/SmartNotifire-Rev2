@@ -54,20 +54,32 @@
         ※本アプリの音声案内は、端末のサウンド状態と通知設定の影響を受けます
     </string>
     <string name="chk_do_not_show_again">今後表示しない</string>
+    <string name="dlg_title_getting_started">Smart Notifireへようこそ</string>
+    <string name="dlg_msg_getting_started_intro">
+        Smart Notifire は、受信した通知をもとに通知ルールの候補を作成します。
+    </string>
+    <string name="dlg_msg_getting_started_try">まずは通知を1件試してみましょう。</string>
+    <string name="dlg_msg_getting_started_steps">
+        1. 通知ボタンをタップ\n
+        2. 通知の権限を許可\n
+        3. 通知音を確認\n
+        4. Smart Notifire の許可をオン\n
+        5. もう一度、通知ボタンをタップ
+    </string>
+    <string name="dlg_msg_getting_started_link_label">詳しい手順:</string>
+    <string name="getting_started_link_text">Getting Started</string>
+    <string name="getting_started_url">https://teyandei.github.io/SmartNotifire-Rev2/ja/getting_started</string>
 
     <!-- ヘルプダイアログ（No.10 helpIcon） -->
     <string name="help_dialog_title">Smart Notifire について</string>
     <string name="msg_about_app_part1">
-        このアプリは、通知音が何の通知であるかを、\n
-        1. ユーザーが指定した条件\n
-        2. ユーザーが登録した音声用案内文\n
-        で、音声による案内をします。
+        Smart Notifire は、通知音だけでは分かりにくい通知元を、音声案内で把握しやすくするアプリです。
     </string>
-    <string name="msg_about_app_part2">注意事項</string>
+    <string name="msg_about_app_part2">通知の取り扱い</string>
     <string name="msg_about_app_part3">
-        このアプリが取り扱う通知は、追加ボタンをタップしたときに表示される通知のみです。\n
-        表示される通知は本アプリが通知をモニターして取得しますが、Andoroidの制限や、Googleプライバシーポリシーの要件により全ての通知を扱うことはできません。\n\n
-        本アプリの詳しい使い方やライセンス条項は以下のURLをご参照ください。
+        本アプリは、通知ルールの作成に必要な最小限の情報のみを利用します。\n
+        通知本文や個人情報を収集・保存・外部送信することはありません。\n\n
+        詳しい使い方と注意事項は以下をご確認ください。
     </string>
     <string name="msg_about_aoo_part5">https://teyandei.github.io/SmartNotifire-Rev2/ja/</string>
     <string name="captionClose">閉じる</string>
@@ -96,5 +108,5 @@
     <string name="list_log_order_recvCount">回数順</string>
     <string name="add_rule">ルールを追加</string>
     <string name="has_rule_text">設定済</string>
-    <string name="msg_about_app_part4">Smart Notifire ホームページ</string>
+    <string name="msg_about_app_part4">Smart Notifire 使い方ページ</string>
 </resources>

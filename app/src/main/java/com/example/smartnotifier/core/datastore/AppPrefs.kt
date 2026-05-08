@@ -34,6 +34,7 @@ import androidx.datastore.preferences.preferencesDataStore
  * @property KEY_NOTIFICATION_TITLE 通知タイトル
  * @property KEY_TYPE_LOG_ORDER 通知ログ表示順
  * @property KEY_SHOW_TTS_HINT 音声案内ヒント表示フラグ
+ * @property KEY_SHOW_GETTING_STARTED 初回操作説明表示フラグ
  * @property SortOrder 並び順
  *
  */
@@ -71,6 +72,10 @@ object AppPrefs {
     // 音声案内ヒント表示
     val KEY_SHOW_TTS_HINT: Preferences.Key<Boolean> =
         booleanPreferencesKey("show_tts_hint")
+
+    // 初回操作説明表示
+    val KEY_SHOW_GETTING_STARTED: Preferences.Key<Boolean> =
+        booleanPreferencesKey("show_getting_started")
 }
 
 val Context.appPrefsDataStore by preferencesDataStore(

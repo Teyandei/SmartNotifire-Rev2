@@ -42,6 +42,7 @@ import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
@@ -74,6 +75,10 @@ import com.example.smartnotifier.data.db.NotificationLogListItem
  * ルール操作やログ操作などのロジックは [MainViewModel] に委譲する。
  */
 class MainFragment : Fragment() {
+    private companion object {
+        const val DIALOG_HORIZONTAL_PADDING_DP = 24
+        const val DIALOG_MESSAGE_CHECKBOX_GAP_DP = 16
+    }
 
     private val viewModel: MainViewModel by viewModels()
     private var _binding: FragmentMainBinding? = null
@@ -227,12 +232,14 @@ class MainFragment : Fragment() {
         super.onResume()
 
         val granted = SmartNotificationListenerService.isPermissionGranted(requireContext())
+
         viewModel.setNotificationAccessGranted(granted)
 
         if (!granted) {
             showNotificationAccessGuideDialog()
         } else {
             permissionDialogShowing = false
+            viewModel.showGettingStartedIfNeeded()
         }
     }
 
@@ -277,6 +284,9 @@ class MainFragment : Fragment() {
 
                         UiEffect.ShowTtsHint ->
                             showTtsHintDialog()
+
+                        UiEffect.ShowGettingStarted ->
+                            showGettingStartedDialog()
                     }
                 }
             }
@@ -400,11 +410,7 @@ class MainFragment : Fragment() {
             }
             .show()
 
-        // message TextView にリンク処理を有効化
-        dialog.findViewById<TextView>(android.R.id.message)?.apply {
-            movementMethod = LinkMovementMethod.getInstance()
-            linksClickable = true
-        }
+        enableDialogMessageLinks(dialog)
 
     }
 
@@ -498,6 +504,24 @@ class MainFragment : Fragment() {
     }
 
     /**
+     * 初回操作説明ダイアログの文字列装飾。
+     */
+    private fun buildGettingStartedText(): CharSequence {
+        val sb = SpannableStringBuilder()
+
+        sb.appendBody(getString(R.string.dlg_msg_getting_started_intro), 2)
+        sb.appendBody(getString(R.string.dlg_msg_getting_started_try), 2)
+        sb.appendBody(getString(R.string.dlg_msg_getting_started_steps), 2)
+        sb.appendBody(getString(R.string.dlg_msg_getting_started_link_label))
+        sb.appendURL(
+            getString(R.string.getting_started_link_text),
+            getString(R.string.getting_started_url)
+        )
+
+        return sb
+    }
+
+    /**
      *  ヘルプダイアログの表示
      */
     private fun showHelpDialog() {
@@ -507,14 +531,27 @@ class MainFragment : Fragment() {
             .setPositiveButton(R.string.captionClose, null)
             .show()
 
-        // AlertDialog の message TextView にリンク処理を有効化
-        dialog.findViewById<TextView>(android.R.id.message)?.apply {
-            movementMethod = LinkMovementMethod.getInstance()
-            linksClickable = true
+        enableDialogMessageLinks(dialog)
+    }
 
-            // お好み：タップ時の背景ハイライトを消す
-            // highlightColor = Color.TRANSPARENT
-        }
+    /**
+     * NLS 権限が許可された直後に、最初の操作だけを案内する。
+     */
+    private fun showGettingStartedDialog() {
+        val (contentView, doNotShowAgainCheck) = createMessageCheckDialogContent(
+            message = buildGettingStartedText(),
+            checkBoxText = getString(R.string.chk_do_not_show_again)
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dlg_title_getting_started)
+            .setView(contentView)
+            .setPositiveButton(R.string.captionClose) { _, _ ->
+                if (doNotShowAgainCheck.isChecked) {
+                    viewModel.disableGettingStarted()
+                }
+            }
+            .show()
     }
 
     /**
@@ -544,28 +581,10 @@ class MainFragment : Fragment() {
      * 音声案内が聞こえない場合に確認する端末設定のヒントを表示する。
      */
     private fun showTtsHintDialog() {
-        val contentView = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            val padding = (24 * resources.displayMetrics.density).toInt()
-            setPadding(padding, 0, padding, 0)
-        }
-        val messageView = TextView(requireContext()).apply {
-            text = getString(R.string.dlg_msg_tts_hint)
-        }
-        val doNotShowAgainCheck = CheckBox(requireContext()).apply {
-            text = getString(R.string.chk_do_not_show_again)
-        }
-        val messageCheckGap = Space(requireContext()).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (16 * resources.displayMetrics.density).toInt()
-            )
-        }
-
-        // 本文とチェックボックスを同時に表示するため、ダイアログ本文をカスタムViewにまとめる。
-        contentView.addView(messageView)
-        contentView.addView(messageCheckGap)
-        contentView.addView(doNotShowAgainCheck)
+        val (contentView, doNotShowAgainCheck) = createMessageCheckDialogContent(
+            message = getString(R.string.dlg_msg_tts_hint),
+            checkBoxText = getString(R.string.chk_do_not_show_again)
+        )
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.dlg_title_tts_hint)
@@ -578,6 +597,53 @@ class MainFragment : Fragment() {
             }
             .show()
     }
+
+    /**
+     * AlertDialog の message TextView にリンク処理を有効化する。
+     */
+    private fun enableDialogMessageLinks(dialog: AlertDialog) {
+        dialog.findViewById<TextView>(android.R.id.message)?.apply {
+            movementMethod = LinkMovementMethod.getInstance()
+            linksClickable = true
+        }
+    }
+
+    /**
+     * 本文とチェックボックスを同時に表示するためのダイアログ本文 View を作成する。
+     */
+    private fun createMessageCheckDialogContent(
+        message: CharSequence,
+        checkBoxText: CharSequence
+    ): Pair<LinearLayout, CheckBox> {
+        val contentView = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = dpToPx(DIALOG_HORIZONTAL_PADDING_DP)
+            setPadding(padding, 0, padding, 0)
+        }
+        val messageView = TextView(requireContext()).apply {
+            text = message
+            movementMethod = LinkMovementMethod.getInstance()
+            linksClickable = true
+        }
+        val doNotShowAgainCheck = CheckBox(requireContext()).apply {
+            text = checkBoxText
+        }
+        val messageCheckGap = Space(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(DIALOG_MESSAGE_CHECKBOX_GAP_DP)
+            )
+        }
+
+        contentView.addView(messageView)
+        contentView.addView(messageCheckGap)
+        contentView.addView(doNotShowAgainCheck)
+
+        return contentView to doNotShowAgainCheck
+    }
+
+    private fun dpToPx(dp: Int): Int =
+        (dp * resources.displayMetrics.density).toInt()
 
     /**
      * ルール一覧の並び順スイッチ（sortList）に関する UI と購読処理を設定する。

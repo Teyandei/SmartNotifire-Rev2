@@ -18,7 +18,6 @@ package com.example.smartnotifier.ui.rules
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,18 +73,11 @@ class RulesAdapter(
 
         init {
             binding.editSrhTitle.setOnClickListener {
-                binding.editSrhTitle.showDropDown()
+                showTitleSuggestions()
             }
             binding.editSrhTitle.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
-                    val text = binding.editSrhTitle.text?.toString().orEmpty()
-                    if (text.isNotEmpty()) {
-                        titleAdapter?.filter?.filter(text) { count ->
-                            if (count > 0) {
-                                binding.editSrhTitle.showDropDown()
-                            }
-                        }
-                    }
+                    showTitleSuggestions()
                 } else {
                     val rule = currentRule ?: return@OnFocusChangeListener
                     val text = binding.editSrhTitle.text?.toString().orEmpty()
@@ -105,6 +97,17 @@ class RulesAdapter(
                 val selected = titleAdapter?.getItem(position).orEmpty()
                 if (selected != rule.srhTitle) {
                     onRuleUpdatedImmediate(rule.copy(srhTitle = selected))
+                }
+            }
+        }
+
+        private fun showTitleSuggestions() {
+            val text = binding.editSrhTitle.text?.toString().orEmpty()
+            titleAdapter?.filter?.filter(text) { count ->
+                if (count > 0) {
+                    binding.editSrhTitle.post {
+                        binding.editSrhTitle.showDropDown()
+                    }
                 }
             }
         }

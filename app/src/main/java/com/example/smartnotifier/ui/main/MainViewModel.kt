@@ -47,6 +47,7 @@ sealed interface UiEffect {
     data class ShowSnackbar(val message: String) : UiEffect     // スナックバー表示メッセージ
     data class ScrollToRule(val ruleId: Long) : UiEffect        // 指定ルールをスクロール表示
     data object ShowTtsHint : UiEffect                          // 音声案内ヒント表示
+    data object ShowGettingStarted : UiEffect                   // 初回操作説明表示
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,6 +74,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * 同一プロセス内で音声案内ヒントを重複表示しないためのフラグ。
      */
     private var ttsHintShownInSession = false
+
+    /**
+     * 同一プロセス内で初回操作説明を重複表示しないためのフラグ。
+     */
+    private var gettingStartedShownInSession = false
 
     /**
      * ルール更新要求を一時的にバッファリングする SharedFlow。
@@ -200,6 +206,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 prefs[AppPrefs.KEY_SHOW_TTS_HINT] = false
+            }
+        }
+    }
+
+    /**
+     * 初回操作説明の表示イベントを必要時だけ送信する。
+     */
+    fun showGettingStartedIfNeeded() {
+        viewModelScope.launch {
+            if (gettingStartedShownInSession) return@launch
+
+            val showGettingStarted = dataStore.data
+                .map { prefs -> prefs[AppPrefs.KEY_SHOW_GETTING_STARTED] ?: true }
+                .first()
+            if (!showGettingStarted) return@launch
+
+            gettingStartedShownInSession = true
+            _effect.emit(UiEffect.ShowGettingStarted)
+        }
+    }
+
+    /**
+     * 初回操作説明を今後表示しない設定にする。
+     */
+    fun disableGettingStarted() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[AppPrefs.KEY_SHOW_GETTING_STARTED] = false
             }
         }
     }

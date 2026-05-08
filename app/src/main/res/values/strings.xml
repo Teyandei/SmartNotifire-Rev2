@@ -53,22 +53,34 @@
         Voice guidance from this app is affected by your device sound state and notification settings.
     </string>
     <string name="chk_do_not_show_again">Do not show again</string>
+    <string name="dlg_title_getting_started">Welcome to Smart Notifire</string>
+    <string name="dlg_msg_getting_started_intro">
+        Smart Notifire creates notification rule suggestions from notifications you receive.
+    </string>
+    <string name="dlg_msg_getting_started_try">First, try sending one test notification.</string>
+    <string name="dlg_msg_getting_started_steps">
+        1. Tap the Notify button\n
+        2. Allow notification permission\n
+        3. Confirm the notification sound\n
+        4. Turn on the Smart Notifire permission switch\n
+        5. Tap the Notify button again
+    </string>
+    <string name="dlg_msg_getting_started_link_label">Detailed steps:</string>
+    <string name="getting_started_link_text">Getting Started</string>
+    <string name="getting_started_url">https://teyandei.github.io/SmartNotifire-Rev2/getting_started</string>
 
     <!-- Help dialog (No.10 helpIcon) -->
     <string name="help_dialog_title">About Smart Notifire</string>
     <string name="msg_about_app_part1">
-        This app provides voice guidance to help you identify what each notification sound refers to,\n
-        based on:\n
-        1. Conditions specified by the user\n
-        2. Voice guidance messages registered by the user.
+        Smart Notifire helps you understand notification sources by voice guidance when notification sounds alone are not enough.
     </string>
-    <string name="msg_about_app_part2">Important Notes</string>
+    <string name="msg_about_app_part2">Notification Handling</string>
     <string name="msg_about_app_part3">
-        The notifications handled by this app are limited to those displayed when you tap the Add button.\n
-        While this app monitors and retrieves notifications shown on your device, it cannot handle all notifications due to Android system limitations and the requirements of Google’s privacy policies.\n\n
-        For detailed usage instructions and license terms, please refer to the following URL.
+        This app uses only the minimum information required to create notification rules.\n
+        It does not collect, store, or transmit notification body text or personal data.\n\n
+        For detailed usage instructions and notes, please see the page below.
     </string>
-    <string name="msg_about_app_part4">Smart Notifire Home Page</string>
+    <string name="msg_about_app_part4">Smart Notifire Guide</string>
     <string name="msg_about_aoo_part5">https://teyandei.github.io/SmartNotifire-Rev2/</string>
     <string name="captionClose">Close</string>
     <string name="msg_privacy_title">Privacy Policy</string>
