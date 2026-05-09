@@ -14,6 +14,7 @@
     <string name="captionConfirm">Notify</string>
     <string name="lbl_NtfLogListNote">Add rule from notification</string>
     <string name="captionSearchTitle">Search Title</string>
+    <string name="placeholder_search_title_partial_match">Example: Medicine / Amazon</string>
     <string name="captionVoiceMsg">Voice Message</string>
     <string name="captionAddBtn">Add</string>
     

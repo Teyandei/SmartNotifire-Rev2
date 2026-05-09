@@ -14,6 +14,7 @@
     <string name="captionConfirm">通知</string>
     <string name="lbl_NtfLogListNote">通知からルール追加</string>
     <string name="captionSearchTitle">通知タイトル条件</string>
+    <string name="placeholder_search_title_partial_match">例: 薬 / Amazon</string>
     <string name="captionVoiceMsg">音声メッセージ</string>
     <string name="captionAddBtn">追加</string>
 
