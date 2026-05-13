@@ -33,11 +33,11 @@ interface RuleDao {
     fun getAllRulesDesc(): Flow<List<RuleEntity>>
 
     /**
-     * ルール一覧を PackageName 昇順で取得する。
+     * ルール一覧をアプリ表示名、チャンネル表示名の昇順で取得する。
      *
-     * 同一 PackageName 内では ID 昇順で並ぶ。
+     * 同一表示名内では PackageName / ChannelID / ID 昇順で並ぶ。
      */
-    @Query("SELECT * FROM rules ORDER BY appLabel ASC, id ASC")
+    @Query("SELECT * FROM rules ORDER BY appLabel ASC, channelName ASC, packageName ASC, channelId ASC, id ASC")
     fun getRulesOrderByPackageAsc(): Flow<List<RuleEntity>>
 
     /**

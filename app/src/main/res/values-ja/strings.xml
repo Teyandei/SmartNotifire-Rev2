@@ -15,6 +15,21 @@
     <string name="lbl_NtfLogListNote">通知からルール追加</string>
     <string name="captionSearchTitle">通知タイトル条件</string>
     <string name="placeholder_search_title_partial_match">タイトルに含まれる文字</string>
+    <string name="cd_search_condition_settings">検索条件設定</string>
+    <string name="search_condition_title">通知タイトル検索　詳細条件設定</string>
+    <string name="search_condition_filter_label">絞り込み：</string>
+    <string name="search_condition_exclude_label">含まない：</string>
+    <string name="search_condition_any_label">何れかを含む：</string>
+    <string name="search_condition_detail_display">詳細設定中(⚙をタップ)</string>
+    <string name="msg_duplicate_search_condition">⛔条件が重複しています。確定できません。</string>
+    <string name="dlg_title_add_filter_condition">絞り込み条件を追加</string>
+    <string name="dlg_title_add_exclude_condition">含まない条件を追加</string>
+    <string name="dlg_title_add_any_condition">何れかを含む条件を追加</string>
+    <string name="hint_search_condition_word">条件ワード</string>
+    <string name="btn_confirm_search_condition">確定</string>
+    <string name="btn_add_filter_condition">絞り込み</string>
+    <string name="btn_add_exclude_condition">含まない</string>
+    <string name="btn_add_any_condition">何れかを含む</string>
     <string name="captionVoiceMsg">音声メッセージ</string>
     <string name="captionAddBtn">追加</string>
 
@@ -91,6 +106,7 @@
     <string name="msg_add_failed_too_many_same_names">ルールの追加に失敗しました。（同名が多すぎます）</string>
     <string name="msg_add_failed_generic">ルールの追加に失敗しました。</string>
     <string name="msg_failed_copy">コピーに失敗しました。</string>
+    <string name="msg_detail_condition_copy_not_allowed">詳細条件のルールはコピーできません。</string>
     <string name="spk_msg_default">%1sから通知が届きました。</string>
     <string name="btn_exit">アプリ終了</string>
     <string name="receivedCount" formatted="true">

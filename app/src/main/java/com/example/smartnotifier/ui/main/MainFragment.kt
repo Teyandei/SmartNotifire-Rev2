@@ -41,6 +41,7 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -67,6 +68,7 @@ import com.example.smartnotifier.R
 import com.example.smartnotifier.ui.log.NotificationLogAdapter
 import com.example.smartnotifier.BuildConfig
 import com.example.smartnotifier.data.db.NotificationLogListItem
+import com.example.smartnotifier.ui.rules.SearchConditionBottomSheetFragment
 
 /**
  * 画面の表示とユーザー入力の収集を担当するメイン画面 Fragment。
@@ -74,7 +76,7 @@ import com.example.smartnotifier.data.db.NotificationLogListItem
  * 設計書の MVVM 方針に従い、Fragment は UI 表示とイベント受付に限定し、
  * ルール操作やログ操作などのロジックは [MainViewModel] に委譲する。
  */
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
     private companion object {
         const val DIALOG_HORIZONTAL_PADDING_DP = 24
         const val DIALOG_MESSAGE_CHECKBOX_GAP_DP = 16
@@ -169,6 +171,7 @@ class MainFragment : Fragment() {
                     ttsManager?.speak(getString(R.string.spk_msg_default, rule.appLabel))
                 }
             },
+            onSearchConditionClicked = { rule -> showSearchConditionBottomSheet(rule) },
             onRuleUpdatedImmediate = { rule -> viewModel.updateImmediate(rule) },
             getTitleSuggestions = { rule ->
                 titleSuggestionsMap[rule.packageName to rule.channelId].orEmpty()
@@ -380,6 +383,37 @@ class MainFragment : Fragment() {
                 }
             }
             .show()
+    }
+
+    private fun showSearchConditionBottomSheet(rule: RuleEntity) {
+        SearchConditionBottomSheetFragment.newInstance(
+            ruleId = rule.id,
+            searchTitle = rule.srhTitle,
+            titleSuggestions = titleSuggestionsMap[rule.packageName to rule.channelId].orEmpty()
+        )
+            .show(childFragmentManager, "search_condition_${rule.id}")
+    }
+
+    override fun onSearchConditionConfirmRequested(
+        fragment: SearchConditionBottomSheetFragment,
+        ruleId: Int,
+        searchConditionText: String
+    ) {
+        val rule = rulesAdapter.currentList.firstOrNull { it.id == ruleId } ?: return
+        rulesAdapter.clearSearchTitleFocus(ruleId)
+        viewLifecycleOwner.lifecycleScope.launch {
+            when (viewModel.updateSearchCondition(rule, searchConditionText)) {
+                MainViewModel.RuleUpdateResult.SUCCESS -> fragment.dismiss()
+                MainViewModel.RuleUpdateResult.DUPLICATE ->
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.msg_duplicate_search_condition,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                MainViewModel.RuleUpdateResult.FAILED ->
+                    Snackbar.make(binding.root, R.string.msg_err_save_failed, Snackbar.LENGTH_LONG).show()
+            }
+        }
     }
 
     /**

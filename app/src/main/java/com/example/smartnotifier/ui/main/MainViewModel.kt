@@ -65,6 +65,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val titleCacheRepo = NotificationTitleCacheRepository(db.notificationTitleCacheDao())
 
+    enum class RuleUpdateResult {
+        SUCCESS,
+        DUPLICATE,
+        FAILED
+    }
+
     private val _effect = MutableSharedFlow<UiEffect>(extraBufferCapacity = 16)
     val effect = _effect.asSharedFlow()
 
@@ -291,6 +297,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     RulesRepository.InsertRuleResult.TooManySameNames -> {
                         _effect.tryEmit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_add_failed_too_many_same_names)))
                     }
+                    RulesRepository.InsertRuleResult.DetailedConditionCannotDuplicate -> {
+                        _effect.tryEmit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_detail_condition_copy_not_allowed)))
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -336,6 +345,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun updateSearchCondition(rule: RuleEntity, searchConditionText: String): RuleUpdateResult =
+        try {
+            rulesRepo.update(rule.copy(srhTitle = searchConditionText))
+            RuleUpdateResult.SUCCESS
+        } catch (_: SQLiteConstraintException) {
+            RuleUpdateResult.DUPLICATE
+        } catch (_: Exception) {
+            RuleUpdateResult.FAILED
+        }
+
     /**
      * ルール更新を Debounce 対象としてバッファに送る。
      */
@@ -364,6 +383,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     RulesRepository.InsertRuleResult.TooManySameNames -> {
                         _effect.emit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_add_failed_too_many_same_names)))
 
+                    }
+                    RulesRepository.InsertRuleResult.DetailedConditionCannotDuplicate -> {
+                        _effect.emit(UiEffect.ShowSnackbar(appContext.getString(R.string.msg_detail_condition_copy_not_allowed)))
                     }
                 }
             } catch (_: Exception) {

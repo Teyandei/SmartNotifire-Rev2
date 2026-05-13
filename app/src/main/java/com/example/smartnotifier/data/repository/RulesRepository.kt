@@ -20,6 +20,7 @@ package com.example.smartnotifier.data.repository
 
 import androidx.room.Transaction
 import androidx.room.withTransaction
+import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.data.db.AppDatabase
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.data.db.RuleDao
@@ -34,6 +35,8 @@ class RulesRepository(private val db: AppDatabase) {
         ) : InsertRuleResult
 
         data object TooManySameNames : InsertRuleResult
+
+        data object DetailedConditionCannotDuplicate : InsertRuleResult
     }
 
     /**
@@ -93,8 +96,14 @@ class RulesRepository(private val db: AppDatabase) {
      *
      * DAO 側のトランザクション処理を呼び出し、複製の一貫性を担保する。
      */
-    suspend fun duplicateRule(id: Int): InsertRuleResult =
-        dao.duplicateRuleTransaction(id).toRepoResult()
+    suspend fun duplicateRule(id: Int): InsertRuleResult {
+        val original = dao.getRuleById(id) ?: return InsertRuleResult.TooManySameNames
+        if (TitleSearchCondition.isDetailedRuleText(original.srhTitle)) {
+            return InsertRuleResult.DetailedConditionCannotDuplicate
+        }
+
+        return dao.duplicateRuleTransaction(id).toRepoResult()
+    }
 
     /**
      * 通知ログから追加(ダブルタップ)するルールを生成する。

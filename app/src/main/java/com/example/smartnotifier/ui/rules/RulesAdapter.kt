@@ -24,6 +24,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.smartnotifier.R
+import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.data.db.entity.RuleEntity
 import com.example.smartnotifier.databinding.ItemRuleBinding
 import com.example.smartnotifier.ui.common.util.ContainsFilterAdapter
@@ -40,6 +42,7 @@ class RulesAdapter(
     private val onCopyClicked: (RuleEntity) -> Unit,
     private val onDeleteClicked: (RuleEntity) -> Unit,
     private val onPlayClicked: (RuleEntity) -> Unit,
+    private val onSearchConditionClicked: (RuleEntity) -> Unit,
     private val onRuleUpdatedImmediate: (RuleEntity) -> Unit,
     private val getTitleSuggestions: (RuleEntity) -> List<String>
 ) : ListAdapter<RuleEntity, RulesAdapter.RuleViewHolder>(DiffCallback) {
@@ -56,11 +59,21 @@ class RulesAdapter(
     private var notificationAccessGranted: Boolean = false
 
     private object PayloadPermissionChanged
+    private object PayloadClearSearchTitleFocus
+    private var pendingClearSearchTitleFocusRuleId: Int? = null
 
     fun setNotificationAccessGranted(granted: Boolean) {
         if (notificationAccessGranted == granted) return
         notificationAccessGranted = granted
         if (itemCount > 0) notifyItemRangeChanged(0, itemCount, PayloadPermissionChanged)
+    }
+
+    fun clearSearchTitleFocus(ruleId: Int) {
+        val position = currentList.indexOfFirst { it.id == ruleId }
+        if (position == RecyclerView.NO_POSITION) return
+
+        pendingClearSearchTitleFocusRuleId = ruleId
+        notifyItemChanged(position, PayloadClearSearchTitleFocus)
     }
 
     inner class RuleViewHolder(
@@ -73,14 +86,21 @@ class RulesAdapter(
 
         init {
             binding.editSrhTitle.setOnClickListener {
-                showTitleSuggestions()
+                val rule = currentRule ?: return@setOnClickListener
+                if (TitleSearchCondition.isDetailedRuleText(rule.srhTitle)) {
+                    onSearchConditionClicked(rule)
+                } else {
+                    showTitleSuggestions()
+                }
             }
             binding.editSrhTitle.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
                     showTitleSuggestions()
                 } else {
+                    if (suppressTextCallback) return@OnFocusChangeListener
                     val rule = currentRule ?: return@OnFocusChangeListener
                     val text = binding.editSrhTitle.text?.toString().orEmpty()
+                    if (isDetailedDisplayText(rule, text)) return@OnFocusChangeListener
                     if (text != rule.srhTitle) {
                         onRuleUpdatedImmediate(rule.copy(srhTitle = text))
                     }
@@ -99,6 +119,10 @@ class RulesAdapter(
                     onRuleUpdatedImmediate(rule.copy(srhTitle = selected))
                 }
             }
+            binding.tilSrhTitle.setEndIconOnClickListener {
+                saveCurrentSearchTitle()
+                currentRule?.let(onSearchConditionClicked)
+            }
         }
 
         private fun showTitleSuggestions() {
@@ -115,6 +139,12 @@ class RulesAdapter(
         fun bind(rule: RuleEntity) {
             val context = binding.root.context
             currentRule = rule
+            if (pendingClearSearchTitleFocusRuleId == rule.id) {
+                pendingClearSearchTitleFocusRuleId = null
+                suppressTextCallback = true
+                binding.editSrhTitle.clearFocus()
+                suppressTextCallback = false
+            }
 
             binding.txtAppName.text = rule.appLabel
             binding.imgAppIcon.setImageBitmap(IconCache.getAppIcon(context, rule.packageName))
@@ -124,10 +154,15 @@ class RulesAdapter(
             titleAdapter = ContainsFilterAdapter(context, suggestions)
             binding.editSrhTitle.setAdapter(titleAdapter)
 
+            val isDetailedSearchCondition = TitleSearchCondition.isDetailedRuleText(rule.srhTitle)
+            binding.editSrhTitle.isFocusable = !isDetailedSearchCondition
+            binding.editSrhTitle.isFocusableInTouchMode = !isDetailedSearchCondition
+            binding.editSrhTitle.isCursorVisible = !isDetailedSearchCondition
+
             suppressTextCallback = true
             try {
                 if (!binding.editSrhTitle.hasFocus()) {
-                    val want = rule.srhTitle
+                    val want = titleDisplayText(rule.srhTitle)
                     val now = binding.editSrhTitle.text?.toString().orEmpty()
                     if (now != want) {
                         binding.editSrhTitle.setText(want, false)
@@ -168,6 +203,29 @@ class RulesAdapter(
             onRuleUpdatedImmediate(updatedRule)
             return updatedRule
         }
+
+        private fun saveCurrentSearchTitle(): RuleEntity? {
+            val rule = currentRule ?: return null
+            val text = binding.editSrhTitle.text?.toString().orEmpty()
+            if (isDetailedDisplayText(rule, text)) return rule
+            if (text == rule.srhTitle) return rule
+
+            val updatedRule = rule.copy(srhTitle = text)
+            currentRule = updatedRule
+            onRuleUpdatedImmediate(updatedRule)
+            return updatedRule
+        }
+
+        private fun titleDisplayText(srhTitle: String): String =
+            if (TitleSearchCondition.isDetailedRuleText(srhTitle)) {
+                binding.root.context.getString(R.string.search_condition_detail_display)
+            } else {
+                srhTitle
+            }
+
+        private fun isDetailedDisplayText(rule: RuleEntity, text: String): Boolean =
+            TitleSearchCondition.isDetailedRuleText(rule.srhTitle) &&
+                text == titleDisplayText(rule.srhTitle)
     }
 
     companion object {

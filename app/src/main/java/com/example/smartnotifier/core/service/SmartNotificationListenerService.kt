@@ -30,6 +30,7 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.example.smartnotifier.BuildConfig
 import com.example.smartnotifier.R
+import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
 import com.example.smartnotifier.data.db.entity.NotificationLogEntity
@@ -258,7 +259,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
             rule.enabled &&
             rule.packageName == log.packageName &&
             rule.channelId == log.channelId &&
-            (rule.srhTitle.isBlank() || title.contains(rule.srhTitle, ignoreCase = true))
+            TitleSearchCondition.fromRuleText(rule.srhTitle).matches(title)
         }
 
         matchedRule?.let { rules ->
