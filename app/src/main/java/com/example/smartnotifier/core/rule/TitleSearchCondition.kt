@@ -32,15 +32,44 @@ data class TitleSearchCondition(
         if (normalizedAndList.isEmpty() && normalizedNotList.isEmpty() && normalizedOrList.isEmpty()) {
             return ""
         }
-        if (normalizedAndList.size == 1 && normalizedNotList.isEmpty() && normalizedOrList.isEmpty()) {
-            return normalizedAndList.first()
-        }
+        simpleSearchText(
+            normalizedAndList = normalizedAndList,
+            normalizedNotList = normalizedNotList,
+            normalizedOrList = normalizedOrList
+        )?.let { return it }
 
         val andPart = encodeList(normalizedAndList)
         val notPart = encodeList(normalizedNotList)
         val orPart = encodeList(normalizedOrList)
 
         return "$PREFIX$SECTION_AND$andPart$SECTION_NOT$notPart$SECTION_OR$orPart"
+    }
+
+    fun displayAsSimpleTextOrNull(): String? =
+        simpleSearchText(
+            normalizedAndList = normalizeList(andList),
+            normalizedNotList = normalizeList(notList),
+            normalizedOrList = normalizeList(orList)
+        )
+
+    fun needsDetailedSettingsDisplay(): Boolean =
+        displayAsSimpleTextOrNull() == null
+
+    private fun simpleSearchText(
+        normalizedAndList: List<String>,
+        normalizedNotList: List<String>,
+        normalizedOrList: List<String>
+    ): String? {
+        if (normalizedNotList.isNotEmpty()) {
+            return null
+        }
+
+        val positiveConditions = normalizedAndList + normalizedOrList
+        if (positiveConditions.size > 1) {
+            return null
+        }
+
+        return positiveConditions.firstOrNull().orEmpty()
     }
 
     companion object {
@@ -73,6 +102,13 @@ data class TitleSearchCondition(
 
         fun isDetailedRuleText(ruleText: String): Boolean =
             ruleText.trim().startsWith(PREFIX)
+
+        fun needsDetailedSettingsDisplay(ruleText: String): Boolean =
+            isDetailedRuleText(ruleText) &&
+                fromRuleText(ruleText).needsDetailedSettingsDisplay()
+
+        fun displayText(ruleText: String): String =
+            fromRuleText(ruleText).displayAsSimpleTextOrNull() ?: ruleText
 
         private fun normalizeList(items: List<String>): List<String> =
             items.map { it.trim() }.filter { it.isNotEmpty() }

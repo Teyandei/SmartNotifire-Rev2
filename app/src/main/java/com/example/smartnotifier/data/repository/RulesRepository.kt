@@ -98,11 +98,19 @@ class RulesRepository(private val db: AppDatabase) {
      */
     suspend fun duplicateRule(id: Int): InsertRuleResult {
         val original = dao.getRuleById(id) ?: return InsertRuleResult.TooManySameNames
-        if (TitleSearchCondition.isDetailedRuleText(original.srhTitle)) {
+        if (TitleSearchCondition.needsDetailedSettingsDisplay(original.srhTitle)) {
             return InsertRuleResult.DetailedConditionCannotDuplicate
         }
 
-        return dao.duplicateRuleTransaction(id).toRepoResult()
+        val simpleTitle = TitleSearchCondition.displayText(original.srhTitle)
+        return dao.insertWithAutoNumber(
+            ruleBase = original.copy(
+                id = 0,
+                srhTitle = simpleTitle,
+                enabled = false
+            ),
+            baseTitle = simpleTitle
+        ).toRepoResult()
     }
 
     /**

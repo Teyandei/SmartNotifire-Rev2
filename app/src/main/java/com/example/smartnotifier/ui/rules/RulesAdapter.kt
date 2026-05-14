@@ -87,7 +87,7 @@ class RulesAdapter(
         init {
             binding.editSrhTitle.setOnClickListener {
                 val rule = currentRule ?: return@setOnClickListener
-                if (TitleSearchCondition.isDetailedRuleText(rule.srhTitle)) {
+                if (TitleSearchCondition.needsDetailedSettingsDisplay(rule.srhTitle)) {
                     onSearchConditionClicked(rule)
                 } else {
                     showTitleSuggestions()
@@ -154,7 +154,7 @@ class RulesAdapter(
             titleAdapter = ContainsFilterAdapter(context, suggestions)
             binding.editSrhTitle.setAdapter(titleAdapter)
 
-            val isDetailedSearchCondition = TitleSearchCondition.isDetailedRuleText(rule.srhTitle)
+            val isDetailedSearchCondition = TitleSearchCondition.needsDetailedSettingsDisplay(rule.srhTitle)
             binding.editSrhTitle.isFocusable = !isDetailedSearchCondition
             binding.editSrhTitle.isFocusableInTouchMode = !isDetailedSearchCondition
             binding.editSrhTitle.isCursorVisible = !isDetailedSearchCondition
@@ -217,14 +217,14 @@ class RulesAdapter(
         }
 
         private fun titleDisplayText(srhTitle: String): String =
-            if (TitleSearchCondition.isDetailedRuleText(srhTitle)) {
+            if (TitleSearchCondition.needsDetailedSettingsDisplay(srhTitle)) {
                 binding.root.context.getString(R.string.search_condition_detail_display)
             } else {
-                srhTitle
+                TitleSearchCondition.displayText(srhTitle)
             }
 
         private fun isDetailedDisplayText(rule: RuleEntity, text: String): Boolean =
-            TitleSearchCondition.isDetailedRuleText(rule.srhTitle) &&
+            TitleSearchCondition.needsDetailedSettingsDisplay(rule.srhTitle) &&
                 text == titleDisplayText(rule.srhTitle)
     }
 
