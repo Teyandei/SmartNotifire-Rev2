@@ -12,7 +12,7 @@
     <string name="hintNotificationTitle">Notification Title</string>
     <string name="captionNtfConfirm">Check\nNotification</string>
     <string name="captionConfirm">Notify</string>
-    <string name="lbl_NtfLogListNote">Add rule from notification</string>
+    <string name="lbl_NtfLogListNote">Add rule</string>
     <string name="captionSearchTitle">Search Title</string>
     <string name="placeholder_search_title_partial_match">Text included in title</string>
     <string name="cd_search_condition_settings">Search condition settings</string>
