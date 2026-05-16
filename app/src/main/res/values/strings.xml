@@ -112,7 +112,7 @@
     <string name="receivedCount" formatted="true">
         Received: %1$,.1f /day
     </string>
-    <string name="importance_silent">DND</string>
+    <string name="importance_silent">Silent</string>
     <string name="desc_app_icon" translatable="false">Application Icon</string>
     <string name="wrn_dnd_title">⚠️ Silent Notification</string>
     <string name="wrn_dnd_msg">
