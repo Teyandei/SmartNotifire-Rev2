@@ -26,7 +26,7 @@ Note: This permission is used only to read notification titles aloud.
 
 <img alt="Check Notification" src="https://teyandei.github.io/SmartNotifire-Rev2/images/notification_check.png" title="Notification Check Screen" style="width:clamp(30%,calc(60000px - 10000vw),80vw);height:auto;max-width:100%;"/>
 
-1. Tap the **Notification** button to send a test notification from this app.
+1. Tap the **Notify** button to send a test notification from this app.
 2. A dialog asking whether to allow notifications is displayed. Tap **Allow**.    
    <img alt="Allow Notification" src="https://teyandei.github.io/SmartNotifire-Rev2/images/allow_notification.png" title="Notification Permission" style="width:clamp(30%,calc(60000px - 10000vw),80vw);height:auto;max-width:100%;"/>
 3. The notification is sent, and the notification sound plays.  
@@ -39,7 +39,7 @@ Note: This permission is used only to read notification titles aloud.
 
 ##  4️⃣ Check the voice announcement
 
-- Tap the **Notification** button from step 2️⃣ again.
+- Tap the **Notify** button from step 2️⃣ again.
 - The notification sound plays, and after 3 seconds, the voice message is read aloud.
 
 > This is the basic behavior of this app. Next, see [Adding a voice announcement rule](./add_rule).  
