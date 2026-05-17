@@ -30,8 +30,10 @@ import androidx.core.view.isVisible
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.databinding.BottomSheetSearchConditionBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -94,6 +96,20 @@ class SearchConditionBottomSheetFragment : BottomSheetDialogFragment() {
                 ruleId = requireArguments().getInt(ARG_RULE_ID),
                 searchConditionText = condition.toRuleText()
             )
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        val bottomSheetDialog = dialog as? BottomSheetDialog ?: return
+        val bottomSheet = bottomSheetDialog.findViewById<View>(
+            com.google.android.material.R.id.design_bottom_sheet
+        ) ?: return
+
+        BottomSheetBehavior.from(bottomSheet).apply {
+            state = BottomSheetBehavior.STATE_EXPANDED
+            skipCollapsed = true
         }
     }
 
