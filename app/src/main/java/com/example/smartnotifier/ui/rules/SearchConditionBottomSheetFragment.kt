@@ -26,7 +26,10 @@ import android.widget.ArrayAdapter
 import android.widget.Filter
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import com.example.smartnotifier.R
 import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.databinding.BottomSheetSearchConditionBinding
@@ -64,6 +67,8 @@ class SearchConditionBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        applySystemBarInsets()
+
         condition = TitleSearchCondition.fromRuleText(
             requireArguments().getString(ARG_SEARCH_TITLE).orEmpty()
         )
@@ -97,6 +102,16 @@ class SearchConditionBottomSheetFragment : BottomSheetDialogFragment() {
                 searchConditionText = condition.toRuleText()
             )
         }
+    }
+
+    private fun applySystemBarInsets() {
+        val initialBottomPadding = binding.root.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            root.updatePadding(bottom = initialBottomPadding + systemBars.bottom)
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(binding.root)
     }
 
     override fun onStart() {

@@ -45,7 +45,11 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -156,6 +160,8 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        applySystemBarInsets()
+
         // ①～⑧ ルールアダプター
         rulesAdapter = RulesAdapter(
             onEnabledChanged = { rule ->
@@ -224,6 +230,106 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
         setupSortListUi()
         setupNotificationTitleUi()
         setNotificationOrderBySpinner()
+    }
+
+    private fun applySystemBarInsets() {
+        val rootInitialPadding = binding.mainRoot.currentPadding()
+        val rulesInitialPadding = binding.recyclerRules.currentPadding()
+        val logsInitialPadding = binding.recyclerLogs.currentPadding()
+        val inputInitialMargins = binding.tilNotificationTitle.currentMargins()
+        val labelInitialMargins = binding.txtNtfConfirmLabel.currentMargins()
+        val confirmInitialMargins = binding.btnConfirm.currentMargins()
+        val fabInitialMargins = binding.btnAddRow.currentMargins()
+
+        binding.recyclerRules.clipToPadding = false
+        binding.recyclerLogs.clipToPadding = false
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainRoot) { _, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            val bottomInset = maxOf(systemBars.bottom, ime.bottom)
+
+            binding.mainRoot.updatePadding(
+                left = rootInitialPadding.left + systemBars.left,
+                top = rootInitialPadding.top + systemBars.top,
+                right = rootInitialPadding.right + systemBars.right,
+                bottom = rootInitialPadding.bottom
+            )
+            binding.recyclerRules.updatePadding(
+                left = rulesInitialPadding.left,
+                top = rulesInitialPadding.top,
+                right = rulesInitialPadding.right,
+                bottom = rulesInitialPadding.bottom + bottomInset
+            )
+            binding.recyclerLogs.updatePadding(
+                left = logsInitialPadding.left,
+                top = logsInitialPadding.top,
+                right = logsInitialPadding.right,
+                bottom = logsInitialPadding.bottom + bottomInset
+            )
+            binding.tilNotificationTitle.updateInsetsMargins(
+                inputInitialMargins,
+                bottom = bottomInset
+            )
+            binding.txtNtfConfirmLabel.updateInsetsMargins(
+                labelInitialMargins,
+                left = systemBars.left
+            )
+            binding.btnConfirm.updateInsetsMargins(
+                confirmInitialMargins,
+                right = systemBars.right
+            )
+            binding.btnAddRow.updateInsetsMargins(
+                fabInitialMargins,
+                right = systemBars.right,
+                bottom = bottomInset
+            )
+
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(binding.mainRoot)
+    }
+
+    private data class ViewPadding(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int
+    )
+
+    private data class ViewMargins(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int
+    )
+
+    private fun View.currentPadding(): ViewPadding =
+        ViewPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
+
+    private fun View.currentMargins(): ViewMargins {
+        val margins = layoutParams as? ViewGroup.MarginLayoutParams
+        return ViewMargins(
+            left = margins?.leftMargin ?: 0,
+            top = margins?.topMargin ?: 0,
+            right = margins?.rightMargin ?: 0,
+            bottom = margins?.bottomMargin ?: 0
+        )
+    }
+
+    private fun View.updateInsetsMargins(
+        initialMargins: ViewMargins,
+        left: Int = 0,
+        top: Int = 0,
+        right: Int = 0,
+        bottom: Int = 0
+    ) {
+        updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            leftMargin = initialMargins.left + left
+            topMargin = initialMargins.top + top
+            rightMargin = initialMargins.right + right
+            bottomMargin = initialMargins.bottom + bottom
+        }
     }
 
     private var permissionDialogShowing = false
