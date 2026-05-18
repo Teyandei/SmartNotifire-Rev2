@@ -1,8 +1,8 @@
 ---  
-title: Gmailのメッセージを音声案内  
+title: Gmailの通知を音声案内  
 layout: default  
 ---  
-# 📧 Gmailのメッセージを音声案内
+# 📧 Gmailの通知を音声案内
 
 Gmailの通知で、チャンネル名が「メール」の通知には2種類の通知タイトルがあります。<sup>※1</sup>  
 
