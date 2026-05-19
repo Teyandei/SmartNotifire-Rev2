@@ -2,8 +2,19 @@
 title: Smart Notifire  
 layout: default  
 ---  
+<div style="text-align:center;">
 
-# 📢 Smart Notifire
+<img src="./pictures/ja/feature_graphic.png"
+alt="Smart Notifire"
+style="width:100%; border-radius:16px;">
+
+<h1> Smart Notifire</h1>
+
+<p>
+Smart notification voice guide for Android
+</p>
+
+</div>
 
 Smart Notifire は、通知をテキスト読み上げ（TTS）で音声案内するアプリです。
 
