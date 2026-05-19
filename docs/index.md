@@ -3,6 +3,8 @@ title: Smart Notifire
 layout: default  
 ---  
 
+<img src="/pictures/ja/feature_graphic.png"/>  
+
 # 📢 Smart Notifire
 
 Smart Notifire is an app that announces notifications by text-to-speech (TTS).
