@@ -1,11 +1,16 @@
----  
-title: Smart Notifire  
-layout: default  
----  
+<div style="text-align:center;">
 
-<img src="./pictures/ja/feature_graphic.png"/>  
+<img src="./pictures/ja/feature_graphic.png"
+alt="Smart Notifire"
+style="width:100%; border-radius:16px;">
 
-# 📢 Smart Notifire
+<h1>Smart Notifire</h1>
+
+<p>
+Smart notification voice guide for Android
+</p>
+
+</div>
 
 Smart Notifire is an app that announces notifications by text-to-speech (TTS).
 
