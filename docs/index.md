@@ -3,7 +3,7 @@ title: Smart Notifire
 layout: default  
 ---  
 
-<img src="/pictures/ja/feature_graphic.png"/>  
+<img src="./pictures/ja/feature_graphic.png"/>  
 
 # 📢 Smart Notifire
 
