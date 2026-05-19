@@ -4,7 +4,7 @@ layout: default
 ---  
 <div style="text-align:center;">
 
-<img src="./pictures/ja/feature_graphic.png"
+<img src="../pictures/ja/feature_graphic.png"
 alt="Smart Notifire"
 style="width:100%; border-radius:16px;">
 
