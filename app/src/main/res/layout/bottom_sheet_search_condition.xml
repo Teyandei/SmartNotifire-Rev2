@@ -104,18 +104,29 @@
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="24dp">
+
+            <androidx.constraintlayout.helper.widget.Flow
+                android:id="@+id/flowConditionButtons"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="btnAddFilterCondition,btnAddExcludeCondition,btnAddAnyCondition"
+                app:flow_horizontalGap="8dp"
+                app:flow_verticalGap="8dp"
+                app:flow_wrapMode="chain"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddFilterCondition"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:layout_weight="1"
                 android:text="@string/btn_add_filter_condition"
                 android:textSize="12sp"
                 app:icon="@drawable/ic_plus_24"
@@ -126,10 +137,8 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddExcludeCondition"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
                 android:text="@string/btn_add_exclude_condition"
                 android:textSize="12sp"
                 app:icon="@drawable/ic_plus_24"
@@ -140,17 +149,15 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddAnyCondition"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
                 android:text="@string/btn_add_any_condition"
                 android:textSize="12sp"
                 app:icon="@drawable/ic_plus_24"
                 app:iconGravity="textStart"
                 app:iconSize="18dp"
                 app:iconPadding="2dp" />
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

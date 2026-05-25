@@ -16,11 +16,11 @@
     <string name="captionSearchTitle">Search Title</string>
     <string name="placeholder_search_title_partial_match">Text included in title</string>
     <string name="cd_search_condition_settings">Search condition settings</string>
-    <string name="search_condition_title">Notification title search detailed conditions</string>
+    <string name="search_condition_title">Advanced title filter</string>
     <string name="search_condition_filter_label">Filter:</string>
-    <string name="search_condition_exclude_label">Does not include:</string>
-    <string name="search_condition_any_label">Includes any:</string>
-    <string name="search_condition_detail_display">Detailed settings (tap ⚙)</string>
+    <string name="search_condition_exclude_label">Exclude:</string>
+    <string name="search_condition_any_label">Any:</string>
+    <string name="search_condition_detail_display">Tap ⚙ for details</string>
     <string name="msg_duplicate_search_condition">⛔ Search condition is duplicated. Cannot confirm.</string>
     <string name="dlg_title_add_filter_condition">Add filter condition</string>
     <string name="dlg_title_add_exclude_condition">Add excluded condition</string>
@@ -28,8 +28,8 @@
     <string name="hint_search_condition_word">Condition word</string>
     <string name="btn_confirm_search_condition">Confirm</string>
     <string name="btn_add_filter_condition">Filter</string>
-    <string name="btn_add_exclude_condition">Does not include</string>
-    <string name="btn_add_any_condition">Includes any</string>
+    <string name="btn_add_exclude_condition">Exclude</string>
+    <string name="btn_add_any_condition">Any</string>
     <string name="captionVoiceMsg">Voice Message</string>
     <string name="captionAddBtn">Add</string>
     
