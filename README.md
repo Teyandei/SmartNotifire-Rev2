@@ -1,3 +1,5 @@
+![mart Notifire](/docs/pictures/ja/feature_graphic.png)
+
 # 📣 Smart Notifire Rev2
 
 ## 🧠 このアプリについて
