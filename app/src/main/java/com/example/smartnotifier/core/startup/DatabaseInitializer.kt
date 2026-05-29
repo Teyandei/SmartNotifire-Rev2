@@ -124,6 +124,9 @@ class DatabaseInitializer : Initializer<Unit> {
             if (!prefs.contains(AppPrefs.KEY_TYPE_LOG_ORDER)) {
                 prefs[AppPrefs.KEY_TYPE_LOG_ORDER] = AppPrefs.SortOrder.ORDER_BY_NEWEST.ordinal
             }
+            if (!prefs.contains(AppPrefs.KEY_VOICE_GUIDANCE_ENABLED)) {
+                prefs[AppPrefs.KEY_VOICE_GUIDANCE_ENABLED] = true
+            }
         }
     }
 

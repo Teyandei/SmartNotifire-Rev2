@@ -416,6 +416,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * 音声案内の有効状態。
+     *
+     * 未設定時は従来動作に合わせてONとして扱う。
+     */
+    val voiceGuidanceEnabled: StateFlow<Boolean> =
+        dataStore.data
+            .map { prefs -> prefs[AppPrefs.KEY_VOICE_GUIDANCE_ENABLED] ?: true }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    /**
+     * 音声案内のON/OFFを切り替える。
+     */
+    fun toggleVoiceGuidance() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                val current = prefs[AppPrefs.KEY_VOICE_GUIDANCE_ENABLED] ?: true
+                prefs[AppPrefs.KEY_VOICE_GUIDANCE_ENABLED] = !current
+            }
+        }
+    }
+
+    /**
      * テスト通知送信用の通知タイトル。
      */
     val notificationTitle: StateFlow<String> =

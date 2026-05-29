@@ -30,6 +30,8 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.example.smartnotifier.BuildConfig
 import com.example.smartnotifier.R
+import com.example.smartnotifier.core.datastore.AppPrefs
+import com.example.smartnotifier.core.datastore.appPrefsDataStore
 import com.example.smartnotifier.core.rule.TitleSearchCondition
 import com.example.smartnotifier.core.tts.TtsManager
 import com.example.smartnotifier.data.db.DatabaseProvider
@@ -73,6 +75,7 @@ class SmartNotificationListenerService : NotificationListenerService() {
     private enum class SpeakDecision {
         SPEAK,
         SKIP_BLOCKED,
+        SKIP_VOICE_GUIDANCE_OFF,
         SKIP_CANNOT_SPEAK_NOW,
         SKIP_LOW_IMPORTANCE,
         SKIP_ONGOING,
@@ -227,10 +230,15 @@ class SmartNotificationListenerService : NotificationListenerService() {
     /**
      * TTSを使えるかを判断する。
      * @return TTSが使え以下の場合はfalseを返す。
-     * 1.マナーモード時
-     * 2.おやすみモード時
+     * 1.音声案内OFF時
+     * 2.マナーモード時
+     * 3.おやすみモード時
      */
-    private fun canSpeakNow(context: Context): Boolean {
+    private suspend fun canSpeakNow(context: Context): Boolean {
+        if (!isVoiceGuidanceEnabled(context)) {
+            return false
+        }
+
         val audioManager = context.getSystemService(AUDIO_SERVICE) as AudioManager
 
         // マナーモード（サイレント / バイブ）は即NG
@@ -244,6 +252,10 @@ class SmartNotificationListenerService : NotificationListenerService() {
         return nm.currentInterruptionFilter ==
                 NotificationManager.INTERRUPTION_FILTER_ALL
     }
+
+    private suspend fun isVoiceGuidanceEnabled(context: Context): Boolean =
+        context.appPrefsDataStore.data
+            .first()[AppPrefs.KEY_VOICE_GUIDANCE_ENABLED] ?: true
 
     /**
      * 検索タイトルのヒット確認とTTS読み上げ
@@ -342,13 +354,14 @@ class SmartNotificationListenerService : NotificationListenerService() {
         }
     }
 
-    private fun shouldSpeakNotification(
+    private suspend fun shouldSpeakNotification(
         sbn: StatusBarNotification,
         isBlocked: Boolean,
         importance: Int,
         isAmbient: Boolean
     ): SpeakDecision {
         if (isBlocked) return SpeakDecision.SKIP_BLOCKED
+        if (!isVoiceGuidanceEnabled(applicationContext)) return SpeakDecision.SKIP_VOICE_GUIDANCE_OFF
         if (!canSpeakNow(applicationContext)) return SpeakDecision.SKIP_CANNOT_SPEAK_NOW
         if (importance < NotificationManager.IMPORTANCE_DEFAULT) return SpeakDecision.SKIP_LOW_IMPORTANCE
         if (sbn.isOngoing) return SpeakDecision.SKIP_ONGOING

@@ -5,6 +5,8 @@
     <string name="play">プレイ</string>
     <string name="sort_order">並び順</string>
     <string name="help">ヘルプ</string>
+    <string name="voice_guidance_on">音声案内ON</string>
+    <string name="voice_guidance_off">音声案内OFF</string>
 
     <string name="app_name">SmartNotifier</string>
     <string name="sortList">新しい順</string>

@@ -412,6 +412,23 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.voiceGuidanceEnabled.collect { enabled ->
+                val iconRes = if (enabled) {
+                    R.drawable.ic_voice_guidance_off
+                } else {
+                    R.drawable.ic_voice_guidance_on
+                }
+                val descriptionRes = if (enabled) {
+                    R.string.voice_guidance_on
+                } else {
+                    R.string.voice_guidance_off
+                }
+                binding.imageButtonVoiceGuidance.setImageResource(iconRes)
+                binding.imageButtonVoiceGuidance.contentDescription = getString(descriptionRes)
+                binding.recyclerRules.alpha = if (enabled) 1.0f else 0.6f
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.logItems.collect { logItems ->
                     logAdapter.submitList(logItems) {
@@ -469,6 +486,9 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
         }
         binding.imageButtonHelp.setOnClickListener {
             showHelpDialog()
+        }
+        binding.imageButtonVoiceGuidance.setOnClickListener {
+            viewModel.toggleVoiceGuidance()
         }
     }
 

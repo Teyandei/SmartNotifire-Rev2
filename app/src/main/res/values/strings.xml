@@ -4,6 +4,8 @@
     <string name="play">Play</string>
     <string name="sort_order">Sort Order</string>
     <string name="help">Help</string>
+    <string name="voice_guidance_on">Voice guidance on</string>
+    <string name="voice_guidance_off">Voice guidance off</string>
 
     <string name="app_name">SmartNotifier</string>
     <string name="appName" translatable="false">Smart Notifier</string>
