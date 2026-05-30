@@ -25,6 +25,7 @@ import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.provider.Settings
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -90,6 +91,10 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
     private var _binding: FragmentMainBinding? = null
 
     private var pendingScrollRuleId: Long? = null   // スクロール表示するルールのId
+
+    private var logListScrollState: Parcelable? = null
+    private var resetLogListScrollOnNextUpdate = true
+    private var restoreLogListScrollOnNextUpdate = false
 
     /**
      * ViewBinding への非nullアクセサ。
@@ -195,6 +200,7 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
                 if (log.importance < NotificationManager.IMPORTANCE_DEFAULT) {
                     showSilentWarning(log)
                 } else {
+                    saveLogListScrollState()
                     viewModel.addRuleFromLog(log)
                 }
             }
@@ -364,6 +370,7 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
         binding.recyclerLogs.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = logAdapter
+            itemAnimator = null
         }
     }
 
@@ -389,7 +396,7 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
                             scrollToRuleId(eff.ruleId)
                         }
                         is UiEffect.ShowLogList ->
-                            viewModel.setShowingLogList(eff.show)
+                            setShowingLogList(eff.show)
 
                         UiEffect.ShowTtsHint ->
                             showTtsHintDialog()
@@ -404,6 +411,9 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
             viewModel.isShowingLogList.collect { isShowing ->
                 binding.layoutLogList.isVisible = isShowing
                 binding.btnAddRow.isVisible = !isShowing
+                if (isShowing) {
+                    restoreLogListScrollState()
+                }
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -433,7 +443,13 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
                 viewModel.logItems.collect { logItems ->
                     logAdapter.submitList(logItems) {
                         binding.recyclerLogs.post {
-                            binding.recyclerLogs.scrollToPosition(0)
+                            if (resetLogListScrollOnNextUpdate) {
+                                binding.recyclerLogs.scrollToPosition(0)
+                                resetLogListScrollOnNextUpdate = false
+                            } else if (restoreLogListScrollOnNextUpdate) {
+                                restoreLogListScrollState()
+                                restoreLogListScrollOnNextUpdate = false
+                            }
                         }
                     }
                 }
@@ -471,17 +487,17 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
      */
     private fun setupClickListeners() {
         binding.btnAddRow.setOnClickListener {
-            viewModel.setShowingLogList(true)
+            setShowingLogList(true)
         }
         binding.btnCloseLog.setOnClickListener {
-            viewModel.setShowingLogList(false)
+            setShowingLogList(false)
         }
         binding.btnConfirm.setOnClickListener {
             checkPermissionAndSendNotification()
         }
         binding.mainRoot.setOnClickListener {
             if (viewModel.isShowingLogList.value) {
-                viewModel.setShowingLogList(false)
+                setShowingLogList(false)
             }
         }
         binding.imageButtonHelp.setOnClickListener {
@@ -489,6 +505,23 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
         }
         binding.imageButtonVoiceGuidance.setOnClickListener {
             viewModel.toggleVoiceGuidance()
+        }
+    }
+
+    private fun setShowingLogList(show: Boolean) {
+        if (!show) saveLogListScrollState()
+        viewModel.setShowingLogList(show)
+    }
+
+    private fun saveLogListScrollState() {
+        logListScrollState = binding.recyclerLogs.layoutManager?.onSaveInstanceState()
+        restoreLogListScrollOnNextUpdate = true
+    }
+
+    private fun restoreLogListScrollState() {
+        val state = logListScrollState ?: return
+        binding.recyclerLogs.post {
+            binding.recyclerLogs.layoutManager?.onRestoreInstanceState(state)
         }
     }
 
@@ -732,6 +765,7 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
             .setMessage(R.string.wrn_dnd_msg)
             .setNegativeButton(R.string.btn_cancel, null)
             .setPositiveButton(R.string.captionAddBtn) { _, _ ->
+                saveLogListScrollState()
                 viewModel.addRuleFromLog(log)
             }
             .show()
@@ -873,6 +907,10 @@ class MainFragment : Fragment(), SearchConditionBottomSheetFragment.Listener {
                     return
                 }
 
+                logListScrollState = null
+                resetLogListScrollOnNextUpdate = true
+                restoreLogListScrollOnNextUpdate = false
+                binding.recyclerLogs.scrollToPosition(0)
                 viewModel.onLogOrderSelected(position)
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
