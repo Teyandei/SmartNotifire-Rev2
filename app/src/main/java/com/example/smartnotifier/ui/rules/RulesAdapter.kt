@@ -95,20 +95,29 @@ class RulesAdapter(
             }
             binding.editSrhTitle.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
+                    applyRuleEnabledAlpha()
                     showTitleSuggestions()
                 } else {
-                    if (suppressTextCallback) return@OnFocusChangeListener
-                    val rule = currentRule ?: return@OnFocusChangeListener
-                    val text = binding.editSrhTitle.text?.toString().orEmpty()
-                    if (isDetailedDisplayText(rule, text)) return@OnFocusChangeListener
-                    if (text != rule.srhTitle) {
-                        onRuleUpdatedImmediate(rule.copy(srhTitle = text))
+                    try {
+                        if (suppressTextCallback) return@OnFocusChangeListener
+                        val rule = currentRule ?: return@OnFocusChangeListener
+                        val text = binding.editSrhTitle.text?.toString().orEmpty()
+                        if (isDetailedDisplayText(rule, text)) return@OnFocusChangeListener
+                        if (text != rule.srhTitle) {
+                            onRuleUpdatedImmediate(rule.copy(srhTitle = text))
+                        }
+                    } finally {
+                        applyRuleEnabledAlpha()
                     }
                 }
             }
             binding.editVoiceMsg.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                if (!hasFocus) {
-                    saveCurrentVoiceMessage()
+                try {
+                    if (!hasFocus) {
+                        saveCurrentVoiceMessage()
+                    }
+                } finally {
+                    applyRuleEnabledAlpha()
                 }
             }
 
@@ -183,8 +192,12 @@ class RulesAdapter(
             binding.swEnabled.setOnCheckedChangeListener(null)
             binding.swEnabled.isChecked = rule.enabled
             binding.swEnabled.setOnCheckedChangeListener { _, isChecked ->
-                onEnabledChanged(rule.copy(enabled = isChecked))
+                val updatedRule = rule.copy(enabled = isChecked)
+                currentRule = updatedRule
+                applyRuleEnabledAlpha()
+                onEnabledChanged(updatedRule)
             }
+            applyRuleEnabledAlpha()
 
             binding.btnCopyRow.setOnClickListener { onCopyClicked(rule) }
             binding.btnDeleteRow.setOnClickListener { onDeleteClicked(rule) }
@@ -226,9 +239,36 @@ class RulesAdapter(
         private fun isDetailedDisplayText(rule: RuleEntity, text: String): Boolean =
             TitleSearchCondition.needsDetailedSettingsDisplay(rule.srhTitle) &&
                 text == titleDisplayText(rule.srhTitle)
+
+        private fun applyRuleEnabledAlpha() {
+            val ruleEnabled = currentRule?.enabled ?: true
+
+            binding.txtAppName.alpha = ENABLED_ALPHA
+            binding.txtChannelName.alpha = ENABLED_ALPHA
+            binding.swEnabled.alpha = ENABLED_ALPHA
+
+            val inactiveAlpha = if (ruleEnabled) ENABLED_ALPHA else DISABLED_ALPHA
+            binding.imgAppIcon.alpha = inactiveAlpha
+            binding.tilSrhTitle.alpha = if (ruleEnabled || binding.editSrhTitle.hasFocus()) {
+                ENABLED_ALPHA
+            } else {
+                DISABLED_ALPHA
+            }
+            binding.btnCopyRow.alpha = inactiveAlpha
+            binding.tilVoiceMsg.alpha = if (ruleEnabled || binding.editVoiceMsg.hasFocus()) {
+                ENABLED_ALPHA
+            } else {
+                DISABLED_ALPHA
+            }
+            binding.btnPlayVoice.alpha = inactiveAlpha
+            binding.btnDeleteRow.alpha = inactiveAlpha
+        }
     }
 
-    companion object {
+    private companion object {
+        const val ENABLED_ALPHA = 1.0f
+        const val DISABLED_ALPHA = 0.6f
+
         private val DiffCallback = object : DiffUtil.ItemCallback<RuleEntity>() {
             override fun areItemsTheSame(oldItem: RuleEntity, newItem: RuleEntity): Boolean =
                 oldItem.id == newItem.id
