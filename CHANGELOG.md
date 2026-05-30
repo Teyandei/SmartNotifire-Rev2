@@ -4,7 +4,7 @@
 
 - 通知ログリスト開始位置統一 (#14)  
 - 音声案内の停止機能追加 (#15)  
-- ルール無効の視覚化 (#16)  
+- ルール無効の視覚化 ([#16](https://github.com/users/Teyandei/projects/1/views/1?pane=issue&itemId=193056853)) 
 
 ## CL-0019 Material 1.14.0 更新と Edge-to-Edge 対応
 
