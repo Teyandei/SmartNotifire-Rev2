@@ -104,7 +104,9 @@ class SmartNotificationListenerService : NotificationListenerService() {
         logRepo = NotificationLogRepository(db)
         ruleRepo = RulesRepository(db)
         notificationsRepo = NotificationsRepository(db)
-        ttsManager = TtsManager(this)
+        ttsManager = TtsManager(this) { message ->
+            writeTtsLog(message)
+        }
         titleCacheRepo = NotificationTitleCacheRepository(db.notificationTitleCacheDao())
     }
 
@@ -337,6 +339,13 @@ class SmartNotificationListenerService : NotificationListenerService() {
         if (BuildConfig.DEBUG) {
             file.appendText("🟩Speak：${text} at ${formatTime(System.currentTimeMillis())}\n")
         }
+    }
+
+    private fun writeTtsLog(message: String) {
+        if (!BuildConfig.DEBUG) return
+
+        File(filesDir, "notif_log.txt")
+            .appendText("[${formatTime(System.currentTimeMillis())}] $message\n")
     }
 
     private fun isRecentDuplicate(key: String, now: Long): Boolean {

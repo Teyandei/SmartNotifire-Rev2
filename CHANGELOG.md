@@ -1,3 +1,9 @@
+## CL-0021 TTS無音対策
+
+### 変更内容
+
+- TTSエラー時対策とログ追加 ([#19](https://github.com/Teyandei/SmartNotifire-Rev2/issues/19))
+
 ## CL-0020 UX改善
 
 ### 変更内容
