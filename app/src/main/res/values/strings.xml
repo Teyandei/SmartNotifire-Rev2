@@ -109,7 +109,7 @@
     <string name="msg_add_failed_generic">Failed to add the rule.</string>
     <string name="msg_failed_copy">Failed to copy.</string>
     <string name="msg_detail_condition_copy_not_allowed">Detailed condition rules cannot be copied.</string>
-    <string name="spk_msg_default">You have received a notification from %1s.</string>
+    <string name="spk_msg_default">You have a notification from %1$s.</string>
     <string name="btn_exit">Exit App</string>
     <string name="receivedCount" formatted="true">
         Received: %1$,.1f /day
